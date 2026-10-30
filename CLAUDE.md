@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Rules for AI coding assistants working in this repo. Read this file fully at the start of every session.
+Rules for AI coding assistants working in this repo. Package-specific rules load automatically from `.claude/rules/` when you touch those files.
 
 ## Project summary
 
@@ -9,12 +9,13 @@ Rules for AI coding assistants working in this repo. Read this file fully at the
 ## Docs: what to read and when
 
 All specs live in `docs/`. They are the source of truth: if code and docs disagree, stop and ask.
+**Until task 0.7**, they are in `Docs/` with a `tracer-` prefix (`docs/prd.md` = `Docs/tracer-prd.md`); `progress.md` has no prefix.
 
 | Doc | Read it when you are… |
 | --- | --- |
 | `docs/prd.md` | Unsure whether a feature is in scope, or which phase (MVP, v1, v2) it belongs to |
 | `docs/implementation-plan.md` | Starting any task: find the task ID, its dependencies and its "Done when" |
-| `docs/progress.md` | Starting and finishing every task (see "Progress tracking") |
+| `docs/progress.md` | Starting and finishing every task |
 | `docs/architecture.md` | Touching package boundaries, data flow, auth, env vars, error handling or logging |
 | `docs/tech-stack.md` | Choosing a library or tool, or checking the "do not use" list |
 | `docs/data-model.md` | Touching the database, migrations, soft delete, retention or seed data |
@@ -23,7 +24,7 @@ All specs live in `docs/`. They are the source of truth: if code and docs disagr
 | `docs/design.md` + `docs/ui-reference.png` | Writing any UI: colors, type, spacing, components, layout, accessibility |
 | `docs/decisions/` | Before reversing an earlier technical decision |
 
-Read only the sections a task needs; quote the section you followed in the PR description.
+The specs are large: read only the sections a task needs (or ask the `spec-reader` agent), and quote the section you followed in the PR description.
 
 ## Repo map
 
@@ -60,44 +61,28 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 
 ## Coding conventions
 
-**Language and types**
 - TypeScript everywhere, `strict: true`. No `any`; use `unknown` and narrow. No `@ts-ignore` (use `@ts-expect-error` with a reason if truly needed).
 - Shared shapes come from `@tracer/protocol`. Never redefine an event, API or value type locally.
 - Validate every external input (agent events, REST params and bodies, config, env) with Zod.
-
-**Naming**
-- Files and folders: `kebab-case` (`event-buffer.ts`, `call-tree/`).
-- Variables and functions: `camelCase`; types, classes, React components: `PascalCase`; constants: `UPPER_SNAKE_CASE`.
-- Database: `snake_case` tables and columns. JSON and API fields: `camelCase`.
-- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`, `obj_`). Env vars: `TRACER_` prefix.
+- Files and folders: `kebab-case`. Variables and functions: `camelCase`; types, classes, React components: `PascalCase`; constants: `UPPER_SNAKE_CASE`.
+- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`, `obj_`). Env vars: `TRACER_` prefix. JSON and API fields: `camelCase`.
 - UI wording says **steps**, never "spans".
-
-**File style**
-- One module, one job. Keep files under ~300 lines; split when larger.
-- Named exports only (no default exports, except where a framework requires it).
+- One module, one job. Keep files under ~300 lines. Named exports only (no default exports unless a framework requires it).
 - Imports ordered: Node built-ins, external packages, `@tracer/*`, relative.
 - Comments explain *why*, not *what*. No commented-out code.
 - Tests live next to the code: `foo.ts` → `foo.test.ts`.
 
-**UI**
-- Colors, spacing, radius and type only through design tokens (`packages/ui/src/theme`). No raw hex values in components.
-- Use shadcn/ui components and Lucide icons; no other UI library.
-- Every interactive element is a real `<button>`, `<a>` or `<input>` with a label; icon-only buttons need `aria-label`.
-- Render captured values as text, never as HTML.
-
 ## Do's and don'ts
 
 **Do**
-- Work on one task from `implementation-plan.md` per session; keep the PR small.
+- Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); keep the PR small.
 - Write or update tests in the same change. Cover the "Done when" condition explicitly.
 - Follow the exact shapes and examples in `api-spec.md` and `data-model.md`.
-- Keep the agent tiny: few dependencies, no blocking I/O, nothing that can throw into user code.
 - Update docs in the same PR when behaviour changes (and say so in the PR).
 
 **Don't**
 - **Don't add a dependency without asking first.** Name the package, why it's needed and the alternative you considered. Check `tech-stack.md` §12 ("Do not use") before proposing anything.
 - Don't change code outside the task's scope ("while I'm here" refactors go in a separate task).
-- Don't write instrumented code to disk, use `eval` / `new Function`, monkey-patch globals, or call getters / `toJSON` on captured user objects.
 - Don't log, print or store tokens or captured values outside the database.
 - Don't send any data off the machine (no telemetry, remote logging or cloud calls) unless a task explicitly says so.
 - Don't skip or weaken a failing test to make CI pass. Fix the cause or ask.
@@ -105,11 +90,8 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 
 ## Errors and edge cases
 
-- **The user's app always wins.** In `agent`, wrap every hook, patch and runtime helper in `try/catch`; count internal errors, never rethrow them into user code; fail open to "not traced".
-- **Collector:** reject invalid input with the error envelope and codes from `api-spec.md` §8; one bad message must never stop ingest or crash the server.
-- **UI:** every screen handles its empty, loading and error states from `user-flows.md` §6; each panel has an error boundary.
-- **Edge cases:** before finishing a task, check the relevant rows in `user-flows.md` §7 and add a test for each one your code touches.
-- Never swallow an error silently in Tracer's own code: log it (pino in the collector, `[tracer]` logger in the agent) with a code and context, without captured values.
+- Never swallow an error silently in Tracer's own code: log it with a code and context, without captured values.
+- Before finishing a task, check the relevant rows in `user-flows.md` §7 and add a test for each edge case your code touches.
 - If behaviour for an edge case isn't specified, don't guess: ask, then record the answer in the right doc.
 
 ## Ask before changing
@@ -124,20 +106,18 @@ Stop and ask the human before you:
 - Move a feature between phases (MVP, v1, v2), or build something not in `implementation-plan.md`.
 - Delete or rewrite more than one file you weren't asked to change.
 
-When asking: say what you want to change, why, and what else it affects. After approval, update the doc first, then the code, and add a decision record in `docs/decisions/` for architecture or schema changes.
+When asking: say what you want to change, why, and what else it affects. After approval, update the doc first, then the code, and record architecture or schema decisions with `/new-decision`.
 
 ## Progress tracking
 
-**Update `docs/progress.md` after every task, in the same PR.**
-
-1. At the start: set the task to `🟡 In progress`, update **Current phase** / **Current task**, add it to **In progress**, and copy its "Done when" into the log entry.
-2. During the task: add any bug or issue you find (and don't fix in this task) to **Known bugs / issues**, and any decision made to **Decisions**.
-3. At the end: set it to `✅ Done` (or `⛔ Blocked` with the reason), remove it from **In progress**, update **Next steps**, and add a log entry with the date, task ID, what changed, tests added, decisions, bugs, and any follow-ups or new tasks discovered.
-4. If you split a task, add the new tasks to both `progress.md` and `implementation-plan.md`.
-5. Never mark a task done unless its "Done when" condition is met and all checks pass.
+Update `docs/progress.md` at the start and end of every task, in the same PR (`/start-task` and `/finish-task` do this). Never mark a task done unless its "Done when" condition is met and all checks pass. If you split a task, add the new tasks to both `progress.md` and `implementation-plan.md`.
 
 ## Commit and PR format
 
 - Branch: `task/<id>-<short-name>` (e.g. `task/2.3-database-setup`).
 - Commit messages: Conventional Commits (`feat(collector): add soft delete`, `fix(agent): …`, `test: …`, `docs: …`).
 - PR description: task ID, what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no).
+
+## Claude setup
+
+`.claude/` holds settings, hooks, rules, agents and skills. Planned changes to it are in `.claude/SETUP-ROADMAP.md`; `/start-task` checks it. When the same mistake happens twice, add a rule.
