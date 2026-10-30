@@ -1,0 +1,54 @@
+Proposed layout
+
+CLAUDE.md                    ← slim: ~60 lines, always loaded
+CLAUDE.local.md              ← your personal notes (gitignored)
+.claude/
+├── settings.json            ← team permissions + hooks (committed)
+├── settings.local.json      ← your personal overrides (gitignored)
+├── hooks/
+│   ├── session-context.sh   ← prints current phase/task/blockers from progress.md
+│   ├── guard-paths.sh       ← blocks schema/migration/token edits → forces "ask first"
+│   └── format.sh            ← runs Prettier on the edited file (no-op until task 0.3)
+├── rules/                   ← each loads ONLY when matching files are touched
+│   ├── agent.md             paths: packages/agent/**      (fail-open, no throws, no eval)
+│   ├── collector.md         paths: packages/collector/**  (error envelope, pino, Zod)
+│   ├── database.md          paths: **/db/**, **/migrations/**  (ask-before-schema, snake_case)
+│   ├── ui.md                paths: packages/ui/**         (tokens only, shadcn, a11y, "steps")
+│   ├── protocol.md          paths: packages/protocol/**
+│   └── testing.md           paths: **/*.test.ts, tests/**
+├── agents/
+│   ├── spec-reader.md       ← Haiku, read-only: "what does api-spec §8 say about X?" → returns the quote only
+│   ├── test-runner.md       ← Haiku: runs lint/typecheck/test/corpus, returns failures only
+│   └── reviewer.md          ← Sonnet, read-only: checks the diff against CLAUDE.md + the task's "Done when"
+└── skills/
+    ├── start-task/          ← /start-task 2.3 → reads the plan row, sets 🟡, creates task/2.3-… branch
+    ├── finish-task/         ← /finish-task → runs checks, updates progress.md, writes PR description
+    └── new-decision/        ← /new-decision → docs/decisions/NNNN-*.md + architecture table + progress
+How each part adapts
+Need	Mechanism	Effect
+Know where the project is	SessionStart hook reads progress.md and prints about 10 lines (phase, current task, blockers, next step)	Every session starts with up-to-date state, without reading the whole file
+Rules that fit the code being edited	paths: frontmatter in .claude/rules/*.md	UI rules never load during agent work, and the other way round
+Personal vs team preferences	~/.claude/ (you, all projects) → .claude/settings.json (team) → settings.local.json + CLAUDE.local.md (you, this project)	Each person adjusts their own setup without changing the shared files
+Learning from your corrections	Auto memory, plus a line in CLAUDE.md: "when corrected, propose a rule update"	The rules grow from real mistakes
+Enforcing "ask before changing"	PreToolUse hook that exits with code 2 on schema, migration or .env paths	Claude can't skip the rule, and it costs no tokens to remind it
+Token optimisation, ordered by impact
+Your specs are the biggest cost. Each is 27–38 KB, roughly 8–10k tokens. Never @import them into CLAUDE.md. Send spec questions through the spec-reader subagent: its reading happens in its own context window, and only the answer comes back.
+Slim down CLAUDE.md. It's about 8.6 KB now and loads on every turn. Keep the summary, repo map, commands and hard rules there. Move the UI, agent, DB and testing conventions into path-scoped rules.
+Pick models by task. Use Sonnet for normal coding, Opus for planning and checkpoints (or the opusplan alias), and Haiku for spec-reader and test-runner.
+Let a subagent run the tests. pnpm output is long and noisy. test-runner returns only the failures.
+Prefer skills over long rules. Only a skill's one-line description is always loaded; the body loads when you run it. Put disable-model-invocation: true on /start-task and /finish-task so they run only when you call them.
+Clear between tasks. Your "one task per session" rule fits this: run /clear after /finish-task, and the SessionStart hook sets up the next session.
+Keep MCP servers to a minimum. Each connected server adds tool definitions.
+Use permission allowlists. Allowing pnpm lint, typecheck, test:*, git status and git diff cuts prompts and back-and-forth. Denying Read on .env, *.db and node_modules/** stops accidental large or sensitive reads.
+When to add each part
+When	Add
+Now (before code)	Slim CLAUDE.md, settings.json, SessionStart hook, /start-task, /finish-task, /new-decision, spec-reader
+Tasks 0.2–0.5 (monorepo, lint, CI)	format.sh hook, pnpm permission allowlist, test-runner
+Phase 2 onward (each package created)	Its path-scoped rule file
+Checkpoints	reviewer agent
+On Gemini/Antigravity: keep the real rules in CLAUDE.md and .claude/rules/ for now. If you bring Gemini in later, you can point its own rules file at the same content instead of keeping two copies.
+
+I can build the "Now" set if you want. It covers the slim CLAUDE.md, settings.json, the session hook, the three skills and the spec-reader agent. I'd also update the "Docs" table in CLAUDE.md to point at the rules, and push it on a chore/claude-config branch.
+
+
+
