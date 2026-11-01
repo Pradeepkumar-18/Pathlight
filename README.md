@@ -1,14 +1,13 @@
-# Pathlight
+# Pathlight Tracker
 
 **Hit an endpoint and watch a live map of your code light up: every function the request passed through, and the real data at each step.**
 
-Pathlight is a local debug visualizer for Node.js / TypeScript backends. A runtime agent preloaded into your app records every function call, argument, return value and error for each request. A local collector stores it in SQLite and streams it to a map UI in your browser (a VS Code extension comes later).
+Pathlight Tracker (`pathlight-tracker` on npm) is a local debug visualizer for Node.js / TypeScript backends. A runtime agent preloaded into your app records every function call, argument, return value and error for each request. A local collector stores it in SQLite and streams it to a map UI in your browser (a VS Code extension comes later).
 
-> The specs use **Tracer** as the working name. The final product name is still an open decision (see [progress](Docs/progress.md#decisions)).
 
 ## Why
 
-AI writes much of our code now, and when it breaks nobody holds a mental model of it. Breakpoints and `console.log` need you to know where to look; APM tools show HTTP and DB spans, not the path through your own functions; static call graphs show what *could* run, not what did. Pathlight turns debugging from guessing into seeing.
+AI writes much of our code now, and when it breaks nobody holds a mental model of it. Breakpoints and `console.log` need you to know where to look; APM tools show HTTP and DB spans, not the path through your own functions; static call graphs show what *could* run, not what did. Pathlight Tracker turns debugging from guessing into seeing.
 
 ## Principles
 
@@ -25,7 +24,7 @@ AI writes much of our code now, and when it breaks nobody holds a mental model o
 Planned usage once the MVP ships:
 
 ```bash
-npx tracer dev -- <your start command>
+npx pathlight-tracker dev -- <your start command>
 ```
 
 ## Docs

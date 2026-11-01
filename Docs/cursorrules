@@ -1,4 +1,4 @@
-# Cursor rules for Tracer
+# Cursor rules for Pathlight Tracker
 
 The full rules for AI assistants in this repo are in `CLAUDE.md` at the repo root.
 Read `CLAUDE.md` completely at the start of every session and follow it exactly.
@@ -10,7 +10,7 @@ The most important rules, repeated here so they are never missed:
 2. Specs in `docs/` are the source of truth. If code and docs disagree, stop and ask.
 3. Ask before changing the database schema, architecture, API, env vars, design tokens or phase scope.
 4. Don't add any dependency without asking first; check the "Do not use" list in `docs/tech-stack.md`.
-5. TypeScript strict, no `any`; shared types only from `@tracer/protocol`; validate inputs with Zod.
+5. TypeScript strict, no `any`; shared types only from `@pathlight-tracker/protocol`; validate inputs with Zod.
 6. The agent must never throw into, slow down or change the behaviour of the user's app.
 7. Never log or send tokens or captured values; nothing leaves the machine.
 8. Write tests in the same change; run `pnpm lint && pnpm typecheck && pnpm test` before finishing.

@@ -1,6 +1,6 @@
-# Tracer: Tech Stack
+# Pathlight Tracker: Tech Stack
 
-Tracer is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
+Pathlight Tracker is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
 
 This document fixes the technology for every part of the system. Each checkpoint below has one decision, not a menu.
 
@@ -13,7 +13,7 @@ This document fixes the technology for every part of the system. Each checkpoint
 | Frontend framework + language + styling + UI library | React + Vite, TypeScript, Tailwind CSS, shadcn/ui (Radix primitives) + Lucide icons; Inter + JetBrains Mono; light and dark themes |
 | Backend / runtime / framework | Node.js; collector CLI with `commander` + Fastify; runtime agent with SWC + `pirates` + `AsyncLocalStorage` |
 | Database + ORM | SQLite via `better-sqlite3` + Drizzle ORM |
-| Auth provider | None (local only); random port + one-time token |
+| Auth provider | None (local only); fixed default port + per-project token |
 | State management + data fetching | Zustand for live state; native WebSocket for the live feed; TanStack Query for history over REST |
 | Third-party services | None in MVP (no payments, email, storage or AI); AI and MCP are future add-ons |
 | Hosting / deployment | No hosting: CLI on npm, extension on VS Code Marketplace + Open VSX, CI on GitHub Actions |
@@ -27,7 +27,7 @@ This document fixes the technology for every part of the system. Each checkpoint
 
 - **TypeScript end to end.** Agent, collector, UI and extension share one language and one set of types.
 - **Local only.** No backend server, cloud account, database server or user accounts. Everything runs on the developer's machine.
-- **Zero code changes in the traced project.** The agent is preloaded with `NODE_OPTIONS="--require @tracer/register"`; only the start command changes.
+- **Zero code changes in the traced project.** The agent is preloaded with `NODE_OPTIONS="--require @pathlight-tracker/agent"`; only the start command changes.
 - **Web app first, VS Code extension second.** Phase 1 ships a browser UI served by a local CLI. Phase 2 wraps the same collector and UI inside a VS Code extension.
 - **Host-agnostic core.** Agent, collector and UI never depend on the browser or VS Code directly; only a thin host adapter changes between phases.
 
@@ -47,7 +47,7 @@ This document fixes the technology for every part of the system. Each checkpoint
 | Part | What it does | Phase 1 (web) | Phase 2 (extension) |
 | --- | --- | --- | --- |
 | Runtime agent | Wraps functions, records calls, data, errors | Same | Same |
-| Collector | Receives events, builds trees, stores, serves UI | `npx tracer dev` | Spawned by the extension as a child Node process |
+| Collector | Receives events, builds trees, stores, serves UI | `npx pathlight-tracker dev` | Spawned by the extension as a child Node process |
 | Map UI | Draws the live map | Browser tab at `localhost` | Same React build in a webview |
 | Host adapter | Opens source files, launches the app | `vscode://file/...` links, CLI | VS Code editor and debug APIs |
 
@@ -74,7 +74,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Value inspector | Custom expandable JSON component | Shows redacted, truncated and suspicious (`undefined`) markers clearly |
 | Flow graph (v1) | **React Flow** (`@xyflow/react`) + **elkjs** | Auto-layout of boxes and arrows |
 | Timeline (v1) | Custom Canvas/SVG | Thousands of bars, zoom and pan |
-| Jump to source (Phase 1) | Editor link pattern, default `vscode://file/<path>:<line>` | Configurable for Cursor, WebStorm and others (`TRACER_EDITOR`) |
+| Jump to source (Phase 1) | Editor link pattern, default `vscode://file/<path>:<line>` | Configurable for Cursor, WebStorm and others (`PATHLIGHT_TRACKER_EDITOR`) |
 | Design reference | `tracer-design.md` + `tracer-ui-reference.png` | Approved three-panel layout |
 
 ---
@@ -115,7 +115,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Concern | Decision | Notes |
 | --- | --- | --- |
 | Runtime | **Node.js 24 LTS** (development and CLI) | Works on Node 20+ for users |
-| CLI framework | **`commander`** | `tracer dev -- <command>` |
+| CLI framework | **`commander`** | `pathlight-tracker dev -- <command>` |
 | HTTP framework | **Fastify** | Serves the UI, a small REST API (history, search) and WebSockets via `@fastify/websocket` |
 | Launch the user's app | `child_process.spawn` + `NODE_OPTIONS` | Works through `nest start --watch`, nodemon and restarts |
 | Open the browser | **`open`** | Cross-platform |
@@ -128,7 +128,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 
 | Concern | Decision | Notes |
 | --- | --- | --- |
-| Database | **SQLite** (one local file, e.g. `.tracer/traces.db`) | No database server |
+| Database | **SQLite** (one local file, e.g. `.pathlight-tracker/traces.db`) | No database server |
 | Driver | **`better-sqlite3`** | Fast, synchronous, works in a plain Node CLI |
 | ORM / query layer | **Drizzle ORM** (`drizzle-orm` + `drizzle-kit`) | Typed schema and queries, lightweight, built-in migrations |
 | Retention | Last 100 requests, auto-pruned (configurable) | Keeps the file small |
@@ -143,7 +143,7 @@ Tables: `sessions`, `requests` (with soft delete), `steps`, `object_refs`, `meta
 | Concern | Decision | Notes |
 | --- | --- | --- |
 | Auth provider | **None** | Single developer, local machine, no accounts |
-| Connection security | Collector binds to `127.0.0.1` only, random port, one-time token passed to the agent and UI | No other local program or network device can read trace data |
+| Connection security | Collector binds to `127.0.0.1` only, fixed default port, per-project token passed to the agent and UI | No other local program or network device can read trace data |
 | Future team features | Out of scope | Revisit only if sharing or cloud features are ever added |
 
 ---
@@ -164,11 +164,11 @@ Tables: `sessions`, `requests` (with soft delete), `steps`, `object_refs`, `meta
 
 ## 9. Hosting and deployment
 
-There is nothing to host: Tracer runs entirely on the developer's machine.
+There is nothing to host: Pathlight Tracker runs entirely on the developer's machine.
 
 | Concern | Decision |
 | --- | --- |
-| CLI and agent distribution | **npm** (`npx tracer dev -- <your command>`) |
+| CLI and agent distribution | **npm** (`npx pathlight-tracker dev -- <your command>`) |
 | Extension distribution (Phase 2) | **VS Code Marketplace** (`@vscode/vsce`) + **Open VSX** (`ovsx`) for Cursor and Windsurf users |
 | Extension bundling (Phase 2) | **esbuild** |
 | CI | **GitHub Actions** on Windows, macOS and Linux |
@@ -196,7 +196,7 @@ There is nothing to host: Tracer runs entirely on the developer's machine.
 Repo layout:
 
 ```
-tracer/
+pathlight-tracker/
 ├── packages/
 │   ├── agent/        # runtime agent (preloaded into the user's app)
 │   ├── protocol/     # shared event types and Zod schemas
@@ -280,19 +280,19 @@ Rules:
 
 | Add-on | Stack | When |
 | --- | --- | --- |
-| MCP server (AI assistants read Tracer data) | `@modelcontextprotocol/sdk` (TypeScript) | Optional, after v1 |
+| MCP server (AI assistants read Pathlight Tracker data) | `@modelcontextprotocol/sdk` (TypeScript) | Optional, after v1 |
 | AI explanation layer | Anthropic, OpenAI or Gemini SDK with the user's own key; compressed and redacted traces | After v2 |
 
 ---
 
-## 14. Using Tracer on a project (no code changes)
+## 14. Using Pathlight Tracker on a project (no code changes)
 
 ```bash
 # Normally:
 npm run start:dev
 
-# With Tracer:
-npx tracer dev -- npm run start:dev
+# With Pathlight Tracker:
+npx pathlight-tracker dev -- npm run start:dev
 ```
 
 - Source files on disk are never modified; functions are wrapped in memory at load time.

@@ -1,10 +1,10 @@
-# PRD: Tracer, a live request debug map for local Node.js development
+# PRD: Pathlight Tracker, a live request debug map for local Node.js development
 
 Oct 29, 2026 (updated Oct 30, 2026) · @Pradeep
 
 ## Overview and problem
 
-Tracer is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step. It runs as a browser app first (`npx tracer dev`), then inside VS Code as an extension. It is for local development only, never production.
+Pathlight Tracker is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step. It runs as a browser app first (`npx pathlight-tracker dev`), then inside VS Code as an extension. It is for local development only, never production.
 
 **The problem.** AI now writes much of our code. When that code breaks, nobody holds a mental model of it. The developer doesn't know:
 
@@ -26,17 +26,17 @@ It feels like opening a novel in the middle: things are happening, but you don't
 
 ## Core idea, goal and principles
 
-**Core idea: a live map of your request.** When you hit an API on your local server, Tracer draws, in real time (in a browser tab now, inside VS Code later), the path that request took through your code: every function it touched, in order, with the real data at each step. Think of a metro map that lights up station by station as the request travels, and at every station you can see what the passenger (your data) was carrying.
+**Core idea: a live map of your request.** When you hit an API on your local server, Pathlight Tracker draws, in real time (in a browser tab now, inside VS Code later), the path that request took through your code: every function it touched, in order, with the real data at each step. Think of a metro map that lights up station by station as the request travels, and at every station you can see what the passenger (your data) was carrying.
 
 **Goal: turn debugging from guessing into seeing.** A developer understands what AI-written code actually did, and finds where it broke, without adding logs or breakpoints, just by hitting the endpoint and watching.
 
 **Principles**
 
-1. **Observe, never change.** The app behaves exactly the same with or without Tracer. If tracing changes behaviour, the tool can't be trusted.
+1. **Observe, never change.** The app behaves exactly the same with or without Pathlight Tracker. If tracing changes behaviour, the tool can't be trusted.
 2. **Your code only.** Library code in `node_modules` is skipped; only its boundaries (DB, HTTP calls) are shown, so the map stays clean.
 3. **One request = one map.** Every recorded call belongs to exactly one request, even when many run concurrently across `await`s.
 4. **Local only.** For development, never production. Data never leaves the machine.
-5. **What first, why later.** Tracer answers "what really happened" completely. "Why the AI wrote it this way" is deferred to a later AI layer.
+5. **What first, why later.** Pathlight Tracker answers "what really happened" completely. "Why the AI wrote it this way" is deferred to a later AI layer.
 
 **Why local-only makes it simpler**
 
@@ -46,11 +46,11 @@ It feels like opening a novel in the middle: things are happening, but you don't
 | Performance overhead | Must be tiny | A 2–5× slowdown is acceptable while debugging |
 | Where data lives | Cloud backend, auth, multi-tenant | One SQLite file on your machine, no server, no login |
 | Security | Strict compliance rules | Still redact secrets, but data never leaves the laptop |
-| Deployment | Agents on many servers | One command: `npx tracer dev -- <your start command>` |
+| Deployment | Agents on many servers | One command: `npx pathlight-tracker dev -- <your start command>` |
 
 ## Questions the developer asks
 
-These ten questions are the product's real requirements: Tracer answers questions 1 to 9 with recorded facts, and leaves question 10 (intent) to a later AI layer.
+These ten questions are the product's real requirements: Pathlight Tracker answers questions 1 to 9 with recorded facts, and leaves question 10 (intent) to a later AI layer.
 
 | # | Developer's question | Book analogy | Example in code | Answered by |
 | --- | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ These ten questions are the product's real requirements: Tracer answers question
 | 4 | What data goes in and out? | What is each character carrying? | What's inside `user`, `cart`, `dto`? | Args and return values (MVP) |
 | 5 | Where does data change shape? | When did the character change? | DTO becomes entity, `null` appears | Changed-value highlight, data journey (v1 / v2) |
 | 6 | What touches the outside world? | Events with consequences | DB, Redis, Kafka, HTTP calls | Boundary nodes (MVP / v1) |
-| 7 | Which branch was taken, and why? | Which plot path happened? | Did `if (isPremium)` go true or false? | Condition tracking (v1) |
+| 7 | Which branch was taken, and why? | Which plot path happened? | Did `if (isPremium)` go true or false? | Condition tracking (MVP: `if` / `switch`; v1: ternary, `&&` / `\|\|`, `?.`) |
 | 8 | Where did it fail, and what led there? | The plot twist and its cause | Error plus the chain before it | Red error path (MVP) |
 | 9 | What's hidden or magic? | Off-page events | NestJS guards, pipes, interceptors | Framework nodes (MVP) |
 | 10 | Why does this code exist? | The author's intent | Why call `recalculateTax` twice? | Not answered; future AI layer |
@@ -69,7 +69,7 @@ These ten questions are the product's real requirements: Tracer answers question
 
 The primary user is a backend developer on Node/TypeScript who uses AI assistants daily and debugs locally.
 
-| Persona | Who they are | What hurts today | What they need from Tracer |
+| Persona | Who they are | What hurts today | What they need from Pathlight Tracker |
 | --- | --- | --- | --- |
 | AI-heavy backend dev (primary) | 1–5 years experience, NestJS or Express, ships mostly AI-generated code | Can't tell which functions ran or what data they got | One-command trace of a request with real values |
 | Onboarding developer | New to a codebase, often junior | Doesn't know the flow of an unfamiliar service | A live map of what a real request touches |
@@ -80,7 +80,7 @@ The primary user is a backend developer on Node/TypeScript who uses AI assistant
 
 ## Goals, non-goals and success metrics
 
-The MVP succeeds if a developer finds the cause of a bug faster with Tracer than with logs and breakpoints, with near-zero setup.
+The MVP succeeds if a developer finds the cause of a bug faster with Pathlight Tracker than with logs and breakpoints, with near-zero setup.
 
 **Goals**
 
@@ -105,18 +105,19 @@ The MVP succeeds if a developer finds the cause of a bug faster with Tracer than
 
 | Metric | Target | How we measure |
 | --- | --- | --- |
-| Time to first map after first run | under 2 minutes | Opt-in telemetry |
+| Time to first map after first run | under 2 minutes | Timed on a fresh machine (task 5.4) |
 | Map appears after request finishes | under 300 ms | Benchmark suite |
-| Maps viewed per active user per week | 10 or more | Opt-in telemetry |
-| Maps where the user opens a source line | 50% or more | Opt-in telemetry |
-| Week-4 retention | 25% or more | Opt-in telemetry |
+| Used on real projects | Weekly by the author for 4+ weeks after MVP | Personal log in `progress.md` |
+| Outside interest | Growing npm downloads, GitHub stars and issues | npm and GitHub stats |
+
+No usage stats are collected for now: this starts as a personal open-source project. Opt-in usage stats (off by default) are planned only after the product proves useful (Future, task 8.3).
 | App slowdown in trace mode | under 5× on typical endpoints | Benchmark suite |
 
 ## User journey and stories
 
 The core journey is four steps: start in trace mode, hit an endpoint, watch the map draw, jump into code.
 
-1. **Start.** The developer runs `npx tracer dev -- npm run start:dev` (web MVP), or clicks "Start with Tracer" in VS Code (extension phase). No code changes. The map opens in the browser.
+1. **Start.** The developer runs `npx pathlight-tracker dev -- npm run start:dev` (web MVP), or clicks "Start with Pathlight Tracker" in VS Code (extension phase). No code changes. The map opens in the browser.
 2. **Hit.** They call an endpoint from Postman, the browser or a test.
 3. **Watch.** The map draws live as the request runs: framework steps, each function with its arguments, return value, duration and errors, and DB/HTTP calls at the edges. The failing path turns red.
 4. **Jump.** Clicking a step shows its values in the inspector and opens that exact line in the editor. (Inline values next to the code arrive with the VS Code extension.)
@@ -168,13 +169,13 @@ All views read the same recording, so supporting many views is cheap on the back
 - **One primary view, others linked.** Selecting a step in any view selects it in all of them (the Chrome DevTools pattern).
 - **Don't build all four at once.** Four half-done views lose to one excellent one, and equal tabs confuse new users.
 - **Capture object IDs from day one.** Data journey ships later, but old recordings can't gain object identity retroactively.
-- **Decisions as a toggle layer.** Condition and loop markers (v1) can be switched on or off so the map stays clean.
+- **Decisions as a toggle layer.** Condition markers (`if` / `switch` in the MVP, expressions in v1) and loop markers (v1) can be switched on or off so the map stays clean.
 
 The approved visual design (three panels: request list, step tree, inspector) is in `tracer-design.md` and `tracer-ui-reference.png`.
 
 ## Tracking coverage
 
-The MVP records request in → framework steps → your functions with their data → DB and HTTP calls → errors → response out; conditions and summarized loops follow in v1.
+The MVP records request in → framework steps → your functions with their data → DB and HTTP calls → errors → response out, plus `if` / `else if` / `switch` conditions; expression conditions (ternary, `&&` / `||`, `?.`) and summarized loops follow in v1.
 
 **1. The request (entry and exit)**
 
@@ -253,7 +254,8 @@ Conditions are recorded with the branch taken and the values that decided it; lo
 
 | What | What the map shows | Phase |
 | --- | --- | --- |
-| `if / else`, `switch`, ternary, `&&` / `\|\|`, `?.` | Branch taken + the values in the condition, e.g. `if (user.tier === 'gold') → false, user.tier = undefined` | v1 (MVP stretch) |
+| `if / else if`, `switch` | Branch taken + the values in the condition, e.g. `if (user.tier === 'gold') → false, user.tier = undefined` | MVP |
+| Ternary, `&&` / `\|\|`, `?.` | Same, for expression conditions | v1 |
 | `for`, `while`, `for...of`, `.forEach` / `.map` | Iteration count and time; details kept only for first, last, failing and unusual-branch iterations | v1 |
 | Executed lines (coverage-style highlight) | Which lines ran inside a function | v2 |
 
@@ -274,7 +276,7 @@ MVP requirements prove the live map; v1 makes it a daily debugging tool; v2 wide
 
 | ID | Area | Requirement | Phase |
 | --- | --- | --- | --- |
-| FR-1 | Launch | Start the app in trace mode with one command (`npx tracer dev -- <command>`) and no code changes | MVP |
+| FR-1 | Launch | Start the app in trace mode with one command (`npx pathlight-tracker dev -- <command>`) and no code changes | MVP |
 | FR-2 | Live | Stream call events to the map UI while the request runs and draw the map live | MVP |
 | FR-3 | Capture | Record every call into user code (not `node_modules`): name, file, line, args, return value, error, duration, parent | MVP |
 | FR-4 | Capture | Group calls by request, correctly across `await` and concurrent requests | MVP |
@@ -282,7 +284,7 @@ MVP requirements prove the live map; v1 makes it a daily debugging tool; v2 wide
 | FR-6 | Capture | Record request in (method, path, params, body) and response out (status, body) | MVP |
 | FR-7 | Framework | Show NestJS middleware, guards, interceptors, pipes, handler and filters, and Express middleware and handlers, as steps | MVP |
 | FR-8 | Boundaries | Show DB queries (Mongoose, TypeORM, Prisma) and outgoing HTTP calls with what was sent and returned | MVP |
-| FR-9 | Errors | Capture thrown, swallowed and unhandled-rejection errors; highlight the path to them | MVP |
+| FR-9 | Errors | Capture thrown, swallowed and unhandled-rejection errors. The red error path leads to errors that reached the response (unhandled, or turned into a 5xx); swallowed errors are marked "Caught" (violet), not red | MVP |
 | FR-10 | Capture | Assign object IDs to captured objects (for the v2 data journey) | MVP |
 | FR-11 | Safety | Redact sensitive keys (password, token, authorization, secret) by default, before storing | MVP |
 | FR-12 | Safety | Cap value depth, array length and string length; handle circular references; never call getters | MVP |
@@ -295,8 +297,16 @@ MVP requirements prove the live map; v1 makes it a daily debugging tool; v2 wide
 | FR-35 | UI | Follow latest (auto-open new requests) and Pin (keep the current request open) | MVP |
 | FR-36 | Onboarding | Waiting screen with agent status, an example curl command and "Load sample data" | MVP |
 | FR-37 | UI | Copy link to a request or step, and copy a request as cURL | MVP |
-| FR-38 | Config | Configurable editor link pattern for Open in code (VS Code by default; Cursor, WebStorm and others) | MVP |
-| FR-16 | Decisions | Record branch taken and condition values for `if`, `switch`, ternary, `&&`, `\|\|`, `?.`; toggleable layer | v1 (MVP stretch) |
+| FR-38 | Config | Editor for Open in code chosen in Settings (VS Code by default; Cursor, WebStorm and others); stored in the browser, which builds the link | MVP |
+| FR-41 | CLI | `pathlight-tracker doctor` checks the setup (Node version, module type, source maps, port) and prints fixes | MVP |
+| FR-42 | CLI | `pathlight-tracker clear` deletes recordings (through the running collector when there is one) | MVP |
+| FR-43 | UI | Sessions menu and "app restarted" dividers in the request list | MVP |
+| FR-44 | UI | Request list filters: path text and "errors only" | MVP |
+| FR-45 | UI | Settings: theme, editor, follow-latest default | MVP |
+| FR-46 | UI | Layout for laptop and desktop widths (1100 px and up) | MVP |
+| FR-47 | UI | Saved and pasted links keep working after the app or collector restarts | MVP |
+| FR-16 | Decisions | Record branch taken and condition values for `if`, `else if` and `switch`; toggleable layer | MVP |
+| FR-48 | Decisions | Same for ternary, `&&`, `\|\|` and `?.` | v1 |
 | FR-17 | Decisions | Summarize loops: count, time, and first, last, failing and unusual iterations | v1 |
 | FR-18 | Capture | Collapse repeated callbacks (`.map`, `.forEach`) into one node with a count | v1 |
 | FR-19 | Capture | Detect arguments mutated inside a function (before vs after) | v1 |
@@ -306,6 +316,9 @@ MVP requirements prove the live map; v1 makes it a daily debugging tool; v2 wide
 | FR-23 | UI | Search and filter within a map (function, file, value) | v1 |
 | FR-24 | UI | Compare two requests side by side and highlight differences | v1 |
 | FR-25 | Config | Include/exclude files and add custom redaction rules | v1 |
+| FR-49 | UI | More request list filters (method, slow, route, state, session, date range, sort by duration) | v1 |
+| FR-50 | UI | More settings: row density, show framework steps, show timings, config viewer with sources, copy config (`GET /config`) | v1 |
+| FR-51 | Misc | UI error logs endpoint, in-memory database fallback, trash size limit, `o + Enter` to reopen the browser, `--quiet` flag, truncation header | v1 |
 | FR-39 | UI | Logs tab showing `console.log` output captured during the request, attached to the step that printed it | v1 |
 | FR-40 | Extension | VS Code extension: one-click start, the same map in a webview, inline values next to code, CodeLens | v2 |
 | FR-26 | UI | Data journey: follow one value through every function and mark where it changed | v2 |
@@ -314,10 +327,12 @@ MVP requirements prove the live map; v1 makes it a daily debugging tool; v2 wide
 | FR-29 | Decisions | Coverage-style highlight of executed lines | v2 |
 | FR-30 | Export | Export a map as JSON or a shareable report | v2 |
 | FR-31 | AI | Plain-language explanation of a map ("why"), grounded in recorded data | Future |
+| FR-52 | Metrics | Opt-in usage stats, off by default, documented payload, never captured values or paths | Future |
+| FR-53 | UI | Tablet and phone layouts | Future |
 
 ## Non-functional requirements
 
-Tracer must never change how the user's code behaves, and must keep their data on their machine.
+Pathlight Tracker must never change how the user's code behaves, and must keep their data on their machine.
 
 | Area | Requirement |
 | --- | --- |
@@ -325,21 +340,21 @@ Tracer must never change how the user's code behaves, and must keep their data o
 | Correctness | Condition probes must preserve short-circuit evaluation (`&&`, `\|\|`, `?.`) and evaluate each expression exactly once |
 | Performance | Under 5× slowdown on typical endpoints in trace mode; zero overhead when trace mode is off |
 | Performance | Loops never store per-iteration data beyond the summarized samples |
-| Live latency | New steps appear in the map within ~100 ms of happening; the full map within 300 ms of the response |
+| Live latency | New steps appear in the map live while the request runs (no fixed millisecond target; it varies with load); the full map within 300 ms of the response |
 | Performance | The map opens a 5,000-step request in under 1 second |
-| Privacy | All data stored locally (SQLite); nothing leaves the machine |
+| Privacy | All data stored locally (SQLite); nothing leaves the machine (no telemetry) |
 | Privacy | Redaction applied before data is stored or streamed |
 | Safety | Capturing values never triggers getters, `toJSON` or lazy DB loads |
-| Reliability | A tracer failure must never crash the user's app; it degrades to "not traced" |
+| Reliability | A pathlight-tracker failure must never crash the user's app; it degrades to "not traced" |
 | Compatibility | Node 20+, TypeScript, CommonJS; modern Chrome, Edge, Firefox and Safari for the map UI; VS Code 1.85+ for the extension phase; Windows, macOS, Linux |
 | Storage | Keep the last 100 requests by default, configurable; older ones move to a trash and are permanently deleted after 72 hours |
 | Accessibility | WCAG 2.2 AA: contrast, full keyboard use, screen-reader labels (see `tracer-design.md` §10) |
 
 ## Competitive landscape
 
-AppMap is the closest existing tool and must be tried hands-on before building; Tracer's angle is live, data-first, NestJS-aware and built for understanding AI-written code.
+AppMap is the closest existing tool and must be tried hands-on before building; Pathlight Tracker's angle is live, data-first, NestJS-aware and built for understanding AI-written code.
 
-| Tool or category | What it does | Gap Tracer fills |
+| Tool or category | What it does | Gap Pathlight Tracker fills |
 | --- | --- | --- |
 | [AppMap](https://github.com/getappmap/appmap) | Records runtime behaviour without code changes (function calls, return values, exceptions, HTTP, SQL); VS Code; supports Node.js; stores locally; sequence diagrams; now focused on its AI assistant | Mostly record-then-open (to verify hands-on); not data-first; not NestJS-layer focused |
 | Static call graphs ([Graph-It-Live](https://github.com/magic5644/Graph-It-Live/wiki), [Chartographer](https://marketplace.visualstudio.com/items?itemName=ArpinFidel.chartographer)) | Show which functions can call which, from reading code | No runtime truth: not what ran, not the data |
@@ -348,14 +363,14 @@ AppMap is the closest existing tool and must be tried hands-on before building; 
 | APM (Datadog, OpenTelemetry) | Request spans, DB/HTTP timing in production | No path through your own functions or their values |
 | AI coding assistants | Read and explain code | Reason statically; guess at runtime behaviour |
 
-**Where Tracer differs**
+**Where Pathlight Tracker differs**
 
 1. **Live:** the map draws as the request runs, not as a file opened afterward.
 2. **Data-first:** focused on where data changed, with conditions explaining why a path was taken.
 3. **NestJS-aware:** guards, pipes, interceptors and filters as first-class steps.
 4. **Built for AI-written code:** the pitch is understanding code you didn't write.
 
-**Biggest threats:** AppMap adding a live, data-first view; AI coding assistants adding runtime awareness. Defence: depth on Node/NestJS, capture accuracy, and possibly exposing Tracer's data to assistants through MCP.
+**Biggest threats:** AppMap adding a live, data-first view; AI coding assistants adding runtime awareness. Defence: depth on Node/NestJS, capture accuracy, and possibly exposing Pathlight Tracker's data to assistants through MCP.
 
 ## Release plan
 
@@ -364,10 +379,10 @@ Ship the smallest loop that proves value (hit an endpoint, watch the live map, j
 | Phase | Theme | What ships | Gate to move on |
 | --- | --- | --- | --- |
 | **Validation** | Is the gap real? | AppMap tried hands-on; capture spike proves wrapping works on NestJS | Go / adjust decision; behaviour corpus green; slowdown under 5× |
-| **MVP (web app)** | Live request map | `npx tracer dev`; Express + NestJS (CommonJS); live step tree with real values; framework steps; DB and HTTP boundaries; errors incl. swallowed; inspector; trash; light and dark; redaction; local SQLite | First map in under 2 minutes on a fresh machine |
-| **v1** | Daily debugging tool | Conditions and loop summaries; flow graph and timeline; compare two requests; search; Logs tab; test runs, Redis, Kafka; custom rules | 25% week-4 retention |
+| **MVP (web app)** | Live request map | `npx pathlight-tracker dev`; Express + NestJS (CommonJS); live step tree with real values; framework steps; DB and HTTP boundaries; errors incl. swallowed; inspector; trash; light and dark; redaction; local SQLite; `if` / `switch` conditions; Prisma; `doctor` and `clear` | First map in under 2 minutes on a fresh machine |
+| **v1** | Daily debugging tool | Expression conditions and loop summaries; flow graph and timeline; compare two requests; search; Logs tab; test runs, Redis, Kafka; custom rules; extra filters and settings | Used weekly by the author on real projects; outside interest growing |
 | **v2** | VS Code and wider reach | VS Code extension (same UI, inline values, CodeLens); ESM and bundlers; Fastify and Next.js; Kafka consumers and cron jobs; data journey; export | Extension adoption and retention |
-| **Future** | AI on top of real data | MCP server for AI assistants; AI explanation layer | Core proven |
+| **Future** | AI on top of real data | MCP server for AI assistants; AI explanation layer; opt-in usage stats; tablet and phone layouts | Core proven |
 
 Each phase starts only when the previous gate is met. The task-level breakdown is in `tracer-implementation-plan.md`.
 
@@ -401,9 +416,8 @@ The biggest risks are technical (instrumenting arbitrary AI-written code safely)
 
 **Open questions**
 
-- Should conditions be in the MVP or wait for v1?
-- Free and open-source, freemium, or paid?
-- Should Tracer expose its data through MCP so Claude Code or Cursor can read real runtime data?
+- Which open-source licence: MIT or Apache-2.0? (Decided: open source.)
+- Should Pathlight Tracker expose its data through MCP so Claude Code or Cursor can read real runtime data?
 - When the core is proven, in which phase should the AI explanation layer return?
 
 ## Related documents

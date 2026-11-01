@@ -1,8 +1,8 @@
-# Tracer: Design (UI/UX)
+# Pathlight Tracker: Design (UI/UX)
 
-Tracer is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
+Pathlight Tracker is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
 
-This document is the visual and interaction system for the map UI. The approved reference is the three-panel light design in `tracer-ui-reference.png` (request list · step tree · inspector). Explored alternatives are on the **Tracer UI variants** canvas.
+This document is the visual and interaction system for the map UI. The approved reference is the three-panel light design in `tracer-ui-reference.png` (request list · step tree · inspector). Explored alternatives are on the **Pathlight Tracker UI variants** canvas.
 
 Related docs: `tracer-user-flows.md` (screens and states), `tracer-architecture.md` (UI modules), `tracer-tech-stack.md` (React, Tailwind, shadcn/ui).
 
@@ -107,7 +107,7 @@ Small uppercase badges after the step name. Neutral badges keep the tree calm; o
 | `HANDLER`, `CONTROLLER`, `SERVICE`, `REPOSITORY`, `FN` | Your code (layer, see note) | `#4B5563` / `#F3F4F6` / none | `#B4BAC6` / `#1C2029` |
 | `DB` | Database boundary | `#15803D` / `#F0FDF4` / `#86EFAC` | `#86EFAC` / `#10261B` |
 | `HTTP` | Outgoing HTTP boundary | `#0369A1` / `#F0F9FF` / `#7DD3FC` | `#7DD3FC` / `#0E2433` |
-| `IF`, `SWITCH`, `LOOP` (v1) | Decisions and loops | `#92400E` / `#FFFBEB` / `#FDE68A` | `#FCD34D` / `#2E2410` |
+| `IF`, `SWITCH` (MVP), `LOOP` (v1) | Decisions and loops | `#92400E` / `#FFFBEB` / `#FDE68A` | `#FCD34D` / `#2E2410` |
 
 **Layer badge rule:** for `method` steps the badge is derived in the UI from the class name suffix (`…Controller` → CONTROLLER, `…Service` → SERVICE, `…Repository` / `…Repo` → REPOSITORY); anything else shows `FN`. No database change is needed.
 
@@ -225,7 +225,7 @@ Flat by default. Shadows only for floating layers:
 | `Skeleton` | Loading rows |
 | `Separator` | Dividers |
 
-### 5.2 Tracer components
+### 5.2 Pathlight Tracker components
 
 | Component | What it is | Key states |
 | --- | --- | --- |
@@ -287,8 +287,8 @@ Flat by default. Shadows only for floating layers:
 
 | Item | Behaviour |
 | --- | --- |
-| Logo + "Tracer" | Goes to the request list |
-| Project name ▾ | Shows the project folder name; the menu lists sessions (app restarts) and "Open .tracer folder". Not a project switcher (one collector = one project) |
+| Logo + "Pathlight Tracker" | Goes to the request list |
+| Project name ▾ | Shows the project folder name; the menu lists sessions (app restarts). Not a project switcher (one collector = one project) |
 | Connection pill | §5.2 `ConnectionPill` |
 | Agent info | `Agent pid 48213 · NestJS`; tooltip with Node version and agent version |
 | Search | Opens the `Ctrl K` command palette (v1 search; in MVP it searches loaded requests and steps) |
@@ -296,7 +296,7 @@ Flat by default. Shadows only for floating layers:
 | Trash | Goes to `/trash`, with a count badge when not empty |
 | Settings | Goes to `/settings` |
 
-There is **no user avatar**: Tracer has no accounts.
+There is **no user avatar**: Pathlight Tracker has no accounts.
 
 ### 6.3 Map content
 
@@ -314,7 +314,7 @@ There is **no user avatar**: Tracer has no accounts.
 
 ## 7. Responsive behaviour
 
-Tracer is **desktop-first** (it runs next to your editor), but every screen works down to phone width.
+Pathlight Tracker is **desktop-first** (it runs next to your editor), but every screen works down to phone width.
 
 | Width | Layout |
 | --- | --- |
@@ -341,7 +341,7 @@ Rules at every size:
 | Default | Follow the operating system (`prefers-color-scheme`) |
 | Override | Settings → Theme: System / Light / Dark, remembered per browser |
 | Implementation | Tokens as CSS variables on `:root` and `[data-theme="dark"]`; Tailwind `darkMode: ["class", '[data-theme="dark"]']` |
-| Phase 2 | In VS Code, follow the editor theme by mapping tokens to VS Code theme variables (`--vscode-editor-background`, etc.); status colours stay Tracer's own so meaning never changes |
+| Phase 2 | In VS Code, follow the editor theme by mapping tokens to VS Code theme variables (`--vscode-editor-background`, etc.); status colours stay Pathlight Tracker's own so meaning never changes |
 | Rule | No component may hard-code a colour; every new colour is a token with both light and dark values, checked for contrast |
 
 ---
@@ -351,7 +351,7 @@ Rules at every size:
 | Reference | Where |
 | --- | --- |
 | **Approved main screen** (request list · step tree · inspector) | `tracer-ui-reference.png` |
-| Explored directions A–D (Midnight IDE, Paper, Signal, Metro map) with palettes | **Tracer UI variants** design canvas |
+| Explored directions A–D (Midnight IDE, Paper, Signal, Metro map) with palettes | **Pathlight Tracker UI variants** design canvas |
 | Screen list, states and flows | `tracer-user-flows.md` |
 
 ### Differences between the reference image and this spec
@@ -401,7 +401,7 @@ The reference is followed closely; these items are adjusted on purpose:
 
 ```
 ┌─────────────────────────────────────────────┐
-│ Connect to your Tracer session              │
+│ Connect to your Pathlight Tracker session              │
 │ Open the link printed in your terminal, or  │
 │ paste the token here:                       │
 │ [ token                       ] [Connect]   │
@@ -460,7 +460,7 @@ Rule: text ≥ 4.5 : 1, icons and control borders ≥ 3 : 1. Decorative dividers
 - The step tree uses the ARIA `treegrid` pattern: rows have `aria-level`, `aria-expanded`, `aria-selected`; columns have headers.
 - The request list is a `listbox` with `aria-selected` on the active row.
 - Live updates: one polite `aria-live` region announces "New request POST /orders, 500" and "Request finished"; it does **not** announce every streamed step.
-- Each route sets the page `<title>` (e.g. "POST /orders 500 · Tracer").
+- Each route sets the page `<title>` (e.g. "POST /orders 500 · Pathlight Tracker").
 
 ### Keyboard
 

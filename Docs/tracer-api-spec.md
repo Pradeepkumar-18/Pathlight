@@ -1,6 +1,6 @@
-# Tracer: API Spec
+# Pathlight Tracker: API Spec
 
-Tracer's backend is the **collector**, a local Node process started by `npx tracer dev`. It exposes:
+Pathlight Tracker's backend is the **collector**, a local Node process started by `npx pathlight-tracker dev`. It exposes:
 
 - a **REST API** under `/api/v1` (used by the map UI, later the VS Code extension and an MCP server), and
 - two **WebSocket channels**: `/agent` (runtime agent → collector) and `/live` (collector → UI).
@@ -30,7 +30,7 @@ Related docs: `tracer-architecture.md` (§4 auth, §6 API approach), `tracer-dat
 
 | Topic | Rule |
 | --- | --- |
-| Base URL | `http://127.0.0.1:<port>` (random port per run, or `TRACER_PORT`) |
+| Base URL | `http://127.0.0.1:<port>` (fixed default port, next free if busy, or `PATHLIGHT_TRACKER_PORT`) |
 | Version | REST under `/api/v1`; every WebSocket message carries `v` (protocol version, currently `1`) |
 | Format | JSON (`Content-Type: application/json; charset=utf-8`), except `…/curl` which returns `text/plain` |
 | Field names | camelCase |
@@ -39,7 +39,7 @@ Related docs: `tracer-architecture.md` (§4 auth, §6 API approach), `tracer-dat
 | Durations and offsets | Nanoseconds as **strings** (`"durationNs": "84000000"`) to avoid JavaScript number precision loss |
 | Captured values | Always the `CapturedValue` shape (§4.1); already redacted and truncated by the agent |
 | Validation | Every request and message is validated with Zod schemas from `packages/protocol` |
-| Response headers | `X-Tracer-Version: 0.1.0`, `Cache-Control: no-store` on all `/api` responses |
+| Response headers | `X-Pathlight-Tracker-Version: 0.1.0`, `Cache-Control: no-store` on all `/api` responses |
 | Trash | Soft-deleted requests are hidden from every endpoint except the trash endpoints, unless `includeDeleted=true` is passed where noted |
 
 ---
@@ -82,13 +82,13 @@ Related docs: `tracer-architecture.md` (§4 auth, §6 API approach), `tracer-dat
 
 ## 3. Auth
 
-Tracer has **no users and no roles**. Every protected call must prove it belongs to the current collector run.
+Pathlight Tracker has **no users and no roles**. Every protected call must prove it belongs to the current collector run.
 
 | Mechanism | Detail |
 | --- | --- |
-| Token | 32 random bytes (base64url), generated each time the collector starts; given to the agent via `TRACER_TOKEN` and to the UI via the URL fragment `#token=…` |
+| Token | 32 random bytes (base64url), generated once per project and kept in `.pathlight-tracker/` so links survive restarts (architecture §11 #19); given to the agent via `PATHLIGHT_TRACKER_TOKEN` and to the UI via the URL fragment `#token=…` |
 | REST | `Authorization: Bearer <token>` |
-| WebSocket | Browsers cannot set headers on WebSockets, so both channels pass the token as a subprotocol: `new WebSocket(url, ["tracer.v1", "bearer.<token>"])`. The server answers with subprotocol `tracer.v1` |
+| WebSocket | Browsers cannot set headers on WebSockets, so both channels pass the token as a subprotocol: `new WebSocket(url, ["pathlight-tracker.v1", "bearer.<token>"])`. The server answers with subprotocol `pathlight-tracker.v1` |
 | Origin check | `/api/*` and `/live` accept only `Origin: http://127.0.0.1:<port>` or `http://localhost:<port>` (Phase 2: the VS Code webview origin). `/agent` must send **no** `Origin` (it is a Node process, not a browser) |
 | Host check | `Host` must be `127.0.0.1:<port>` or `localhost:<port>` (blocks DNS rebinding) |
 | Network | Server binds `127.0.0.1` only |
@@ -210,7 +210,7 @@ type StepDetail = StepSummary & {
   error: { type: string; message: string; stack: StackFrame[]; file: string | null; line: number | null } | null;
   detail: Record<string, unknown> | null;   // boundary / decision / loop / guard / pipe detail (data-model §6)
   calledBy: { id: string; name: string } | null;
-  editorUrl: string | null;       // built from TRACER_EDITOR, e.g. "vscode://file/…:22:3"
+  editorUrl: string | null;       // built from PATHLIGHT_TRACKER_EDITOR, e.g. "vscode://file/…:22:3"
 };
 
 type StackFrame = { fn: string | null; file: string; line: number; column: number; internal: boolean };
@@ -233,7 +233,7 @@ type ApiError = {
 
 ### 5.1 `GET /api/v1/health`
 
-Collector status, used by the header connection pill and `tracer doctor`.
+Collector status, used by the header connection pill and `pathlight-tracker doctor`.
 
 **Params:** none.
 
@@ -253,7 +253,7 @@ Collector status, used by the header connection pill and `tracer doctor`.
 }
 ```
 
-`storage.mode` is `"memory"` when `.tracer/` could not be written (data is lost when the collector stops).
+`storage.mode` is `"memory"` when `.pathlight-tracker/` could not be written (data is lost when the collector stops).
 
 **Errors:** `401`, `403`, `429`.
 
@@ -587,7 +587,7 @@ curl -X POST 'http://localhost:3000/orders' \
   --data-raw '{"userId":7,"items":[{"sku":"A1","qty":2},{"sku":"B4","qty":1}]}'
 ```
 
-If the body was truncated during capture, the response adds the header `X-Tracer-Truncated: true` and the UI warns that the command is incomplete.
+If the body was truncated during capture, the response adds the header `X-Pathlight-Tracker-Truncated: true` and the UI warns that the command is incomplete.
 
 **Errors:** `401`, `403`, `404 REQUEST_NOT_FOUND`, `404 REQUEST_IN_TRASH`, `409 REQUEST_IN_PROGRESS`, `429`.
 
@@ -864,7 +864,7 @@ WebSocket close codes:
 
 ## 10. Rate limits and size limits
 
-Tracer is local, so limits exist to protect the collector from runaway scripts or loops, not to meter usage.
+Pathlight Tracker is local, so limits exist to protect the collector from runaway scripts or loops, not to meter usage.
 
 | Scope | Limit | Behaviour when exceeded |
 | --- | --- | --- |
@@ -875,7 +875,7 @@ Tracer is local, so limits exist to protect the collector from runaway scripts o
 | `/agent` connections | 32 open at once (one per app process) | Close `4029` |
 | `/agent` message (one batch) | 1 MB and 2,000 events | Close `4013`; agent splits batches below this |
 | `/agent` throughput | No hard limit; **backpressure** instead | When ingest falls behind, collector sends `slow_down`; agent collapses repeated calls and drops low-priority events until `resume` |
-| Steps per request | `TRACER_MAX_STEPS` (default 5,000) | Recording stops; request marked `truncated` |
+| Steps per request | `PATHLIGHT_TRACKER_MAX_STEPS` (default 5,000) | Recording stops; request marked `truncated` |
 
 Implementation: `@fastify/rate-limit` for REST; manual counters for WebSocket connections.
 
@@ -887,7 +887,7 @@ All messages are JSON objects with `type` and `v`. Messages are validated with Z
 
 ### 11.1 `WS /agent` (agent → collector)
 
-Connect with subprotocols `["tracer.v1", "bearer.<token>"]`.
+Connect with subprotocols `["pathlight-tracker.v1", "bearer.<token>"]`.
 
 **Agent → collector**
 
@@ -924,7 +924,7 @@ Event types inside a batch: `request.start`, `step.enter`, `step.exit`, `step.th
 
 ### 11.2 `WS /live` (collector → UI)
 
-Connect with subprotocols `["tracer.v1", "bearer.<token>"]`.
+Connect with subprotocols `["pathlight-tracker.v1", "bearer.<token>"]`.
 
 **UI → collector**
 

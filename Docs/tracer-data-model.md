@@ -1,6 +1,6 @@
-# Tracer: Data Model
+# Pathlight Tracker: Data Model
 
-Tracer stores traced requests in **one local SQLite file** (`.tracer/traces.db`), owned by the collector. This document defines every table, field, key, index, enum, timestamp rule, access rule and the seed data.
+Pathlight Tracker stores traced requests in **one local SQLite file** (`.pathlight-tracker/traces.db`), owned by the collector. This document defines every table, field, key, index, enum, timestamp rule, access rule and the seed data.
 
 Related docs: `tracer-architecture.md` (event flow, API), `tracer-tech-stack.md` (SQLite, `better-sqlite3`, Drizzle ORM).
 
@@ -32,7 +32,7 @@ Related docs: `tracer-architecture.md` (event flow, API), `tracer-tech-stack.md`
 | `object_refs` | Appearance of a captured object in a step (argument, return value, `this`, thrown) | Written from MVP, read by the data journey in v2 |
 | `meta` | Key/value setting or schema info for the database | MVP |
 
-There is no `users` table: Tracer is a single-developer, local-only tool with no accounts.
+There is no `users` table: Pathlight Tracker is a single-developer, local-only tool with no accounts.
 
 `requests` supports **soft delete** (a trash the developer can restore from); trashed requests are permanently purged after a grace period. See §7.
 
@@ -93,7 +93,7 @@ One row per traced request.
 | `has_error` | INTEGER | Yes | `0` | `1` if any error occurred (thrown, swallowed, unhandled) |
 | `error_step_id` | TEXT | No | `NULL` | Step where the first error was thrown (not a FK, see §4) |
 | `step_count` | INTEGER | Yes | `0` | Steps stored for this request |
-| `truncated` | INTEGER | Yes | `0` | `1` if `TRACER_MAX_STEPS` was hit |
+| `truncated` | INTEGER | Yes | `0` | `1` if `PATHLIGHT_TRACKER_MAX_STEPS` was hit |
 | `request_json` | TEXT | Yes | — | `{ params, query, body, headers }` as captured values, redacted |
 | `response_json` | TEXT | No | `NULL` | `{ headers, body }` as captured values, redacted |
 | `started_at` | INTEGER | Yes | — | Epoch ms |
@@ -295,7 +295,7 @@ When the developer deletes a request, it moves to the **trash** (`deleted_at` is
 | Steps of a trashed request | The API returns `404 REQUEST_NOT_FOUND` for its steps unless called with `includeDeleted=true` (used by the trash preview). |
 | Live updates | Soft-deleting or restoring sends `live.request.deleted` / `live.request.restored` so every open UI updates. |
 | Restore | Sets `deleted_at = NULL`. If retention would then exceed the limit, the oldest **active** request is moved to the trash, never purged straight away. |
-| Grace period | `TRACER_TRASH_TTL_HOURS` (default **72 hours**). The purge job hard-deletes requests whose `deleted_at` is older than this. |
+| Grace period | `PATHLIGHT_TRACKER_TRASH_TTL_HOURS` (default **72 hours**). The purge job hard-deletes requests whose `deleted_at` is older than this. |
 | Permanent delete | Explicit "Delete permanently" or "Empty trash" hard-deletes immediately (cascade), skipping the grace period. |
 | Privacy | Purged rows are gone; the collector then runs `PRAGMA incremental_vacuum` so deleted values do not linger in free pages of the file. |
 
@@ -304,13 +304,13 @@ How rows are removed:
 | Trigger | Type | What happens |
 | --- | --- | --- |
 | `DELETE /api/v1/requests/:requestId` (UI "Delete") | **Soft** | Sets `deleted_at` on one request |
-| `DELETE /api/v1/requests` / `tracer clear` (UI "Clear all") | **Soft** | Sets `deleted_at` on all finished active requests |
+| `DELETE /api/v1/requests` / `pathlight-tracker clear` (UI "Clear all") | **Soft** | Sets `deleted_at` on all finished active requests |
 | `POST /api/v1/requests/:requestId/restore` | Restore | Clears `deleted_at` |
 | `DELETE /api/v1/requests/:requestId?permanent=true` | **Hard** | Deletes the request, its steps and object refs immediately |
-| `DELETE /api/v1/trash` / `tracer clear --purge` (UI "Empty trash") | **Hard** | Deletes every trashed request immediately |
-| Purge job (on startup, then hourly) | **Hard** | Deletes trashed requests older than `TRACER_TRASH_TTL_HOURS` |
-| Retention (after each completed request) | **Soft** first | Moves the oldest **active** requests beyond `TRACER_RETENTION` (default 100) to the trash; the purge job removes them later |
-| Trash size guard | **Hard** | If the trash holds more than `TRACER_RETENTION` requests, the oldest trashed ones are purged early, so the file cannot grow without limit |
+| `DELETE /api/v1/trash` / `pathlight-tracker clear --purge` (UI "Empty trash") | **Hard** | Deletes every trashed request immediately |
+| Purge job (on startup, then hourly) | **Hard** | Deletes trashed requests older than `PATHLIGHT_TRACKER_TRASH_TTL_HOURS` |
+| Retention (after each completed request) | **Soft** first | Moves the oldest **active** requests beyond `PATHLIGHT_TRACKER_RETENTION` (default 100) to the trash; the purge job removes them later |
+| Trash size guard | **Hard** | If the trash holds more than `PATHLIGHT_TRACKER_RETENTION` requests, the oldest trashed ones are purged early, so the file cannot grow without limit |
 | Session cleanup | **Hard** | Disconnected sessions with no remaining requests (active or trashed) |
 
 Example queries:
@@ -334,7 +334,7 @@ DELETE FROM requests WHERE deleted_at IS NOT NULL AND deleted_at < :now - :ttlMs
 
 ## 8. Access rules
 
-Only the **collector** opens the database. Every other part goes through the collector's API. The database file is created with owner-only permissions (`0600`; `.tracer/` folder `0700`).
+Only the **collector** opens the database. Every other part goes through the collector's API. The database file is created with owner-only permissions (`0600`; `.pathlight-tracker/` folder `0700`).
 
 | Actor | `sessions` | `requests` | `steps` | `object_refs` | `meta` |
 | --- | --- | --- | --- | --- | --- |
@@ -346,8 +346,8 @@ Only the **collector** opens the database. Every other part goes through the col
 | Collector REST API | Read (`/health`) | Read active; read trash; soft delete; restore; hard delete (`permanent=true`, empty trash) | Read (only for active requests, or with `includeDeleted=true`) | Read (v2) | — |
 | Map UI | Read via API | Read, soft delete, restore, delete permanently, empty trash via API | Read via API | Read via API (v2) | — |
 | VS Code extension (Phase 2) | Read via API | Read active via API | Read via API | Read via API | — |
-| CLI (`tracer clear`) | — | Soft delete all finished requests | — | — | — |
-| CLI (`tracer clear --purge`) | Delete | Hard delete all (active and trashed) | Delete (cascade) | Delete (cascade) | Update |
+| CLI (`pathlight-tracker clear`) | — | Soft delete all finished requests | — | — | — |
+| CLI (`pathlight-tracker clear --purge`) | Delete | Hard delete all (active and trashed) | Delete (cascade) | Delete (cascade) | Update |
 | Migrations | Schema only | Schema only | Schema only | Schema only | Create, update `schema_version` |
 
 API calls require the local token and pass origin checks (see `tracer-architecture.md` §4). There are no per-user or per-role rules, because there is only one user.
@@ -624,7 +624,7 @@ What the seed demonstrates:
 | DB boundary nodes | `stp_…06`, `stp_…13` |
 | Error path in red (`on_error_path = 1`) | `stp_…03`, `stp_…04`, `stp_…08`, `stp_…09` |
 | Error handling values | `propagated` (service), `converted` (handler → 500) |
-| Decision row (v1) | `stp_…09`: `user.tier === 'gold'` → `false` because `user.tier` is `undefined` |
+| Decision row (MVP) | `stp_…09`: `user.tier === 'gold'` → `false` because `user.tier` is `undefined` |
 | Data journey (v2) | `obj_3` (User) returned by `findById`, then passed into `calculateDiscount` |
 | A successful request for comparison | `req_…02` (`GET /orders/42`, 200) |
 | Soft delete (in the trash, restorable) | `req_…03` (`GET /health`) with `deleted_at` set, and its step `stp_…14` |

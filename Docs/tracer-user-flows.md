@@ -1,6 +1,6 @@
-# Tracer: User Flows
+# Pathlight Tracker: User Flows
 
-Tracer is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
+Pathlight Tracker is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
 
 This document defines every screen, the main journeys step by step, navigation, connection ("logged-in vs logged-out") behaviour, empty/loading/error states and edge cases. It covers **Phase 1 (CLI + browser UI)**; Phase 2 (VS Code extension) differences are in §9.
 
@@ -20,7 +20,7 @@ Related docs: PRD, `tracer-architecture.md` (API, auth, events), `tracer-data-mo
 | Empty, loading and error states | §6 |
 | Edge cases (invalid input, no permission, network fail) | §7 |
 
-**About signup:** Tracer has **no signup, login or accounts** (local, single-developer tool). The "signup + onboarding" journey is the **first run**: install-free `npx` command → browser opens → first map. "Logged in" means **the browser holds a valid session token** for the running collector (§5).
+**About signup:** Pathlight Tracker has **no signup, login or accounts** (local, single-developer tool). The "signup + onboarding" journey is the **first run**: install-free `npx` command → browser opens → first map. "Logged in" means **the browser holds a valid session token** for the running collector (§5).
 
 ---
 
@@ -30,9 +30,9 @@ Related docs: PRD, `tracer-architecture.md` (API, auth, events), `tracer-data-mo
 
 | ID | Screen | Command | Phase |
 | --- | --- | --- | --- |
-| T1 | Dev session | `npx tracer dev -- <your command>` | MVP |
-| T2 | Doctor (setup check) | `npx tracer doctor` | MVP |
-| T3 | Clear | `npx tracer clear` / `npx tracer clear --purge` | MVP |
+| T1 | Dev session | `npx pathlight-tracker dev -- <your command>` | MVP |
+| T2 | Doctor (setup check) | `npx pathlight-tracker doctor` | MVP |
+| T3 | Clear | `npx pathlight-tracker clear` / `npx pathlight-tracker clear --purge` | MVP |
 
 ### 1b. Browser UI
 
@@ -63,7 +63,7 @@ The approved design is `tracer-ui-reference.png`; visual rules are in `tracer-de
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Tracer  shop-api ▾  ● Connected  Agent pid 48213 · NestJS     [Search…  Ctrl K]   🗑   ⚙      │
+│ Pathlight Tracker  shop-api ▾  ● Connected  Agent pid 48213 · NestJS     [Search…  Ctrl K]   🗑   ⚙      │
 ├───────────────────────┬────────────────────────────────────────────────┬──────────────────────┤
 │ Requests  ◉ Follow    │ POST /orders  500  84 ms · 9 steps · 12:04:58  │ calculateDiscount    │
 │ [Filter…        ] [⚲] │                [Copy link] [Open in code] [⋯]  │ SERVICE              │
@@ -95,7 +95,7 @@ Goal: from nothing to a first live map in under 2 minutes, with no code changes.
 
 | # | Where | User does | System does |
 | --- | --- | --- | --- |
-| 1 | Terminal | Runs `npx tracer dev -- npm run start:dev` in their project | Downloads Tracer if needed; creates `.tracer/`, adds it to `.gitignore` (prints a notice); opens SQLite; starts collector on `127.0.0.1:<random port>`; generates token |
+| 1 | Terminal | Runs `npx pathlight-tracker dev -- npm run start:dev` in their project | Downloads Pathlight Tracker if needed; creates `.pathlight-tracker/`, adds it to `.gitignore` (prints a notice); opens SQLite; starts collector on `127.0.0.1:<random port>`; generates token |
 | 2 | Terminal | — | Runs pre-checks (Node version, CommonJS, source maps). Warnings printed but not blocking; blocking problems stop here (see J8) |
 | 3 | Terminal | — | Spawns the user's command with the agent preloaded; forwards the app's own output unchanged; prints the UI URL |
 | 4 | Browser | (Browser opens automatically) | Opens `http://127.0.0.1:<port>/#token=…`; UI stores the token, removes it from the address bar, connects `/live` |
@@ -107,12 +107,12 @@ Goal: from nothing to a first live map in under 2 minutes, with no code changes.
 Terminal output for steps 1–3:
 
 ```
-$ npx tracer dev -- npm run start:dev
+$ npx pathlight-tracker dev -- npm run start:dev
 
-  Tracer 0.1.0
+  Pathlight Tracker 0.1.0
   ✓ Node v24.10.0
   ✓ CommonJS + TypeScript, source maps on
-  ✓ Added .tracer/ to .gitignore
+  ✓ Added .pathlight-tracker/ to .gitignore
 
   Map UI:  http://127.0.0.1:52341   (opening in your browser…)
   Running: npm run start:dev  (agent attached)
@@ -177,18 +177,18 @@ $ npx tracer dev -- npm run start:dev
 | --- | --- | --- |
 | 1 | Tab closed, collector still running | User reopens the URL printed in the terminal (it includes the token) → connects straight away |
 | 2 | Typed `http://127.0.0.1:<port>` without the token | S1 Connect screen asks for the token, shown in the terminal (`Token: 7Kq…` with a "copy link" hint) |
-| 3 | Collector stopped (Ctrl+C) and started again | New port and token; the old tab shows S8 "Collector stopped"; the new run opens a new tab. History is still there (stored in `.tracer/traces.db`) |
+| 3 | Collector stopped (Ctrl+C) and started again | New port and token; the old tab shows S8 "Collector stopped"; the new run opens a new tab. History is still there (stored in `.pathlight-tracker/traces.db`) |
 
 ### J8. Setup problem (doctor)
 
 | # | Screen | User does | System does |
 | --- | --- | --- | --- |
-| 1 | T1 | Runs `tracer dev` in an unsupported project (e.g. `"type": "module"`) | Prints a clear blocking message and the next step, does **not** start the app |
-| 2 | T2 | Runs `npx tracer doctor` | Lists every check with ✓ / ⚠ / ✗ and a fix for each |
+| 1 | T1 | Runs `pathlight-tracker dev` in an unsupported project (e.g. `"type": "module"`) | Prints a clear blocking message and the next step, does **not** start the app |
+| 2 | T2 | Runs `npx pathlight-tracker doctor` | Lists every check with ✓ / ⚠ / ✗ and a fix for each |
 | 3 | T1 | Fixes warnings (e.g. turns on `sourceMap`), re-runs | Starts normally |
 
 ```
-$ npx tracer doctor
+$ npx pathlight-tracker doctor
   ✓ Node v24.10.0 (supported: 20+)
   ✓ TypeScript project
   ⚠ tsconfig.json: "sourceMap" is off → steps will show compiled .js lines.
@@ -213,7 +213,7 @@ $ npx tracer doctor
 
 | Shows | Actions |
 | --- | --- |
-| Tracer version, pre-check results, UI URL, token hint, the user's app output (unchanged), Tracer warnings prefixed `[tracer]`, a one-line summary per finished request (optional, `--quiet` hides) | `Ctrl+C` stops the app and the collector (forwards the signal to the app first); `o` + Enter reopens the UI in the browser |
+| Pathlight Tracker version, pre-check results, UI URL, token hint, the user's app output (unchanged), Pathlight Tracker warnings prefixed `[pathlight-tracker]`, a one-line summary per finished request (optional, `--quiet` hides) | `Ctrl+C` stops the app and the collector (forwards the signal to the app first); `o` + Enter reopens the UI in the browser |
 
 ### T2. Doctor
 
@@ -225,13 +225,13 @@ $ npx tracer doctor
 
 | Shows | Actions |
 | --- | --- |
-| `tracer clear`: "Moved 37 requests to the trash (restorable for 72 h)". `tracer clear --purge`: confirmation prompt with counts, then "Deleted permanently" | `--yes` skips the prompt |
+| `pathlight-tracker clear`: "Moved 37 requests to the trash (restorable for 72 h)". `pathlight-tracker clear --purge`: confirmation prompt with counts, then "Deleted permanently" | `--yes` skips the prompt |
 
 ### S1. Connect (token gate)
 
 | Shows | Actions |
 | --- | --- |
-| "Connect to your Tracer session", explanation that the link with the token is in the terminal, a token field | Paste token → **Connect**; link "Where do I find this?" (shows the terminal line) |
+| "Connect to your Pathlight Tracker session", explanation that the link with the token is in the terminal, a token field | Paste token → **Connect**; link "Where do I find this?" (shows the terminal line) |
 
 ### S2. Waiting for first request (onboarding)
 
@@ -249,7 +249,7 @@ $ npx tracer doctor
 
 | Shows | Actions |
 | --- | --- |
-| Header: method chip, path, status badge, duration · step count · start time. Tabs: **Trace** (MVP), Graph, Timeline, Logs (v1). Status legend (Success, Error, In progress, Caught). Step table with columns Step · Status · Duration · ⋯: chevron, error-path dot, step name, kind/layer badge (GUARD, PIPE, HANDLER, SERVICE, DB, IF…), inline return value with suspicious values highlighted, ✓/✕/spinner, duration, collapsed-count badge, redacted/truncated markers, indent guide lines. Error path auto-expanded. Truncation note if `TRACER_MAX_STEPS` was hit. Banner if the request is incomplete | Expand / collapse (click, `←`/`→`), **Expand error path** (`e`), **Collapse all**, select step (`↑`/`↓`), switch tab, header actions: **Copy link**, **Open in code** (handler), `⋯` → **Copy as cURL**, **Delete**; row `⋯` → Open in code, Copy value, Follow this object (v2) |
+| Header: method chip, path, status badge, duration · step count · start time. Tabs: **Trace** (MVP), Graph, Timeline, Logs (v1). Status legend (Success, Error, In progress, Caught). Step table with columns Step · Status · Duration · ⋯: chevron, error-path dot, step name, kind/layer badge (GUARD, PIPE, HANDLER, SERVICE, DB, IF…), inline return value with suspicious values highlighted, ✓/✕/spinner, duration, collapsed-count badge, redacted/truncated markers, indent guide lines. Error path auto-expanded. Truncation note if `PATHLIGHT_TRACKER_MAX_STEPS` was hit. Banner if the request is incomplete | Expand / collapse (click, `←`/`→`), **Expand error path** (`e`), **Collapse all**, select step (`↑`/`↓`), switch tab, header actions: **Copy link**, **Open in code** (handler), `⋯` → **Copy as cURL**, **Delete**; row `⋯` → Open in code, Copy value, Follow this object (v2) |
 
 ### S5. Step inspector (right panel)
 
@@ -267,19 +267,19 @@ $ npx tracer doctor
 
 | Shows | Actions |
 | --- | --- |
-| Read-only: active config (include/exclude, redaction keys, limits, retention, trash TTL) with where each value came from (default / env / config file). Editable UI preferences: theme (system/light/dark), density, follow latest by default, show framework steps, show timings | Change UI preferences (saved in the browser); **Copy config as `tracer.config.json`** |
+| Read-only: active config (include/exclude, redaction keys, limits, retention, trash TTL) with where each value came from (default / env / config file). Editable UI preferences: theme (system/light/dark), density, follow latest by default, show framework steps, show timings | Change UI preferences (saved in the browser); **Copy config as `pathlight-tracker.config.json`** |
 
 ### S8. Collector stopped / disconnected (overlay)
 
 | Shows | Actions |
 | --- | --- |
-| "Reconnecting…" with attempt counter (temporary drop), or "Tracer stopped. Start it again with `npx tracer dev -- …`" (collector gone). Already-loaded data stays visible and greyed | **Retry now**; continue browsing loaded data read-only |
+| "Reconnecting…" with attempt counter (temporary drop), or "Pathlight Tracker stopped. Start it again with `npx pathlight-tracker dev -- …`" (collector gone). Already-loaded data stays visible and greyed | **Retry now**; continue browsing loaded data read-only |
 
 ### S9. Version mismatch
 
 | Shows | Actions |
 | --- | --- |
-| "This page was loaded from an older Tracer version" or "Agent and collector versions don't match", with the update command | **Reload**; copy update command |
+| "This page was loaded from an older Pathlight Tracker version" or "Agent and collector versions don't match", with the update command | **Reload**; copy update command |
 
 ### S10. Not found
 
@@ -351,9 +351,9 @@ There are no accounts. Access is controlled by the **one-time token** for the cu
 | --- | --- | --- | --- |
 | **Connected** ("logged in") | Opened the URL with `#token`, or pasted a valid token in S1 | Full app; header shows ● Connected | Everything |
 | **No token** ("logged out") | Opened `http://127.0.0.1:<port>` without the token, or a new tab without `sessionStorage` | S1 Connect | Paste the token; nothing else loads (no data is sent without a token) |
-| **Invalid token** | Wrong or mistyped token | S1 with error "This token doesn't match the running Tracer session" | Retry |
-| **Expired token** | Collector was restarted (new token); old tab still open | S8 "Tracer was restarted. Open the new link from your terminal." | Open the new link; old data stays visible read-only until then |
-| **Collector unreachable** | Collector stopped or crashed | S8 "Tracer stopped" | Retry; browse already-loaded data read-only |
+| **Invalid token** | Wrong or mistyped token | S1 with error "This token doesn't match the running Pathlight Tracker session" | Retry |
+| **Expired token** | Collector was restarted (new token); old tab still open | S8 "Pathlight Tracker was restarted. Open the new link from your terminal." | Open the new link; old data stays visible read-only until then |
+| **Collector unreachable** | Collector stopped or crashed | S8 "Pathlight Tracker stopped" | Retry; browse already-loaded data read-only |
 | **Wrong origin** | Page loaded from another site or host (e.g. a malicious page) | Requests rejected by the collector (`403 ORIGIN_NOT_ALLOWED`); no data | None, by design |
 
 Session rules:
@@ -375,7 +375,7 @@ Session rules:
 | S3 | Filter matches nothing | "No requests match 'payments'" + **Clear filter** |
 | S3 | All requests moved to trash | "No requests. Deleted ones are in the Trash (37)" + link |
 | S4 | Request has no steps from user code (e.g. served by a static file middleware) | "This request didn't run any of your code" + shows the request and response only |
-| S4 | Request has steps but all files were excluded | "Your code for this request is excluded by TRACER_EXCLUDE" + link to S7 |
+| S4 | Request has steps but all files were excluded | "Your code for this request is excluded by PATHLIGHT_TRACKER_EXCLUDE" + link to S7 |
 | S5 | No step selected | "Select a step to see its values" |
 | S5 | Function with no arguments / void return | "No arguments" / "Returned undefined" |
 | S6 | Trash empty | "Trash is empty. Deleted requests stay here for 72 hours." |
@@ -399,14 +399,14 @@ Session rules:
 | Error | Where shown | Message | Recovery |
 | --- | --- | --- | --- |
 | Live connection dropped | S8 overlay (non-blocking for 5 s, then visible) | "Reconnecting… (attempt 3)" | Auto-retry with backoff; **Retry now** |
-| Collector stopped | S8 | "Tracer stopped. Start it again with `npx tracer dev -- …`" | Read-only browsing of loaded data |
+| Collector stopped | S8 | "Pathlight Tracker stopped. Start it again with `npx pathlight-tracker dev -- …`" | Read-only browsing of loaded data |
 | REST call failed | Toast or in-panel | "Couldn't load this request (COLLECTOR_ERROR). Retry" | **Retry** |
 | Request not found | S10 in map panel | "This request no longer exists" | Back to list |
 | Request in trash | S10 | "This request is in the trash" | **Restore** |
 | Agent auto-disabled | Header banner (yellow) + terminal | "Tracing turned off for pid 48213 after internal errors. Your app is unaffected." | Restart the app; link to logs |
-| Agent can't reach collector | Terminal `[tracer]` warning; UI shows "App not connected" | "Your app is running but not sending traces" | Check that both run from the same `tracer dev` command |
+| Agent can't reach collector | Terminal `[pathlight-tracker]` warning; UI shows "App not connected" | "Your app is running but not sending traces" | Check that both run from the same `pathlight-tracker dev` command |
 | Request incomplete (app crashed / restarted) | Badge on row + banner in S4 | "This request didn't finish: the app stopped while it was running" | Shows everything recorded up to that point |
-| Step limit reached | Note at the cut point in S4 | "Recording stopped after 5,000 steps (TRACER_MAX_STEPS)" | Change the limit in config |
+| Step limit reached | Note at the cut point in S4 | "Recording stopped after 5,000 steps (PATHLIGHT_TRACKER_MAX_STEPS)" | Change the limit in config |
 | Version mismatch | S9 | "Agent 0.2 and collector 0.1 don't match" | Update command |
 | UI panel crashed | That panel only (error boundary) | "This panel hit an error. Reload panel" | **Reload panel**; other panels keep working |
 
@@ -420,9 +420,9 @@ Session rules:
 | --- | --- |
 | Malformed URL id (`/requests/abc`) | S10 "Not found"; no crash |
 | Pasted token with spaces or quotes | Trimmed automatically before checking |
-| Invalid `tracer.config.json` (bad JSON or unknown keys) | Terminal: clear error with file and line; falls back to defaults for that file; collector still starts |
-| Invalid env value (`TRACER_MAX_DEPTH=abc`) | Terminal warning; default used |
-| `tracer dev` with no command after `--` | Usage help: `tracer dev -- <your start command>` |
+| Invalid `pathlight-tracker.config.json` (bad JSON or unknown keys) | Terminal: clear error with file and line; falls back to defaults for that file; collector still starts |
+| Invalid env value (`PATHLIGHT_TRACKER_MAX_DEPTH=abc`) | Terminal warning; default used |
+| `pathlight-tracker dev` with no command after `--` | Usage help: `pathlight-tracker dev -- <your start command>` |
 | Search with special characters (v1) | Treated as plain text, never as a regex or SQL |
 | Captured string containing HTML or script | Rendered as text; never executed |
 | Huge value (e.g. 50 MB buffer) | Captured as a summary ("Buffer, 50 MB, truncated"); never sent in full |
@@ -436,8 +436,8 @@ Session rules:
 | --- | --- |
 | Missing or invalid token | S1 Connect / invalid token message (§5) |
 | Request from another website (wrong `Origin`) | Rejected `403`; nothing displayed |
-| Port in use (`TRACER_PORT` fixed) | Terminal: "Port 4000 is in use. Remove TRACER_PORT to use a random port." |
-| No write permission for `.tracer/` | Terminal error with path; falls back to in-memory storage for this run with a warning |
+| Port in use (`PATHLIGHT_TRACKER_PORT` fixed) | Terminal: "Port 4000 is in use. Remove PATHLIGHT_TRACKER_PORT to use the default port." |
+| No write permission for `.pathlight-tracker/` | Terminal error with path; falls back to in-memory storage for this run with a warning |
 | `vscode://` links not handled (VS Code not installed, or link handler blocked) | After clicking **Open in code**, show the path with **Copy path** as fallback; Settings lets the user pick another editor URL pattern (e.g. Cursor, WebStorm) |
 | Source file moved or deleted since the request | Open in code still tries; inspector notes "File may have changed since this request" if the file's timestamp is newer than the request |
 | Delete pressed on an in-progress request | Button disabled with tooltip "Wait until the request finishes" |
@@ -472,7 +472,7 @@ Session rules:
 | Setup checks | ✓ (`doctor`, pre-checks) | Warnings shown in S7 |
 | See requests, maps, values | Summary line only | ✓ |
 | Delete / restore / empty trash | `clear`, `clear --purge` | ✓ |
-| Configuration | Env vars, `tracer.config.json` | Read-only view (S7) |
+| Configuration | Env vars, `pathlight-tracker.config.json` | Read-only view (S7) |
 | Open source code | — | ✓ (`vscode://` links) |
 
 ---
@@ -481,7 +481,7 @@ Session rules:
 
 | Area | Phase 1 (browser) | Phase 2 (VS Code) |
 | --- | --- | --- |
-| Start | `npx tracer dev -- …` in a terminal | **Start with Tracer** command / status bar button; picks the start script from `package.json` |
+| Start | `npx pathlight-tracker dev -- …` in a terminal | **Start with Pathlight Tracker** command / status bar button; picks the start script from `package.json` |
 | Connect (S1) | Token in URL fragment | Not shown: the extension passes the token to the webview directly |
 | Workspace (S3/S4/S5) | Browser tab | Webview panel beside the editor (same UI) |
 | Open in code | `vscode://` link | Direct editor API; opens in the same window |

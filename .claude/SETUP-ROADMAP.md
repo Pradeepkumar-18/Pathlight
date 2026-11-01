@@ -29,7 +29,7 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 | ⬜ | 0.3 | Add `PostToolUse` hook on `Edit\|Write`: run Prettier on the edited file (plain bash parsing like `ask-before-change.sh`, no jq) | Formatting without spending tokens on it |
 | ⬜ | 0.4 | Add `test-runner` agent (Haiku): runs the checks and returns only failures; use it in `/finish-task` | Test output is long; keeps it out of the main context |
 | ⬜ | 0.4 | Add `.claude/rules/testing.md` for `**/*.test.ts` and `tests/**` with the conventions the testing setup establishes (runner, file placement, fixtures) | Test conventions only become real in 0.4 |
-| ⬜ | 0.7 | Docs move: replace `Docs/tracer-*.md` paths and the "Until task 0.7" notes in `CLAUDE.md`, all agents, skills and `session-context.sh`; move `Docs/learning/` and `Docs/analysis/` to `docs/`; `Docs/cursorrules` → root `.cursorrules`; decide where `vibe-coding-setup-guide.md` lives | Paths change |
+| ⬜ | 0.7 | Docs move: replace `Docs/tracer-*.md` paths and the "Until task 0.7" notes in `CLAUDE.md`, all agents, skills and `session-context.sh`; move `Docs/learning/`, `Docs/analysis/` and `Docs/decisions/` to `docs/`; `Docs/cursorrules` → root `.cursorrules`; decide where `vibe-coding-setup-guide.md` lives | Paths change |
 | ⬜ | 0.7 | Point `.cursorrules` at the same rules (`.claude/rules/`) so nothing is duplicated | One source of truth |
 | ⬜ | Checkpoint 0 | Run `product-analyst` on the whole product (gap vs AppMap and others) before committing to Phase 1 | Cheapest moment to change direction |
 | ⬜ | 2.1 | Add `.claude/rules/protocol.md` once conventions are real; after 2.1, add `packages/protocol/` to `ask-before-change.sh` (changes = event protocol = architecture) | Not guarded during creation to avoid prompt noise |
@@ -37,7 +37,7 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 | ⬜ | Phase 3 | Re-check `agent.md` rule; make `test-runner` include `pnpm test:corpus` for agent changes | Corpus is the safety net |
 | ⬜ | 4.1 | Re-check `ui.md` rule paths and theme path; consider a `design-check` agent comparing screens to `design.md` | UI work starts |
 | ⬜ | Each checkpoint | Trim `CLAUDE.md` (keep under ~150 lines), prune rules nobody needs, review memory, review this file; run `product-analyst` on the next phase | Keeps always-loaded context small |
-| ⬜ | Name decision | If "Pathlight" is final: `/new-decision`, then rename Tracer in docs, `README.md`, `CLAUDE.md`, rules, agents, skills, `@tracer/*` packages, `TRACER_` env vars, the `tracer dev` CLI (before Phase 2 if possible); if not final, rename the GitHub repo instead | Cheaper before code exists |
+| ✅ | Name decision | Done 2026-11-01: renamed to `pathlight-tracker` in docs, README, CLAUDE.md, rules and agents (decision 0003). Optional: rename the GitHub repo to `pathlight-tracker` | Cheaper before code exists |
 | ⬜ | 7.1 | Add `.claude/rules/extension.md` for `packages/extension/**` | VS Code extension work |
 | ⬜ | 8.1 | Add project `.mcp.json` to use Pathlight's own MCP server while developing it | Dogfooding |
 | ⬜ | Gemini / Antigravity joins | Add its rules file pointing to `CLAUDE.md` + `.claude/rules/` instead of copying them | One source of truth |

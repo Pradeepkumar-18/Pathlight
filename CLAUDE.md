@@ -4,7 +4,7 @@ Rules for AI coding assistants working in this repo. Package-specific rules load
 
 ## Project summary
 
-**Tracer** (working name) is a local developer debug visualizer for Node.js/TypeScript backends. A runtime agent preloaded into the user's app records every function call, value and error for each request; a local collector stores it in SQLite and streams it to a React map UI, so developers can see exactly what AI-written code did. Local only, never production; web app first, VS Code extension later.
+**Pathlight Tracker** (working name) is a local developer debug visualizer for Node.js/TypeScript backends. A runtime agent preloaded into the user's app records every function call, value and error for each request; a local collector stores it in SQLite and streams it to a React map UI, so developers can see exactly what AI-written code did. Local only, never production; web app first, VS Code extension later.
 
 ## Docs: what to read and when
 
@@ -31,7 +31,7 @@ The specs are large: read only the sections a task needs (or ask the `spec-reade
 ```
 packages/protocol    Shared types + Zod schemas (depends on nothing)
 packages/agent       Runtime agent preloaded into the user's app
-packages/collector   CLI (`tracer dev`), Fastify server, SQLite store, ingest, live hub, REST API
+packages/collector   CLI (`pathlight-tracker dev`), Fastify server, SQLite store, ingest, live hub, REST API
 packages/ui          React map UI (browser now, VS Code webview later)
 packages/extension   VS Code extension (Phase 2 only)
 fixtures/            nestjs-app, express-app, seed data
@@ -47,28 +47,28 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | --- | --- |
 | Install | `pnpm install` |
 | Build all | `pnpm build` |
-| Run the UI dev server (against seed data) | `pnpm --filter @tracer/ui dev` |
-| Run Tracer on a fixture | `pnpm dev:nest` / `pnpm dev:express` |
+| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` |
+| Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` |
 | Load seed data | `pnpm seed` |
-| Unit tests | `pnpm test` (one package: `pnpm --filter @tracer/<pkg> test`) |
+| Unit tests | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
 | Behaviour corpus | `pnpm test:corpus` |
 | End-to-end tests | `pnpm test:e2e` |
 | Benchmarks | `pnpm bench` |
 | Lint / typecheck / format | `pnpm lint` · `pnpm typecheck` · `pnpm format` |
-| DB migration from schema | `pnpm --filter @tracer/collector db:generate` |
+| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` |
 
 Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (plus `pnpm test:corpus` for any agent change, `pnpm test:e2e` for any UI or API change).
 
 ## Coding conventions
 
 - TypeScript everywhere, `strict: true`. No `any`; use `unknown` and narrow. No `@ts-ignore` (use `@ts-expect-error` with a reason if truly needed).
-- Shared shapes come from `@tracer/protocol`. Never redefine an event, API or value type locally.
+- Shared shapes come from `@pathlight-tracker/protocol`. Never redefine an event, API or value type locally.
 - Validate every external input (agent events, REST params and bodies, config, env) with Zod.
 - Files and folders: `kebab-case`. Variables and functions: `camelCase`; types, classes, React components: `PascalCase`; constants: `UPPER_SNAKE_CASE`.
-- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`, `obj_`). Env vars: `TRACER_` prefix. JSON and API fields: `camelCase`.
+- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`, `obj_`). Env vars: `PATHLIGHT_TRACKER_` prefix. JSON and API fields: `camelCase`.
 - UI wording says **steps**, never "spans".
 - One module, one job. Keep files under ~300 lines. Named exports only (no default exports unless a framework requires it).
-- Imports ordered: Node built-ins, external packages, `@tracer/*`, relative.
+- Imports ordered: Node built-ins, external packages, `@pathlight-tracker/*`, relative.
 - Comments explain *why*, not *what*. No commented-out code.
 - Tests live next to the code: `foo.ts` → `foo.test.ts`.
 
@@ -90,7 +90,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 
 ## Errors and edge cases
 
-- Never swallow an error silently in Tracer's own code: log it with a code and context, without captured values.
+- Never swallow an error silently in Pathlight Tracker's own code: log it with a code and context, without captured values.
 - Before finishing a task, check the relevant rows in `user-flows.md` §7 and add a test for each edge case your code touches.
 - If behaviour for an edge case isn't specified, don't guess: ask, then record the answer in the right doc.
 
