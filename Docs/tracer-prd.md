@@ -416,7 +416,6 @@ The biggest risks are technical (instrumenting arbitrary AI-written code safely)
 
 **Open questions**
 
-- Which open-source licence: MIT or Apache-2.0? (Decided: open source.)
 - Should Pathlight Tracker expose its data through MCP so Claude Code or Cursor can read real runtime data?
 - When the core is proven, in which phase should the AI explanation layer return?
 

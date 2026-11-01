@@ -51,7 +51,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Product and package name: `pathlight-tracker` everywhere ("Pathlight Tracker" in prose) | ✅ Decided | `decisions/0003-product-name.md` |
 | 2026-11-01 | Conditions: `if` / `else if` / `switch` in the MVP (3.14, 4.17); ternary, `&&` / `\|\|`, `?.` in v1 | ✅ Decided | `decisions/0004-conditions-scope.md` |
 | 2026-11-01 | Open source | ✅ Decided | `decisions/0005-open-source.md` |
-| 2026-11-01 | Licence: MIT or Apache-2.0. Needed by 0.2 | ❓ Open | `decisions/0005-open-source.md` |
+| 2026-11-01 | Licence: MIT | ✅ Decided | `decisions/0005-open-source.md` |
 | 2026-11-01 | No usage stats for now; success = own weekly use + npm / GitHub interest; opt-in stats later (8.3) | ✅ Decided | `decisions/0006-no-usage-stats-yet.md` |
 | 2026-11-01 | Prisma in the MVP (Express fixture) | ✅ Decided | `decisions/0007-prisma-in-mvp.md` |
 | 2026-11-01 | MVP extras placed by phase: MVP / v1 (6.14) / hidden / dropped / Future (8.4) | ✅ Decided | `decisions/0008-mvp-scope-split.md` |
@@ -68,8 +68,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 1. 0.1 Validate against AppMap → `docs/decisions/0001-appmap-validation.md`
 2. 0.2 Create the monorepo
-3. Choose the licence (MIT or Apache-2.0) before 0.2
-4. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
+3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
 ---
 
@@ -246,7 +245,7 @@ Newest first. One entry per task (or checkpoint). Template:
 ### 2026-11-01 · Spec audit decisions
 - What changed: product renamed to `pathlight-tracker` across all docs, `CLAUDE.md`, rules and agents; 14 decisions recorded (`docs/decisions/0003`–`0016`); PRD (FR-9, FR-16, FR-38, FR-41–FR-53, metrics, release plan), plan (0.8, 3.14, 3.15, 4.17, 6.1, 6.2, 6.14, 6.15, 8.3, 8.4 and edits to 0.6, 1.1, 2.6, 2.10, 3.6, 4.5–4.11, 4.15), architecture §4 / §11 #18–#21, API spec, data model, design, tech stack and user flows updated.
 - Audit saved: `docs/analysis/2026-11-01-spec-audit.md`.
-- Decisions: 13 decided, licence still open.
+- Decisions: 14 decided (licence: MIT).
 - Follow-ups: task 0.8 applies the remaining audit fixes.
 
 ### 2026-10-30 · Planning complete
