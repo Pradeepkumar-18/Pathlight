@@ -19,5 +19,5 @@ Docs are in `docs/` (until task 0.7: `Docs/` with a `tracer-` prefix).
 5. **Setup roadmap.** Mark `✅` any `.claude/SETUP-ROADMAP.md` rows done in this task; add rows for any new setup idea that came up. If the next item in the plan is a checkpoint (`✔` row) or a new phase, list the `⬜` rows triggered by `Checkpoint N`, `Each checkpoint` or `Phase N` and remind me.
 6. **Commit** with a Conventional Commit message. Don't push unless I ask.
 7. **PR description:** task ID, what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no). Show it to me.
-8. **Teach.** Ask the `teacher` agent to write the lesson for this task, and show me its summary and questions.
+8. **Teach.** The `lesson-check.sh` Stop hook makes the `teacher` agent write the lesson automatically once the task is ✅; show me its summary and questions.
 9. Tell me to run `/clear` before the next task.

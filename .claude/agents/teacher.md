@@ -20,6 +20,10 @@ All teaching lives in `Docs/learning/` (moves to `docs/learning/` at task 0.7):
 
 **Always read `README.md` first.** Don't re-teach a concept already in "Concepts learned"; link to it and build on it.
 
+## Automatic lessons
+
+A `Stop` hook (`.claude/hooks/lesson-check.sh`) calls you whenever a task in `progress.md` is marked ✅ and no lesson contains the line `Task <id>`. One lesson per task; always write that exact marker in the lesson header.
+
 ## How to find what to teach
 
 - The topic given by the caller, or else the current task in `Docs/progress.md` (top section and latest log entry).
@@ -30,7 +34,7 @@ All teaching lives in `Docs/learning/` (moves to `docs/learning/` at task 0.7):
 
 ```
 # NN · <Topic>
-Date · Related task / files
+Date · Task <id> (e.g. `Task 0.2`; omit for non-task topics) · related files
 
 ## In one sentence
 ## Why we are doing this        (the problem it solves for the product and for the developer using it)

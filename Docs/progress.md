@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 0 | ⬜ |
+| 0 Setup and validation | 8 | 1 | 🟡 |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **0** | ⬜ |
-| 6 v1 | 15 | 0 | ⬜ |
+| **MVP total** | **65** | **1** | 🟡 |
+| 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
-| 8 Future | 4 | 0 | ⬜ |
+| 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 0: Setup and validation (not started)
-**Current task:** none yet (next: 0.1)
+**Current phase:** Phase 0: Setup and validation (in progress)
+**Current task:** none (next: 0.2)
 **Blockers:** none
 
 ## In progress
@@ -63,10 +63,13 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Editor for Open in code: browser setting; browser builds the link | ✅ Decided | `decisions/0014-editor-setting-in-browser.md` |
 | 2026-11-01 | Saved links survive restarts: fixed default port + per-project token | ✅ Decided | `decisions/0015-links-survive-restarts.md` |
 | 2026-11-01 | Suspicious values: flag `undefined`; missing keys shown through `if` probes | ✅ Decided | `decisions/0016-suspicious-values.md` |
+| 2026-11-01 | Task 0.1 AppMap validation: adjust (build MVP, change the pitch); don't build on `appmap-node` | ✅ Decided | `decisions/0001-appmap-validation.md` |
+| 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
+| 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 
 ## Next steps
 
-1. 0.1 Validate against AppMap → `docs/decisions/0001-appmap-validation.md`
+1. 0.2 Create the monorepo (`/start-task 0.2`)
 2. 0.2 Create the monorepo
 3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
@@ -76,7 +79,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
-| 0.1 | Validate against AppMap | ⬜ | | |
+| 0.1 | Validate against AppMap | ✅ | | Desk research (adjust); hands-on checklist after 0.6 |
 | 0.2 | Create the monorepo | ⬜ | | |
 | 0.3 | Linting and formatting | ⬜ | | |
 | 0.4 | Testing setup | ⬜ | | |
@@ -198,6 +201,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 6.13 | Custom config rules and client logs | ⬜ | | |
 | 6.14 | Extra filters, settings and CLI extras | ⬜ | | |
 | 6.15 | v1 hardening and release `0.2.0` | ⬜ | | |
+| 6.16 | MCP server (moved from 8.1) | ⬜ | | |
 | ✔ | **Checkpoint 6: v1 review** | ⬜ | | |
 
 ## Phase 7: VS Code extension and v2
@@ -220,7 +224,6 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
-| 8.1 | MCP server | ⬜ | | |
 | 8.2 | AI explanation layer | ⬜ | | |
 | 8.3 | Opt-in usage stats | ⬜ | | |
 | 8.4 | Tablet and phone layouts | ⬜ | | |
@@ -241,6 +244,15 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-01 · 0.1 Validate against AppMap · ✅ Done
+- Done when: `docs/decisions/0001-appmap-validation.md` exists with a go / adjust decision.
+- What changed: desk research by the `product-analyst` agent (`docs/analysis/2026-11-01-appmap-validation.md`); verdict adjust; PRD competitive section rewritten (Express and NestJS, correctness, full values, live); MCP server moved to v1 (6.16); AppMap export added to 7.10.
+- Tests: none (research task).
+- Docs updated: PRD, implementation plan, `progress.md`.
+- Decisions: 0001, 0017, 0018.
+- Bugs: none.
+- Follow-ups: hands-on checklist on the fixtures after 0.6; AppMap bugs #180, #251, #181/#182, #183 as corpus cases in 1.3.
 
 ### 2026-11-01 · Spec audit decisions
 - What changed: product renamed to `pathlight-tracker` across all docs, `CLAUDE.md`, rules and agents; 14 decisions recorded (`docs/decisions/0003`–`0016`); PRD (FR-9, FR-16, FR-38, FR-41–FR-53, metrics, release plan), plan (0.8, 3.14, 3.15, 4.17, 6.1, 6.2, 6.14, 6.15, 8.3, 8.4 and edits to 0.6, 1.1, 2.6, 2.10, 3.6, 4.5–4.11, 4.15), architecture §4 / §11 #18–#21, API spec, data model, design, tech stack and user flows updated.

@@ -325,7 +325,8 @@ MVP requirements prove the live map; v1 makes it a daily debugging tool; v2 wide
 | FR-27 | Capture | Follow a request across Kafka/queue consumers; cron jobs as entry points | v2 |
 | FR-28 | Capture | Support ESM and bundled apps (Vite, esbuild); Fastify and Next.js API routes | v2 |
 | FR-29 | Decisions | Coverage-style highlight of executed lines | v2 |
-| FR-30 | Export | Export a map as JSON or a shareable report | v2 |
+| FR-30 | Export | Export a map as JSON, a shareable report, or AppMap's file format | v2 |
+| FR-54 | AI | Read-only MCP server so AI assistants (Claude Code, Cursor) can read requests, steps and error paths | v1 |
 | FR-31 | AI | Plain-language explanation of a map ("why"), grounded in recorded data | Future |
 | FR-52 | Metrics | Opt-in usage stats, off by default, documented payload, never captured values or paths | Future |
 | FR-53 | UI | Tablet and phone layouts | Future |
@@ -352,11 +353,11 @@ Pathlight Tracker must never change how the user's code behaves, and must keep t
 
 ## Competitive landscape
 
-AppMap is the closest existing tool and must be tried hands-on before building; Pathlight Tracker's angle is live, data-first, NestJS-aware and built for understanding AI-written code.
+AppMap is the closest existing tool. It was checked by desk research on 2026-11-01 (`docs/analysis/2026-11-01-appmap-validation.md`, decision 0001: adjust); a hands-on check on the fixtures is still to do. AppMap now also pitches "runtime evidence for AI-assisted development" and has an MCP server, so Pathlight Tracker's angle is a correct, live, full-value view of one request, for Express and NestJS.
 
 | Tool or category | What it does | Gap Pathlight Tracker fills |
 | --- | --- | --- |
-| [AppMap](https://github.com/getappmap/appmap) | Records runtime behaviour without code changes (function calls, return values, exceptions, HTTP, SQL); VS Code; supports Node.js; stores locally; sequence diagrams; now focused on its AI assistant | Mostly record-then-open (to verify hands-on); not data-first; not NestJS-layer focused |
+| [AppMap](https://github.com/getappmap/appmap) | Records runtime behaviour without code changes (function calls, return values, exceptions, HTTP, SQL); VS Code; supports Node.js (`appmap-node`, MIT + Commons Clause); stores locally; sequence diagrams; AI and MCP focus | Record-then-open only; values are one-line strings cut to ~100 characters, no redaction; no place for branch outcomes; async nesting unreliable; NestJS layer not labelled; `fetch` not captured (desk research, to verify hands-on) |
 | Static call graphs ([Graph-It-Live](https://github.com/magic5644/Graph-It-Live/wiki), [Chartographer](https://marketplace.visualstudio.com/items?itemName=ArpinFidel.chartographer)) | Show which functions can call which, from reading code | No runtime truth: not what ran, not the data |
 | CPU profiler ([Chrome DevTools](https://oneuptime.com/blog/post/2026-01-22-nodejs-debug-chrome-devtools/view)) | Flame chart, bottom-up and call tree with timings | No argument or return values; not request-scoped |
 | [Debug Visualizer](https://marketplace.visualstudio.com/items?itemName=hediet.debug-visualizer) | Visualizes data structures at a breakpoint | One moment in time, not the flow |
@@ -365,12 +366,16 @@ AppMap is the closest existing tool and must be tried hands-on before building; 
 
 **Where Pathlight Tracker differs**
 
-1. **Live:** the map draws as the request runs, not as a file opened afterward.
-2. **Data-first:** focused on where data changed, with conditions explaining why a path was taken.
-3. **NestJS-aware:** guards, pipes, interceptors and filters as first-class steps.
-4. **Built for AI-written code:** the pitch is understanding code you didn't write.
+1. **One request = one correct tree,** even with concurrent requests and long `await`s.
+2. **Full values:** structured and expandable, not truncated strings, with secrets redacted before storage.
+3. **Live:** steps appear while the request runs, and a hung request shows as hung.
+4. **Framework-aware, Express and NestJS:** Express middleware and error middleware, and NestJS guards, pipes, interceptors and filters (including built-ins), shown as labelled steps in execution order.
+5. **Decisions and swallowed errors:** `if` / `switch` outcomes and "Caught" errors.
+6. **Coverage of what AI writes:** Mongoose, TypeORM, Prisma and `fetch` as named boundary steps.
 
-**Biggest threats:** AppMap adding a live, data-first view; AI coding assistants adding runtime awareness. Defence: depth on Node/NestJS, capture accuracy, and possibly exposing Pathlight Tracker's data to assistants through MCP.
+"Built for AI-written code" describes who it is for, not how it differs: AppMap makes the same claim.
+
+**Biggest threats:** AppMap adding a live, data-first view (it already has the AI pitch and an MCP server); AI coding assistants adding runtime awareness. Defence: depth on Node/NestJS, capture accuracy, a read-only MCP server in v1, AppMap-format export in v2, and exposing Pathlight Tracker's data to assistants through MCP.
 
 ## Release plan
 
@@ -380,9 +385,9 @@ Ship the smallest loop that proves value (hit an endpoint, watch the live map, j
 | --- | --- | --- | --- |
 | **Validation** | Is the gap real? | AppMap tried hands-on; capture spike proves wrapping works on NestJS | Go / adjust decision; behaviour corpus green; slowdown under 5× |
 | **MVP (web app)** | Live request map | `npx pathlight-tracker dev`; Express + NestJS (CommonJS); live step tree with real values; framework steps; DB and HTTP boundaries; errors incl. swallowed; inspector; trash; light and dark; redaction; local SQLite; `if` / `switch` conditions; Prisma; `doctor` and `clear` | First map in under 2 minutes on a fresh machine |
-| **v1** | Daily debugging tool | Expression conditions and loop summaries; flow graph and timeline; compare two requests; search; Logs tab; test runs, Redis, Kafka; custom rules; extra filters and settings | Used weekly by the author on real projects; outside interest growing |
+| **v1** | Daily debugging tool | Expression conditions and loop summaries; flow graph and timeline; compare two requests; search; Logs tab; test runs, Redis, Kafka; custom rules; extra filters and settings; read-only MCP server | Used weekly by the author on real projects; outside interest growing |
 | **v2** | VS Code and wider reach | VS Code extension (same UI, inline values, CodeLens); ESM and bundlers; Fastify and Next.js; Kafka consumers and cron jobs; data journey; export | Extension adoption and retention |
-| **Future** | AI on top of real data | MCP server for AI assistants; AI explanation layer; opt-in usage stats; tablet and phone layouts | Core proven |
+| **Future** | AI on top of real data | AI explanation layer; opt-in usage stats; tablet and phone layouts | Core proven |
 
 Each phase starts only when the previous gate is met. The task-level breakdown is in `tracer-implementation-plan.md`.
 
@@ -416,7 +421,6 @@ The biggest risks are technical (instrumenting arbitrary AI-written code safely)
 
 **Open questions**
 
-- Should Pathlight Tracker expose its data through MCP so Claude Code or Cursor can read real runtime data?
 - When the core is proven, in which phase should the AI explanation layer return?
 
 ## Related documents

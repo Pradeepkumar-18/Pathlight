@@ -14,7 +14,7 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 
 - Slim `CLAUDE.md`; package rules moved to `.claude/rules/` (`agent`, `collector`, `database`, `ui`), loaded only for matching paths
 - `settings.json`: read-only git and pnpm check commands allowed; `.env`, `*.db`, `rm -rf`, force push denied
-- Hooks: `session-context.sh` (status from `progress.md` at session start), `ask-before-change.sh` (permission prompt for schema, migrations, tokens, dependencies, env)
+- Hooks: `session-context.sh` (status from `progress.md` at session start), `ask-before-change.sh` (permission prompt for schema, migrations, tokens, dependencies, env), `lesson-check.sh` (Stop hook: teacher writes a lesson for every finished task, added 2026-11-01)
 - Agents: `spec-reader` (Haiku), `teacher` (Sonnet), `product-analyst` (Opus)
 - Skills: `/start-task`, `/finish-task`, `/new-decision`
 

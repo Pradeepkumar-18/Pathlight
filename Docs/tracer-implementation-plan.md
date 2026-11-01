@@ -33,9 +33,9 @@ Source docs (keep them in `docs/` in the repo and give the relevant ones to ever
 | 4 | Map UI | Browser UI from the design: shell, list, step tree, decision rows, inspector, trash, settings, states | 4.1–4.17 |
 | 5 | Integration and MVP release | End-to-end tests, CLI polish, packaging, docs, release `0.1.0` | 5.1–5.8 |
 | ═══ | **MVP LINE** | Everything above ships as the MVP | — |
-| 6 | v1: daily debugging tool | Expression conditions, loops, Logs, search, compare, graph, timeline, extra filters and settings | 6.1–6.15 |
+| 6 | v1: daily debugging tool | Expression conditions, loops, Logs, search, compare, graph, timeline, extra filters and settings, read-only MCP server | 6.1–6.16 |
 | 7 | Phase 2 product: VS Code extension and v2 | Extension, ESM, data journey, more frameworks, export | 7.1–7.10 |
-| 8 | Future | MCP server, AI explanation, opt-in usage stats, tablet and phone layouts | 8.1–8.4 |
+| 8 | Future | AI explanation, opt-in usage stats, tablet and phone layouts (MCP moved to 6.16) | 8.2–8.4 |
 
 ```
 Phase 0 ──▶ Phase 1 (spike) ──▶ Phase 2 (collector) ──▶ Phase 3 (agent) ──▶ Phase 5 ══ MVP ══▶ Phase 6 ──▶ Phase 7
@@ -243,7 +243,8 @@ Everything above this line is the MVP (`0.1.0`). Everything below is planned, bu
 | 6.12 | **Timeline view.** Canvas waterfall with zoom and pan; parallel work side by side | MVP | `Promise.all` fixture shows parallel bars |
 | 6.13 | **Custom config rules and client logs.** Include/exclude and redaction rules in config UI notes; `POST /client-logs` | MVP | Custom redaction key works end to end; UI panel crash appears in the collector log |
 | 6.14 | **Extra filters, settings and CLI extras.** Request list filters (method, slow, route, state, session, date range, sort by duration); settings (density, show framework steps, show timings, config viewer with sources, copy config, `GET /config`); trash size limit with reworded promise; in-memory DB fallback; `o + Enter`; `--quiet`; truncation header | MVP | Each item works end to end and is in the PRD (FR-49 to FR-51) |
-| 6.15 | **v1 hardening and release `0.2.0`.** Corpus, E2E, performance re-run, docs | 6.1–6.14 | Same gates as Checkpoint 5 for the v1 features |
+| 6.16 | **MCP server.** Expose requests, steps and error paths to AI assistants (Claude Code, Cursor) via `@modelcontextprotocol/sdk`, read-only, local token (moved from 8.1, decision 0017) | MVP | An assistant can answer "why did POST /orders fail?" using Pathlight Tracker data |
+| 6.15 | **v1 hardening and release `0.2.0`.** Corpus, E2E, performance re-run, docs | 6.1–6.14, 6.16 | Same gates as Checkpoint 5 for the v1 features |
 
 **Checkpoint 6: v1 review**
 
@@ -266,7 +267,7 @@ Everything above this line is the MVP (`0.1.0`). Everything below is planned, bu
 | 7.7 | **Data journey.** `GET /requests/:id/objects/:objectId` + UI "Follow this object" | v1 | Following the seed `User` object shows `findById` → `calculateDiscount` |
 | 7.8 | **Queue consumers and cron entry points.** Kafka/queue consumer messages and scheduled jobs start maps | 6.7 | Kafka fixture consumer produces its own map, linked to the publishing request |
 | 7.9 | **More frameworks.** Fastify and Next.js API routes | 7.6 | Fixture apps for both produce correct maps |
-| 7.10 | **Export and share.** Export a map as JSON and a shareable report (redacted) | v1 | Exported file re-opens in Pathlight Tracker and shows the same map |
+| 7.10 | **Export and share.** Export a map as JSON, a shareable report (redacted) and AppMap's file format (decision 0018) | v1 | Exported file re-opens in Pathlight Tracker and shows the same map; AppMap export opens in AppMap's viewer |
 
 **Checkpoint 7: Phase 2 product review**
 
@@ -280,8 +281,7 @@ Everything above this line is the MVP (`0.1.0`). Everything below is planned, bu
 
 | ID | Task | Depends on | Done when |
 | --- | --- | --- | --- |
-| 8.1 | **MCP server.** Expose requests, steps and error paths to AI assistants (Claude Code, Cursor) via `@modelcontextprotocol/sdk`, read-only, local token | v1 | An assistant can answer "why did POST /orders fail?" using Pathlight Tracker data |
-| 8.2 | **AI explanation layer.** "Explain" a map or step with the user's own API key; compressed and redacted traces only | 8.1 | Explanations rated helpful in ≥70% of in-panel feedback |
+| 8.2 | **AI explanation layer.** "Explain" a map or step with the user's own API key; compressed and redacted traces only | 6.16 | Explanations rated helpful in ≥70% of in-panel feedback |
 | 8.3 | **Opt-in usage stats.** Off by default, asked once, documented payload, never captured values or file paths, disable with an env var; needs a small receiving server | v1 proven useful | Decision recorded with `/new-decision`; nothing is sent unless the user opted in |
 | 8.4 | **Tablet and phone layouts.** Inspector drawer, list drawer, single-column phone flow from `design.md` §7 | v1 | Screenshots at 900 and 390 px match the spec |
 
@@ -297,8 +297,8 @@ Everything above this line is the MVP (`0.1.0`). Everything below is planned, bu
 | 3 Runtime agent | 15 | Correct maps from real apps, safely |
 | 4 Map UI | 17 | UI matching the reference design |
 | 5 Integration and release | 8 | **MVP `0.1.0` released** |
-| 6 v1 | 15 | `0.2.0`: expression conditions, loops, search, compare, views |
+| 6 v1 | 16 | `0.2.0`: expression conditions, loops, search, compare, views, MCP |
 | 7 Extension and v2 | 10 | VS Code extension, ESM, data journey |
-| 8 Future | 4 | MCP, AI |
+| 8 Future | 3 | AI, opt-in stats, tablet and phone |
 
 **MVP total: 65 tasks across Phases 0–5.**
