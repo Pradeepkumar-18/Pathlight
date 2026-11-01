@@ -1,3 +1,11 @@
 # Personal Claude Code settings
 .claude/settings.local.json
 CLAUDE.local.md
+
+# Dependencies and build output
+node_modules/
+dist/
+.turbo/
+
+# Local recordings of Pathlight Tracker itself
+.pathlight-tracker/
