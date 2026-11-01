@@ -29,4 +29,3 @@
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).
 - Hands-on AppMap checklist is pending until `fixtures/nestjs-app` exists (after task 0.6). Decision 0001 may change.
 - BUG-001 (Windows long paths) is still open until the README note in task 0.7.
-- Package names are `@pathlight-tracker/*` but CLAUDE.md still says `@tracer/*`; docs rename pending.
