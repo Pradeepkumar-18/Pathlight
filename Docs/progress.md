@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 1 | 🟡 |
+| 0 Setup and validation | 8 | 2 | 🟡 |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **1** | 🟡 |
+| **MVP total** | **65** | **2** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** none (next: 0.2)
+**Current task:** none (next: 0.3)
 **Blockers:** none
 
 ## In progress
@@ -37,7 +37,7 @@ Open bugs and issues found while coding. Close a row by setting Status to `Fixed
 
 | ID | Found | Area | Description | Status | Fix (task / PR) |
 | --- | --- | --- | --- | --- | --- |
-| — | | | none | | |
+| BUG-001 | 2026-11-01 | Dev setup (Windows) | `turbo.exe` fails to start (ENOENT) when the repo sits in a deep folder: its path inside `node_modules/.pnpm` passes ~260 characters | Open | Document in README (0.7): keep the clone path short or enable Windows long paths |
 
 IDs: `BUG-001`, `BUG-002`, …
 
@@ -69,8 +69,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 ## Next steps
 
-1. 0.2 Create the monorepo (`/start-task 0.2`)
-2. 0.2 Create the monorepo
+1. 0.3 Linting and formatting (`/start-task 0.3`)
+2. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
 3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
 ---
@@ -80,7 +80,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
 | 0.1 | Validate against AppMap | ✅ | | Desk research (adjust); hands-on checklist after 0.6 |
-| 0.2 | Create the monorepo | ⬜ | | |
+| 0.2 | Create the monorepo | ✅ | | Clean-clone build verified |
 | 0.3 | Linting and formatting | ⬜ | | |
 | 0.4 | Testing setup | ⬜ | | |
 | 0.5 | CI | ⬜ | | |
@@ -244,6 +244,15 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-01 · 0.2 Create the monorepo · ✅ Done
+- Done when: `pnpm install && pnpm build` succeeds on a clean clone
+- What changed: pnpm workspace + Turborepo root (`packageManager` pnpm 10.34.9, Node 24 via `.nvmrc` and `engines`), strict `tsconfig.base.json` (ES2023, CommonJS output), empty `protocol`, `agent`, `collector`, `ui` packages building with `tsc`, MIT `LICENSE`, `.gitignore`; dev deps typescript 5.9.3 (npm latest is 7.x; tech stack pins 5.x), turbo 2.11.10, /node 24.19.2.
+- Tests: none yet (Vitest arrives in 0.4); verified `pnpm install && pnpm build` and `pnpm typecheck` on a fresh clone (4/4 packages).
+- Docs updated: `progress.md`.
+- Decisions: none.
+- Bugs: BUG-001 (Windows path length with deep clone paths).
+- Follow-ups: `reviewer` and `spec-checker` agents added; usable after restarting Claude Code. TypeScript 7 is out; moving to it would need a decision.
 
 ### 2026-11-01 · 0.1 Validate against AppMap · ✅ Done
 - Done when: `docs/decisions/0001-appmap-validation.md` exists with a go / adjust decision.
