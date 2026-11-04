@@ -10,6 +10,7 @@
 ## Lessons
 1. [Validate against AppMap](01-validate-against-appmap.md) (Task 0.1)
 2. [The monorepo: pnpm, Turborepo and strict TypeScript](02-monorepo-pnpm-turborepo.md) (Task 0.2)
+3. [Linting and formatting: ESLint 9, Prettier and Lefthook](03-linting-and-formatting.md) (Task 0.3)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -24,6 +25,10 @@
 - Strict TS base config, CommonJS for `--require`, ES2023, source maps: [02](02-monorepo-pnpm-turborepo.md)
 - Why `engines` Node 24 is root-only; why pinned TS 5.9.3: [02](02-monorepo-pnpm-turborepo.md)
 - Verify on a fresh clone; Windows 260-char path (BUG-001): [02](02-monorepo-pnpm-turborepo.md)
+- ESLint 9 flat config + typescript-eslint v8 (`projectService`): [03](03-linting-and-formatting.md)
+- Prettier 3 code formatting vs documentation preservation (`.prettierignore`): [03](03-linting-and-formatting.md)
+- Lefthook git pre-commit hooks + auto re-staging (`stage_fixed: true`): [03](03-linting-and-formatting.md)
+- PostToolUse formatting hook for automated token-free cleanup: [03](03-linting-and-formatting.md)
 
 ## Open questions
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).

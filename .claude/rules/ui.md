@@ -1,6 +1,6 @@
 ---
 paths:
-  - "packages/ui/**"
+  - 'packages/ui/**'
 ---
 
 # UI rules

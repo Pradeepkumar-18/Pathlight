@@ -1,0 +1,13 @@
+# Lefthook configuration for Pathlight Tracker
+# Runs formatting and linting on staged files before commit
+
+pre-commit:
+  commands:
+    format:
+      glob: '*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml}'
+      run: npx prettier --write {staged_files}
+      stage_fixed: true
+    lint:
+      glob: '*.{ts,tsx,js,jsx,mjs,cjs}'
+      run: npx eslint --fix {staged_files}
+      stage_fixed: true

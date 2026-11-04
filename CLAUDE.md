@@ -11,18 +11,18 @@ Rules for AI coding assistants working in this repo. Package-specific rules load
 All specs live in `docs/`. They are the source of truth: if code and docs disagree, stop and ask.
 **Until task 0.7**, they are in `Docs/` with a `tracer-` prefix (`docs/prd.md` = `Docs/tracer-prd.md`); `progress.md` has no prefix.
 
-| Doc | Read it when you are… |
-| --- | --- |
-| `docs/prd.md` | Unsure whether a feature is in scope, or which phase (MVP, v1, v2) it belongs to |
-| `docs/implementation-plan.md` | Starting any task: find the task ID, its dependencies and its "Done when" |
-| `docs/progress.md` | Starting and finishing every task |
-| `docs/architecture.md` | Touching package boundaries, data flow, auth, env vars, error handling or logging |
-| `docs/tech-stack.md` | Choosing a library or tool, or checking the "do not use" list |
-| `docs/data-model.md` | Touching the database, migrations, soft delete, retention or seed data |
-| `docs/api-spec.md` | Adding or changing a REST endpoint, WebSocket message, error code or limit |
-| `docs/user-flows.md` | Building any screen, state (empty / loading / error) or edge case |
-| `docs/design.md` + `docs/ui-reference.png` | Writing any UI: colors, type, spacing, components, layout, accessibility |
-| `docs/decisions/` | Before reversing an earlier technical decision |
+| Doc                                        | Read it when you are…                                                             |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
+| `docs/prd.md`                              | Unsure whether a feature is in scope, or which phase (MVP, v1, v2) it belongs to  |
+| `docs/implementation-plan.md`              | Starting any task: find the task ID, its dependencies and its "Done when"         |
+| `docs/progress.md`                         | Starting and finishing every task                                                 |
+| `docs/architecture.md`                     | Touching package boundaries, data flow, auth, env vars, error handling or logging |
+| `docs/tech-stack.md`                       | Choosing a library or tool, or checking the "do not use" list                     |
+| `docs/data-model.md`                       | Touching the database, migrations, soft delete, retention or seed data            |
+| `docs/api-spec.md`                         | Adding or changing a REST endpoint, WebSocket message, error code or limit        |
+| `docs/user-flows.md`                       | Building any screen, state (empty / loading / error) or edge case                 |
+| `docs/design.md` + `docs/ui-reference.png` | Writing any UI: colors, type, spacing, components, layout, accessibility          |
+| `docs/decisions/`                          | Before reversing an earlier technical decision                                    |
 
 The specs are large: read only the sections a task needs (or ask the `spec-reader` agent), and quote the section you followed in the PR description.
 
@@ -43,19 +43,19 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 
 ## Commands
 
-| Task | Command |
-| --- | --- |
-| Install | `pnpm install` |
-| Build all | `pnpm build` |
-| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` |
-| Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` |
-| Load seed data | `pnpm seed` |
-| Unit tests | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
-| Behaviour corpus | `pnpm test:corpus` |
-| End-to-end tests | `pnpm test:e2e` |
-| Benchmarks | `pnpm bench` |
-| Lint / typecheck / format | `pnpm lint` · `pnpm typecheck` · `pnpm format` |
-| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` |
+| Task                                      | Command                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------ |
+| Install                                   | `pnpm install`                                                           |
+| Build all                                 | `pnpm build`                                                             |
+| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev`                                |
+| Run Pathlight Tracker on a fixture        | `pnpm dev:nest` / `pnpm dev:express`                                     |
+| Load seed data                            | `pnpm seed`                                                              |
+| Unit tests                                | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
+| Behaviour corpus                          | `pnpm test:corpus`                                                       |
+| End-to-end tests                          | `pnpm test:e2e`                                                          |
+| Benchmarks                                | `pnpm bench`                                                             |
+| Lint / typecheck / format                 | `pnpm lint` · `pnpm typecheck` · `pnpm format`                           |
+| DB migration from schema                  | `pnpm --filter @pathlight-tracker/collector db:generate`                 |
 
 Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (plus `pnpm test:corpus` for any agent change, `pnpm test:e2e` for any UI or API change).
 
@@ -69,18 +69,20 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 - UI wording says **steps**, never "spans".
 - One module, one job. Keep files under ~300 lines. Named exports only (no default exports unless a framework requires it).
 - Imports ordered: Node built-ins, external packages, `@pathlight-tracker/*`, relative.
-- Comments explain *why*, not *what*. No commented-out code.
+- Comments explain _why_, not _what_. No commented-out code.
 - Tests live next to the code: `foo.ts` → `foo.test.ts`.
 
 ## Do's and don'ts
 
 **Do**
+
 - Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); keep the PR small.
 - Write or update tests in the same change. Cover the "Done when" condition explicitly.
 - Follow the exact shapes and examples in `api-spec.md` and `data-model.md`.
 - Update docs in the same PR when behaviour changes (and say so in the PR).
 
 **Don't**
+
 - **Don't add a dependency without asking first.** Name the package, why it's needed and the alternative you considered. Check `tech-stack.md` §12 ("Do not use") before proposing anything.
 - Don't change code outside the task's scope ("while I'm here" refactors go in a separate task).
 - Don't log, print or store tokens or captured values outside the database.
