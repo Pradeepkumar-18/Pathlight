@@ -20,7 +20,7 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** none (next: 0.4)
+**Current task:** 0.4 Testing setup
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| — | none | | |
+| 0.4 | Testing setup | 2026-11-04 | |
 
 ## Known bugs / issues
 
@@ -82,7 +82,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.1 | Validate against AppMap | ✅ | | Desk research (adjust); hands-on checklist after 0.6 |
 | 0.2 | Create the monorepo | ✅ | | Clean-clone build verified |
 | 0.3 | Linting and formatting | ✅ | | |
-| 0.4 | Testing setup | ⬜ | | |
+| 0.4 | Testing setup | 🟡 | | |
 | 0.5 | CI | ⬜ | | |
 | 0.6 | Fixture apps | ⬜ | | |
 | 0.7 | Docs in repo | ⬜ | | |
@@ -244,6 +244,15 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-04 · 0.4 Testing setup · 🟡 In progress
+- Done when: `pnpm test` runs all packages and passes.
+- What changed:
+- Tests:
+- Docs updated: `progress.md`
+- Decisions:
+- Bugs:
+- Follow-ups:
 
 ### 2026-11-04 · 0.3 Linting and formatting · ✅ Done
 - Done when: `pnpm lint` passes; a badly formatted file is fixed on commit.
