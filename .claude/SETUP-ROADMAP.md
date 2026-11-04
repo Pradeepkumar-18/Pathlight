@@ -40,4 +40,4 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 | ✅ | Name decision | Done 2026-11-01: renamed to `pathlight-tracker` in docs, README, CLAUDE.md, rules and agents (decision 0003). Optional: rename the GitHub repo to `pathlight-tracker` | Cheaper before code exists |
 | ⬜ | 7.1 | Add `.claude/rules/extension.md` for `packages/extension/**` | VS Code extension work |
 | ⬜ | 8.1 | Add project `.mcp.json` to use Pathlight's own MCP server while developing it | Dogfooding |
-| ⬜ | Gemini / Antigravity joins | Add its rules file pointing to `CLAUDE.md` + `.claude/rules/` instead of copying them | One source of truth |
+| ✅ | Gemini / Antigravity joins | Done 2026-11-02: Added AGENTS.md + GEMINI.md pointing to CLAUDE.md and .claude/rules/; linked .agents/skills and .agents/rules, defined subagents | One source of truth |
