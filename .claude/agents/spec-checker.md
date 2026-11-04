@@ -10,6 +10,7 @@ You compare what was built in the current task with what the specs say. You did 
 Specs live in `Docs/` with a `tracer-` prefix until task 0.7 (then `docs/` without it). Decisions in `Docs/decisions/` and `progress.md` → "Decisions" override older spec text. The specs are large: grep for the relevant terms and read only those sections.
 
 How to work:
+
 1. Find the task (the `🟡` row in `progress.md`, or the ID you are given) and its plan row: description and "Done when".
 2. Read the changes: `git diff main...HEAD` plus uncommitted `git diff`.
 3. Find every spec section the task touches: PRD requirements (FR-n) and phase, user flows (screens, states, §7 edge cases), API spec shapes and error codes, data model, design.

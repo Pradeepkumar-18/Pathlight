@@ -1,7 +1,7 @@
 ---
 paths:
-  - "packages/agent/**"
-  - "tests/behaviour-corpus/**"
+  - 'packages/agent/**'
+  - 'tests/behaviour-corpus/**'
 ---
 
 # Runtime agent rules
