@@ -34,7 +34,7 @@
 - Vitest root config + per-package `--dir src`, tests kept out of `dist/`: [04](04-testing-setup-vitest.md)
 - Colocated unit tests (`foo.ts` → `foo.test.ts`): [04](04-testing-setup-vitest.md)
 - V8 code coverage reports (`@vitest/coverage-v8`): [04](04-testing-setup-vitest.md)
-- GitHub Actions CI matrix (`[ubuntu, macos, windows]` x Node `[20, 24]`): [05](05-ci-github-actions-changesets.md)
+- GitHub Actions CI matrix (`[ubuntu, macos, windows]` x Node 24, decision 0019): [05](05-ci-github-actions-changesets.md)
 - Frozen lockfile verification in CI (`--frozen-lockfile`): [05](05-ci-github-actions-changesets.md)
 - Monorepo package versioning & automated changelogs with Changesets: [05](05-ci-github-actions-changesets.md)
 
