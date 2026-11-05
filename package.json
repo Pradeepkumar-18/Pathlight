@@ -17,9 +17,11 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:turbo": "turbo run test",
+    "changeset": "changeset",
     "prepare": "lefthook install"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@eslint/js": "^9.39.5",
     "@types/node": "24.19.2",
     "@vitest/coverage-v8": "^5.1.0",
