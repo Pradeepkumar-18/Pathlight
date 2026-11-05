@@ -20,7 +20,7 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** none (next: 0.5)
+**Current task:** 0.5 CI (waiting for green PR)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| — | none | | |
+| 0.5 | CI | 2026-11-05 | waiting for green PR |
 
 ## Known bugs / issues
 
@@ -66,12 +66,14 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Task 0.1 AppMap validation: adjust (build MVP, change the pitch); don't build on `appmap-node` | ✅ Decided | `decisions/0001-appmap-validation.md` |
 | 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
+| 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
 
 ## Next steps
 
-1. 0.5 CI (`/start-task 0.5`)
-2. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
-3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
+1. 0.5 CI: merge the task PRs 0.2 → 0.5 in order; mark 0.5 ✅ when its PR is green on Ubuntu, macOS and Windows
+2. 0.6 Fixture apps (`/start-task 0.6`)
+3. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
+4. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
 ---
 
@@ -83,7 +85,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.2 | Create the monorepo | ✅ | | Clean-clone build verified |
 | 0.3 | Linting and formatting | ✅ | | |
 | 0.4 | Testing setup | ✅ | | |
-| 0.5 | CI | ⬜ | | |
+| 0.5 | CI | 🟡 | | waiting for green PR |
 | 0.6 | Fixture apps | ⬜ | | |
 | 0.7 | Docs in repo | ⬜ | | |
 | 0.8 | Spec consistency pass | ⬜ | | |
@@ -244,6 +246,16 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-05 · 0.5 CI · 🟡 In progress
+- Done when: A PR shows all checks green on all three OSes.
+- Note: waiting for green PR.
+- What changed: GitHub Actions CI workflow (`.github/workflows/ci.yml`) updated to test across Ubuntu, macOS, and Windows with Node 24 only (decision 0019); Changesets initialized (`.changeset/config.json`); release workflow dropped; Lesson 05 added.
+- Tests: local checks (`pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`) pass.
+- Docs updated: `progress.md`, `Docs/tracer-implementation-plan.md`, `Docs/decisions/0019-ci-node-24-only.md`, `Docs/learning/05-ci-github-actions-changesets.md`, `Docs/learning/README.md`.
+- Decisions: 0019.
+- Bugs: none.
+- Follow-ups: verify green CI on draft PR across Ubuntu, macOS, Windows.
 
 ### 2026-11-04 · 0.4 Testing setup · ✅ Done
 - Done when: `pnpm test` runs all packages and passes.
