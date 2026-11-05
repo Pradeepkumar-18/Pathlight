@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> **Single Source of Truth**: This project uses [`CLAUDE.md`](./CLAUDE.md) and scoped rules in [`.claude/rules/`](./.claude/rules/) (mirrored in [`.agents/rules/`](./.agents/rules/)) as the unified coding standards and project policies for all AI coding assistants (Antigravity, Gemini, Claude Code, Cursor).
+> **Single Source of Truth**: This project uses [`CLAUDE.md`](./CLAUDE.md) and scoped rules in [`.claude/rules/`](./.claude/rules/) (referenced in [`.agents/rules/`](./.agents/rules/)) as the unified coding standards and project policies for all AI coding assistants (Antigravity, Gemini, Claude Code, Cursor).
 
 ---
 
@@ -75,7 +75,7 @@ Stop and ask the user before:
 ---
 
 ## 7. Workflows & Skills
-Use the workflows defined in `.agents/skills/` (mirrored from `.claude/skills/`):
+Use the workflows defined in `.claude/skills/` (referenced in `.agents/skills.json`):
 - `/start-task [task ID]`: Check dependencies, create task branch, update `progress.md`, and plan the work.
 - `/finish-task`: Verify "Done when", run test/lint checks, review diff, update `progress.md`, draft commit & PR.
 - `/new-decision [title]`: Record an ADR in `docs/decisions/` and update `progress.md`.
