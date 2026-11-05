@@ -5,6 +5,7 @@ CLAUDE.local.md
 # Dependencies and build output
 node_modules/
 dist/
+coverage/
 .turbo/
 
 # Local recordings of Pathlight Tracker itself
