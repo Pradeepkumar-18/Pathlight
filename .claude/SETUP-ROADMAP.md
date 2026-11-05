@@ -22,10 +22,10 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 
 | Status | Trigger | Change | Why |
 | --- | --- | --- | --- |
-| ⬜ | 0.2 | Add `reviewer` agent (Sonnet, read-only): checks the diff against CLAUDE.md, `.claude/rules/` and the task's "Done when"; every finding has file, problem, fix | First code arrives; `/finish-task` already calls it if present |
-| ⬜ | 0.2 | Add `spec-checker` agent (Sonnet, read-only): compares the finished task with the PRD and user flows, reports missing / extra / different | A second agent checks work it didn't write |
-| ⬜ | 0.2 | Check `settings.json` allow list matches the real `package.json` scripts; check hook paths (`db/schema`, `migrations`, `ui/src/theme`) match the real layout | Layout becomes real |
-| ⬜ | 0.2 | Consider a `.claude/settings.local.json` for personal overrides (gitignored already) | Only if you need different permissions than the team |
+| ✅ | 0.2 | Add `reviewer` agent (Sonnet, read-only): checks the diff against CLAUDE.md, `.claude/rules/` and the task's "Done when"; every finding has file, problem, fix | First code arrives; `/finish-task` already calls it if present |
+| ✅ | 0.2 | Add `spec-checker` agent (Sonnet, read-only): compares the finished task with the PRD and user flows, reports missing / extra / different | A second agent checks work it didn't write |
+| ✅ | 0.2 | Check `settings.json` allow list matches the real `package.json` scripts; check hook paths (`db/schema`, `migrations`, `ui/src/theme`) match the real layout | Layout becomes real |
+| ⏭️ | 0.2 | Skipped: no personal overrides needed. Consider a `.claude/settings.local.json` for personal overrides (gitignored already) | Only if you need different permissions than the team |
 | ⬜ | 0.3 | Add `PostToolUse` hook on `Edit\|Write`: run Prettier on the edited file (plain bash parsing like `ask-before-change.sh`, no jq) | Formatting without spending tokens on it |
 | ⬜ | 0.4 | Add `test-runner` agent (Haiku): runs the checks and returns only failures; use it in `/finish-task` | Test output is long; keeps it out of the main context |
 | ⬜ | 0.4 | Add `.claude/rules/testing.md` for `**/*.test.ts` and `tests/**` with the conventions the testing setup establishes (runner, file placement, fixtures) | Test conventions only become real in 0.4 |
@@ -40,4 +40,4 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 | ✅ | Name decision | Done 2026-11-01: renamed to `pathlight-tracker` in docs, README, CLAUDE.md, rules and agents (decision 0003). Optional: rename the GitHub repo to `pathlight-tracker` | Cheaper before code exists |
 | ⬜ | 7.1 | Add `.claude/rules/extension.md` for `packages/extension/**` | VS Code extension work |
 | ⬜ | 8.1 | Add project `.mcp.json` to use Pathlight's own MCP server while developing it | Dogfooding |
-| ⬜ | Gemini / Antigravity joins | Add its rules file pointing to `CLAUDE.md` + `.claude/rules/` instead of copying them | One source of truth |
+| ✅ | Gemini / Antigravity joins | Done 2026-11-02: Added AGENTS.md + GEMINI.md pointing to CLAUDE.md and .claude/rules/; linked .agents/skills and .agents/rules, defined subagents | One source of truth |
