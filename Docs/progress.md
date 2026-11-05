@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 4 | 🟡 |
+| 0 Setup and validation | 8 | 5 | 🟡 |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **4** | 🟡 |
+| **MVP total** | **65** | **5** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** 0.5 CI (waiting for green PR)
+**Current task:** none (next: 0.6)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 0.5 | CI | 2026-11-05 | waiting for green PR |
+| — | none | | |
 
 ## Known bugs / issues
 
@@ -70,10 +70,9 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 ## Next steps
 
-1. 0.5 CI: merge the task PRs 0.2 → 0.5 in order; mark 0.5 ✅ when its PR is green on Ubuntu, macOS and Windows
-2. 0.6 Fixture apps (`/start-task 0.6`)
-3. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
-4. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
+1. 0.6 Fixture apps (`/start-task 0.6`)
+2. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
+3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
 ---
 
@@ -82,10 +81,10 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
 | 0.1 | Validate against AppMap | ✅ | | Desk research (adjust); hands-on checklist after 0.6 |
-| 0.2 | Create the monorepo | ✅ | | Clean-clone build verified |
-| 0.3 | Linting and formatting | ✅ | | |
-| 0.4 | Testing setup | ✅ | | |
-| 0.5 | CI | 🟡 | | waiting for green PR |
+| 0.2 | Create the monorepo | ✅ | [#2](https://github.com/Pradeepkumar-18/Pathlight/pull/2) | Clean-clone build verified |
+| 0.3 | Linting and formatting | ✅ | [#3](https://github.com/Pradeepkumar-18/Pathlight/pull/3) | |
+| 0.4 | Testing setup | ✅ | [#4](https://github.com/Pradeepkumar-18/Pathlight/pull/4) | |
+| 0.5 | CI | ✅ | [#5](https://github.com/Pradeepkumar-18/Pathlight/pull/5) | Green on Ubuntu, macOS, Windows (Node 24) |
 | 0.6 | Fixture apps | ⬜ | | |
 | 0.7 | Docs in repo | ⬜ | | |
 | 0.8 | Spec consistency pass | ⬜ | | |
@@ -247,15 +246,14 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-05 · 0.5 CI · 🟡 In progress
+### 2026-11-05 · 0.5 CI · ✅ Done
 - Done when: A PR shows all checks green on all three OSes.
-- Note: waiting for green PR.
 - What changed: GitHub Actions CI workflow (`.github/workflows/ci.yml`) updated to test across Ubuntu, macOS, and Windows with Node 24 only (decision 0019); Changesets initialized (`.changeset/config.json`); release workflow dropped; Lesson 05 added.
-- Tests: local checks (`pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`) pass.
+- Tests: PR #5 CI run #3 green on Ubuntu, macOS and Windows (Node 24); the merge to `main` (run #4) is green too. Same checks pass locally on a clean checkout.
 - Docs updated: `progress.md`, `Docs/tracer-implementation-plan.md`, `Docs/decisions/0019-ci-node-24-only.md`, `Docs/learning/05-ci-github-actions-changesets.md`, `Docs/learning/README.md`.
 - Decisions: 0019.
 - Bugs: none.
-- Follow-ups: verify green CI on draft PR across Ubuntu, macOS, Windows.
+- Follow-ups: Node 20 support for traced apps is tested later through the fixtures and the behaviour corpus (decision 0019).
 
 ### 2026-11-04 · 0.4 Testing setup · ✅ Done
 - Done when: `pnpm test` runs all packages and passes.
