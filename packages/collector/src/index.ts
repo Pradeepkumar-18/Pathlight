@@ -1,2 +1,2 @@
 // Collector CLI arrives in task 2.2.
-export {};
+export const COLLECTOR_VERSION = '0.0.1';

@@ -11,6 +11,7 @@
 1. [Validate against AppMap](01-validate-against-appmap.md) (Task 0.1)
 2. [The monorepo: pnpm, Turborepo and strict TypeScript](02-monorepo-pnpm-turborepo.md) (Task 0.2)
 3. [Linting and formatting: ESLint 9, Prettier and Lefthook](03-linting-and-formatting.md) (Task 0.3)
+4. [Unit testing: Vitest, workspaces and coverage](04-testing-setup-vitest.md) (Task 0.4)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -29,6 +30,9 @@
 - Prettier 3 code formatting vs documentation preservation (`.prettierignore`): [03](03-linting-and-formatting.md)
 - Lefthook git pre-commit hooks + auto re-staging (`stage_fixed: true`): [03](03-linting-and-formatting.md)
 - PostToolUse formatting hook for automated token-free cleanup: [03](03-linting-and-formatting.md)
+- Vitest workspace configuration (`vitest.workspace.ts`): [04](04-testing-setup-vitest.md)
+- Colocated unit tests (`foo.ts` → `foo.test.ts`): [04](04-testing-setup-vitest.md)
+- V8 code coverage reports (`@vitest/coverage-v8`): [04](04-testing-setup-vitest.md)
 
 ## Open questions
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).

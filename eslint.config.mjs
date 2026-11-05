@@ -26,9 +26,12 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
+      '**/coverage/**',
       '**/.turbo/**',
       '**/.pathlight-tracker/**',
       'eslint.config.mjs',
+      'vitest.config.ts',
+      'vitest.workspace.ts',
     ],
   },
 );

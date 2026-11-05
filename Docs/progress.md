@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 3 | 🟡 |
+| 0 Setup and validation | 8 | 4 | 🟡 |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **3** | 🟡 |
+| **MVP total** | **65** | **4** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** 0.4 Testing setup
+**Current task:** none (next: 0.5)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 0.4 | Testing setup | 2026-11-04 | |
+| — | none | | |
 
 ## Known bugs / issues
 
@@ -69,7 +69,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 ## Next steps
 
-1. 0.4 Testing setup (`/start-task 0.4`)
+1. 0.5 CI (`/start-task 0.5`)
 2. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
 3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
@@ -82,7 +82,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.1 | Validate against AppMap | ✅ | | Desk research (adjust); hands-on checklist after 0.6 |
 | 0.2 | Create the monorepo | ✅ | | Clean-clone build verified |
 | 0.3 | Linting and formatting | ✅ | | |
-| 0.4 | Testing setup | 🟡 | | |
+| 0.4 | Testing setup | ✅ | | |
 | 0.5 | CI | ⬜ | | |
 | 0.6 | Fixture apps | ⬜ | | |
 | 0.7 | Docs in repo | ⬜ | | |
@@ -245,14 +245,14 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-04 · 0.4 Testing setup · 🟡 In progress
+### 2026-11-04 · 0.4 Testing setup · ✅ Done
 - Done when: `pnpm test` runs all packages and passes.
-- What changed:
-- Tests:
-- Docs updated: `progress.md`
-- Decisions:
-- Bugs:
-- Follow-ups:
+- What changed: Vitest workspace setup (`vitest.config.ts`, `vitest.workspace.ts`), sample unit tests in all 4 packages (`packages/*/src/index.test.ts`), `@vitest/coverage-v8` coverage, root & package `test` scripts, `turbo.json` test task; `.claude/rules/testing.md` added; `test-runner` subagent added; Lesson 04 added.
+- Tests: `pnpm test` (4/4 packages pass), `pnpm test:coverage` (100% statements, branches, functions, lines), `pnpm lint`, `pnpm typecheck`, `pnpm build`.
+- Docs updated: `progress.md`, `Docs/learning/04-testing-setup-vitest.md`, `Docs/learning/README.md`.
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-04 · 0.3 Linting and formatting · ✅ Done
 - Done when: `pnpm lint` passes; a badly formatted file is fixed on commit.
