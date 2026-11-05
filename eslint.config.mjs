@@ -17,12 +17,21 @@ export default tseslint.config(
     },
   },
   {
+    // Nest resolves injected classes from decorator metadata, so their imports
+    // must stay value imports; this tells consistent-type-imports about it.
+    files: ['fixtures/nestjs-app/**/*.ts'],
+    languageOptions: {
+      parserOptions: { emitDecoratorMetadata: true, experimentalDecorators: true },
+    },
+  },
+  {
     ignores: [
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
       '**/.turbo/**',
       '**/.pathlight-tracker/**',
+      'fixtures/express-app/generated/**',
       'eslint.config.mjs',
     ],
   },

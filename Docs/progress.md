@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 5 | 🟡 |
+| 0 Setup and validation | 8 | 6 | 🟡 |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **5** | 🟡 |
+| **MVP total** | **65** | **6** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** none (next: 0.6)
+**Current task:** none (next: 0.7)
 **Blockers:** none
 
 ## In progress
@@ -67,12 +67,13 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 | 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
+| 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. 0.6 Fixture apps (`/start-task 0.6`)
-2. Hands-on AppMap checklist after 0.6 (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
-3. 0.8 Spec consistency pass → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
+1. Hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
+2. 0.7 Docs in repo (`/start-task 0.7`)
+3. 0.8 Spec consistency pass (also the fixture vs spec mismatches logged in the 0.6 entry) → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
 
 ---
 
@@ -85,7 +86,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.3 | Linting and formatting | ✅ | [#3](https://github.com/Pradeepkumar-18/Pathlight/pull/3) | |
 | 0.4 | Testing setup | ✅ | [#4](https://github.com/Pradeepkumar-18/Pathlight/pull/4) | |
 | 0.5 | CI | ✅ | [#5](https://github.com/Pradeepkumar-18/Pathlight/pull/5) | Green on Ubuntu, macOS, Windows (Node 24) |
-| 0.6 | Fixture apps | ⬜ | | |
+| 0.6 | Fixture apps | ✅ | | Both fixtures + smoke script; CI runs the smoke test |
 | 0.7 | Docs in repo | ⬜ | | |
 | 0.8 | Spec consistency pass | ⬜ | | |
 | ✔ | **Checkpoint 0: Setup review** | ⬜ | | |
@@ -245,6 +246,15 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-05 · 0.6 Fixture apps · ✅ Done
+- Done when: Both apps start with one command; a script hits their endpoints and gets the expected 200s and the deliberate 500.
+- What changed: `fixtures/nestjs-app` (NestJS 11, Mongoose on `mongodb-memory-server`, TypeORM on in-memory SQLite, guard, pipes, interceptor, exception filter, the PRD `POST /orders` bug at `pricing.service.ts:27`), `fixtures/express-app` (Express 5, middleware chain, error middleware, Prisma 7 on SQLite, axios to a local stub, deliberate 500 on `GET /users/7/badge`), `fixtures/smoke` script; root scripts `fixture:nest`, `fixture:express`, `fixtures:smoke`; CI runs the smoke test and caches the MongoDB binary.
+- Tests: `pnpm fixtures:smoke` (13 status checks + 4 log checks) passes locally on Windows; unit tests pin both deliberate bugs (`pricing.service.test.ts`, `badge.service.test.ts`); lint, typecheck, test, format all green. CI (Ubuntu, macOS, Windows) runs the smoke test on the PR.
+- Docs updated: `Docs/tracer-tech-stack.md` §10 (fixture databases), `Docs/decisions/0020-fixture-stack.md`, `fixtures/README.md`.
+- Decisions: 0020 (fixture databases without install, NestJS 11, install-script allowlist), approved 2026-11-05.
+- Bugs: none.
+- Follow-ups: (1) NestJS 12 is ESM-only, so new Nest apps can't be traced by the CommonJS-only MVP: check at Checkpoint 0 / product-analyst. (2) For 0.8: PRD says "Cannot read 'rate' of undefined" but Node emits "Cannot read properties of undefined (reading 'rate')"; PRD `users.findOne({ id: 7 })` vs user-flows `{_id:7}` (fixture uses numeric `id`); PRD `JwtAuthGuard` and `CreateOrderDto { userId, items }` vs fixture `AuthGuard` and `{ userId }`; seed user name, file lines other than pricing; CLAUDE.md `dev:nest` / `dev:express` are for 2.12 (fixture-only start is `fixture:nest` / `fixture:express`); fixtures need Node >=20.19, tech stack says 20+.
 
 ### 2026-11-05 · 0.5 CI · ✅ Done
 - Done when: A PR shows all checks green on all three OSes.

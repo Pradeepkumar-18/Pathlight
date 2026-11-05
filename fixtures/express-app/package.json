@@ -1,0 +1,29 @@
+{
+  "name": "@pathlight-tracker/fixture-express-app",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Express fixture (middleware chain, error middleware, axios, Prisma) with a deliberate 500",
+  "type": "commonjs",
+  "main": "dist/src/main.js",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "prisma generate && prisma db push && tsc -p tsconfig.build.json",
+    "start": "node --enable-source-maps dist/src/main.js",
+    "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run --dir src"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "axios": "1.21.0",
+    "express": "5.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "prisma": "7.10.1"
+  }
+}

@@ -1,2 +1,12 @@
 packages:
   - 'packages/*'
+  - 'fixtures/*'
+
+# pnpm 10 blocks dependency install scripts by default. These fixture
+# dependencies need theirs: native SQLite bindings, Prisma engines and the
+# in-memory MongoDB binary.
+onlyBuiltDependencies:
+  - better-sqlite3
+  - prisma
+  - '@prisma/engines'
+  - mongodb-memory-server

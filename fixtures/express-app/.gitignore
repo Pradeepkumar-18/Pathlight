@@ -1,0 +1,4 @@
+# Built by `pnpm build` (prisma generate / prisma db push)
+generated/
+prisma/*.db
+prisma/*.db-journal

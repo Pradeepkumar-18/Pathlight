@@ -1,0 +1,18 @@
+// SQLite keeps the fixture self-contained: `pnpm build` creates the database
+// file next to this schema, and the app seeds it on every start.
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id   Int     @id
+  name String
+  // Optional on purpose: users without a tier trigger the deliberate bug.
+  tier String?
+}
