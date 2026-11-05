@@ -1,2 +1,2 @@
-// Placeholder build; task 4.1 replaces this package setup with Vite and React.
-export const UI_VERSION = '0.0.1';
+// React map UI entry arrives in task 4.1.
+export const PACKAGE_NAME = '@pathlight-tracker/ui';

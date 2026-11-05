@@ -1,2 +1,2 @@
-// Collector CLI arrives in task 2.2.
-export const COLLECTOR_VERSION = '0.0.1';
+// Collector entry arrives in task 2.1.
+export const PACKAGE_NAME = '@pathlight-tracker/collector';

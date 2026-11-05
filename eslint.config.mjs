@@ -7,12 +7,6 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   eslintConfigPrettier,
   {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
@@ -30,8 +24,6 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/.pathlight-tracker/**',
       'eslint.config.mjs',
-      'vitest.config.ts',
-      'vitest.workspace.ts',
     ],
   },
 );

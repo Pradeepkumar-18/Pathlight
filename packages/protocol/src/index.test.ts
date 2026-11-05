@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { PROTOCOL_VERSION } from './index';
+import { PACKAGE_NAME } from './index';
 
 describe('protocol package', () => {
-  it('should define PROTOCOL_VERSION', () => {
-    expect(PROTOCOL_VERSION).toBe('0.0.1');
+  it('should define PACKAGE_NAME', () => {
+    expect(PACKAGE_NAME).toBe('@pathlight-tracker/protocol');
   });
 });

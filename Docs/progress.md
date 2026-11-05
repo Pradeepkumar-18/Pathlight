@@ -247,8 +247,8 @@ Newest first. One entry per task (or checkpoint). Template:
 
 ### 2026-11-04 · 0.4 Testing setup · ✅ Done
 - Done when: `pnpm test` runs all packages and passes.
-- What changed: Vitest workspace setup (`vitest.config.ts`, `vitest.workspace.ts`), sample unit tests in all 4 packages (`packages/*/src/index.test.ts`), `@vitest/coverage-v8` coverage, root & package `test` scripts, `turbo.json` test task; `.claude/rules/testing.md` added; `test-runner` subagent added; Lesson 04 added.
-- Tests: `pnpm test` (4/4 packages pass), `pnpm test:coverage` (100% statements, branches, functions, lines), `pnpm lint`, `pnpm typecheck`, `pnpm build`.
+- What changed: Vitest root config (`vitest.config.mts`, root `include`; packages run `vitest run --dir src`), `tsconfig.build.json` per package so tests stay out of `dist/`, sample unit tests in all 4 packages (`packages/*/src/index.test.ts`), `@vitest/coverage-v8` coverage, root & package `test` scripts, `turbo.json` test task; `.claude/rules/testing.md` added; `test-runner` subagent added; Lesson 04 added.
+- Tests: `pnpm test` (4/4 packages pass), `pnpm --filter <pkg> test` and `pnpm test:turbo` after a build, `pnpm test:coverage` (100% statements, branches, functions, lines), `pnpm lint`, `pnpm typecheck`, `pnpm build`.
 - Docs updated: `progress.md`, `Docs/learning/04-testing-setup-vitest.md`, `Docs/learning/README.md`.
 - Decisions: none.
 - Bugs: none.
