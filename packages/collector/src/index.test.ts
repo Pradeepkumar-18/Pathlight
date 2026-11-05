@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { COLLECTOR_VERSION } from './index';
+import { PACKAGE_NAME } from './index';
 
 describe('collector package', () => {
-  it('should define COLLECTOR_VERSION', () => {
-    expect(COLLECTOR_VERSION).toBe('0.0.1');
+  it('should define PACKAGE_NAME', () => {
+    expect(PACKAGE_NAME).toBe('@pathlight-tracker/collector');
   });
 });

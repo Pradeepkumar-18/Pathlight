@@ -9,7 +9,9 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ['*.mts'],
+        },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -30,8 +32,6 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/.pathlight-tracker/**',
       'eslint.config.mjs',
-      'vitest.config.ts',
-      'vitest.workspace.ts',
     ],
   },
 );
