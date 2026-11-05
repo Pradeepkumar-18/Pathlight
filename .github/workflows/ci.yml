@@ -33,6 +33,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
 
+      # The fixtures' in-memory MongoDB binary is large (up to ~800 MB on
+      # Windows); cache it so installs don't download it on every run.
+      - name: Cache MongoDB binary for fixtures
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/mongodb-memory-server
+          key: mongodb-binary-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: mongodb-binary-${{ runner.os }}-${{ runner.arch }}-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -50,3 +59,6 @@ jobs:
 
       - name: Build packages
         run: pnpm build
+
+      - name: Fixture smoke test
+        run: pnpm fixtures:smoke

@@ -77,7 +77,7 @@ Phase 4 can start as soon as the REST API and seed data exist (task 2.10), in pa
 **Checkpoint 0: Setup review**
 
 - [ ] Clean clone → install → build → lint → test all pass locally and in CI on three OSes.
-- [ ] Both fixture apps run and reproduce the `POST /orders` bug.
+- [x] Both fixture apps run and reproduce the `POST /orders` bug.
 - [ ] AppMap validation decision recorded; if "adjust", PRD updated before continuing.
 
 ---

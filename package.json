@@ -17,6 +17,9 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:turbo": "turbo run test",
+    "fixture:nest": "turbo run build --filter=@pathlight-tracker/fixture-nestjs-app && pnpm --filter @pathlight-tracker/fixture-nestjs-app start",
+    "fixture:express": "turbo run build --filter=@pathlight-tracker/fixture-express-app && pnpm --filter @pathlight-tracker/fixture-express-app start",
+    "fixtures:smoke": "turbo run build --filter=./fixtures/* && pnpm --filter @pathlight-tracker/fixtures-smoke start",
     "changeset": "changeset",
     "prepare": "lefthook install"
   },

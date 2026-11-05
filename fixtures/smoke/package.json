@@ -1,0 +1,16 @@
+{
+  "name": "@pathlight-tracker/fixtures-smoke",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Starts each fixture app and checks its endpoints return the expected statuses",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "start": "node src/smoke.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src"
+  }
+}

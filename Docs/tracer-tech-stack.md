@@ -188,7 +188,7 @@ There is nothing to host: Pathlight Tracker runs entirely on the developer's mac
 | Git hooks | **lefthook** (lint and format on commit) |
 | Unit tests | **Vitest** |
 | Behaviour-preservation tests | Corpus of tricky code (getters, generators, decorators, `this`, `arguments`, short-circuit conditions, async ordering) run with and without the agent, asserting identical results |
-| Fixture apps | Sample **Express** app and sample **NestJS** app (Mongoose and TypeORM) in the repo |
+| Fixture apps | Sample **Express** app (Prisma 7 on SQLite, axios) and sample **NestJS** 11 app (Mongoose on `mongodb-memory-server`, TypeORM on in-memory SQLite) in the repo; no database install or Docker. NestJS 11 because 12 is ESM-only (see `fixtures/README.md`) |
 | UI end-to-end tests | **Playwright** |
 | Performance benchmarks | **autocannon** against fixtures, traced vs untraced |
 | Extension tests (Phase 2) | **`@vscode/test-electron`** |

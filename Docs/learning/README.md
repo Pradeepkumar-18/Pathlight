@@ -13,6 +13,7 @@
 3. [Linting and formatting: ESLint 9, Prettier and Lefthook](03-linting-and-formatting.md) (Task 0.3)
 4. [Unit testing: Vitest and coverage](04-testing-setup-vitest.md) (Task 0.4)
 5. [Continuous Integration: GitHub Actions and Changesets](05-ci-github-actions-changesets.md) (Task 0.5)
+6. [Fixture apps: real apps with deliberate bugs](06-fixture-apps.md) (Task 0.6)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -37,6 +38,12 @@
 - GitHub Actions CI matrix (`[ubuntu, macos, windows]` x Node 24, decision 0019): [05](05-ci-github-actions-changesets.md)
 - Frozen lockfile verification in CI (`--frozen-lockfile`): [05](05-ci-github-actions-changesets.md)
 - Monorepo package versioning & automated changelogs with Changesets: [05](05-ci-github-actions-changesets.md)
+- Fixture apps and deliberate bugs (the PRD user-7 bug): [06](06-fixture-apps.md)
+- In-memory databases instead of installs (mongodb-memory-server, SQLite): [06](06-fixture-apps.md)
+- NestJS 11 vs 12 (ESM-only risk for the CommonJS MVP): [06](06-fixture-apps.md)
+- pnpm `onlyBuiltDependencies` install-script allowlist: [06](06-fixture-apps.md)
+- Decorator metadata and value imports: [06](06-fixture-apps.md)
+- `--enable-source-maps` and the smoke-script pattern (PORT=0, parse URL, kill child): [06](06-fixture-apps.md)
 
 ## Open questions
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).
