@@ -221,7 +221,7 @@ Pinned by major version. At project setup, install the latest stable release wit
 | Node.js (development, CI, CLI) | 24.x LTS (set in `.nvmrc` and `engines`) |
 | Node.js (traced apps supported) | 20.x and newer |
 | pnpm | 10.x (set via `packageManager` field) |
-| TypeScript | 5.x (strict mode) |
+| TypeScript | 5.x (strict mode; installed: 5.9.3) |
 | React | 19.x |
 | Vite | latest stable major at setup |
 | Tailwind CSS | 4.x |
@@ -239,8 +239,11 @@ Pinned by major version. At project setup, install the latest stable release wit
 | Zod | latest stable major at setup |
 | Vitest | latest stable major at setup |
 | Playwright | 1.x |
-| ESLint | 9.x (flat config) |
-| Prettier | 3.x |
+| ESLint | 9.x (flat config; installed: 9.39.5) |
+| typescript-eslint | 8.72.1 |
+| Prettier | 3.x (installed: 3.9.10) |
+| lefthook | 2.2.2 |
+| turbo | 2.11.10 |
 | VS Code engine (Phase 2) | `^1.85.0` minimum |
 
 Rules:

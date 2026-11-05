@@ -1,6 +1,6 @@
 ---
 paths:
-  - 'packages/collector/**'
+  - "packages/collector/**"
 ---
 
 # Collector rules

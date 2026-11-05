@@ -5,5 +5,4 @@ dist
 pnpm-lock.yaml
 Docs/
 docs/
-
-
+*.md

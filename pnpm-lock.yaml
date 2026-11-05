@@ -9,22 +9,22 @@ importers:
   .:
     devDependencies:
       '@eslint/js':
-        specifier: ^9.39.5
+        specifier: 9.39.5
         version: 9.39.5
       '@types/node':
         specifier: 24.19.2
         version: 24.19.2
       eslint:
-        specifier: ^9.39.5
+        specifier: 9.39.5
         version: 9.39.5
       eslint-config-prettier:
-        specifier: ^10.1.8
+        specifier: 10.1.8
         version: 10.1.8(eslint@9.39.5)
       lefthook:
-        specifier: ^2.2.2
+        specifier: 2.2.2
         version: 2.2.2
       prettier:
-        specifier: ^3.9.10
+        specifier: 3.9.10
         version: 3.9.10
       turbo:
         specifier: 2.11.10
@@ -33,7 +33,7 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.72.1
+        specifier: 8.72.1
         version: 8.72.1(eslint@9.39.5)(typescript@5.9.3)
 
   packages/agent: {}
