@@ -247,7 +247,7 @@ Newest first. One entry per task (or checkpoint). Template:
 
 ### 2026-11-04 · 0.3 Linting and formatting · ✅ Done
 - Done when: `pnpm lint` passes; a badly formatted file is fixed on commit.
-- What changed: ESLint 9 flat config + `typescript-eslint` v8 (`eslint.config.mjs`), Prettier 3 (`.prettierrc`, `.prettierignore`), Lefthook pre-commit git hook (`lefthook.yml`), root & package scripts for `lint`, `format`, `format:check`; PostToolUse Prettier hook (`.claude/hooks/format-on-edit.sh`); Lesson 03 added.
+- What changed: ESLint 9 flat config + `typescript-eslint` v8 (`eslint.config.mjs`), Prettier 3 (`.prettierrc`, `.prettierignore`), Lefthook pre-commit git hook (`lefthook.yml`), root & package scripts for `lint`, `format`, `format:check`; PostToolUse Prettier hook (`.claude/hooks/format-on-edit.sh`); Lesson 03 added. Review fixes: LF line endings for all text files (`.gitattributes`), exact version pins, Markdown excluded from Prettier, installed versions recorded in tech-stack §11.
 - Tests: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm format:check` all pass; Lefthook pre-commit auto-formatting verified.
 - Docs updated: `progress.md`, `Docs/learning/03-linting-and-formatting.md`, `Docs/learning/README.md`.
 - Decisions: none.

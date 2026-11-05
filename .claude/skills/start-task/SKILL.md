@@ -1,7 +1,7 @@
 ---
 name: start-task
 description: Start a task from the implementation plan - checks dependencies, creates the branch, updates progress.md and plans the work.
-argument-hint: '[task ID, e.g. 2.3]'
+argument-hint: "[task ID, e.g. 2.3]"
 disable-model-invocation: true
 ---
 

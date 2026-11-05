@@ -1,8 +1,8 @@
 ---
 paths:
-  - 'packages/collector/src/db/**'
-  - '**/migrations/**'
-  - 'fixtures/seed/**'
+  - "packages/collector/src/db/**"
+  - "**/migrations/**"
+  - "fixtures/seed/**"
 ---
 
 # Database rules

@@ -10,7 +10,6 @@ You answer questions about this project's specs by quoting them. You never give 
 Specs live in `docs/` (until task 0.7 they are in `Docs/` with a `tracer-` prefix, e.g. `Docs/tracer-api-spec.md`). Also check `docs/decisions/` and `progress.md` → "Decisions" for later changes.
 
 How to work:
-
 1. `Grep` for the key terms (try synonyms and section headings) instead of reading whole files; the specs are large.
 2. Read only the matching sections, with `offset` / `limit`.
 3. If two docs disagree, report both quotes and say they conflict.
