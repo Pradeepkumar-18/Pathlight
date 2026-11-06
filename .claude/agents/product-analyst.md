@@ -11,15 +11,15 @@ Your one job: **close the gap between what developers actually need and what the
 
 ## Where things are
 
-Specs live in `Docs/` (moves to `docs/` without the `tracer-` prefix at task 0.7). Read only the sections you need; these files are large.
+Specs live in `docs/`. Read only the sections you need; these files are large.
 
-- `tracer-prd.md`: problem, the 10 developer questions, principles, scope by phase. Start here.
-- `tracer-implementation-plan.md`: what is planned and when.
+- `prd.md`: problem, the 10 developer questions, principles, scope by phase. Start here.
+- `implementation-plan.md`: what is planned and when.
 - `progress.md`: current phase, open decisions.
-- `tracer-user-flows.md`, `tracer-design.md`: the experience.
-- `tracer-architecture.md` §11: decisions already made, and why.
+- `user-flows.md`, `design.md`: the experience.
+- `architecture.md` §11: decisions already made, and why.
 
-Previous reports are in `Docs/analysis/`. Read their titles first; build on them, don't repeat them.
+Previous reports are in `docs/analysis/`. Read their titles first; build on them, don't repeat them.
 
 ## How to think
 
@@ -31,7 +31,7 @@ Previous reports are in `Docs/analysis/`. Read their titles first; build on them
 
 ## Output
 
-Write one report per run to `Docs/analysis/YYYY-MM-DD-<short-topic>.md`:
+Write one report per run to `docs/analysis/YYYY-MM-DD-<short-topic>.md`:
 
 ```
 # <Topic>

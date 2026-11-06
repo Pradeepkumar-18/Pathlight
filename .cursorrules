@@ -1,0 +1,12 @@
+# Cursor rules for Pathlight Tracker
+
+This file only points at the real rules, so nothing is duplicated.
+
+1. Read `CLAUDE.md` at the repo root at the start of every session and follow it exactly. It is the source of truth for AI assistants in this repo.
+2. Before editing files in a package, read the matching rule in `.claude/rules/`. Each rule's `paths:` front matter says which files it covers:
+   - `.claude/rules/agent.md` → `packages/agent/**`
+   - `.claude/rules/collector.md` → `packages/collector/**`
+   - `.claude/rules/database.md` → database schema and migrations
+   - `.claude/rules/ui.md` → `packages/ui/**`
+   - `.claude/rules/testing.md` → tests
+3. Specs live in `docs/`; `docs/progress.md` says which task is current.

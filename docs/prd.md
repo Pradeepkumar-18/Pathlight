@@ -171,7 +171,7 @@ All views read the same recording, so supporting many views is cheap on the back
 - **Capture object IDs from day one.** Data journey ships later, but old recordings can't gain object identity retroactively.
 - **Decisions as a toggle layer.** Condition markers (`if` / `switch` in the MVP, expressions in v1) and loop markers (v1) can be switched on or off so the map stays clean.
 
-The approved visual design (three panels: request list, step tree, inspector) is in `tracer-design.md` and `tracer-ui-reference.png`.
+The approved visual design (three panels: request list, step tree, inspector) is in `design.md` and `ui-reference.png`.
 
 ## Tracking coverage
 
@@ -349,7 +349,7 @@ Pathlight Tracker must never change how the user's code behaves, and must keep t
 | Reliability | A pathlight-tracker failure must never crash the user's app; it degrades to "not traced" |
 | Compatibility | Node 20+, TypeScript, CommonJS; modern Chrome, Edge, Firefox and Safari for the map UI; VS Code 1.85+ for the extension phase; Windows, macOS, Linux |
 | Storage | Keep the last 100 requests by default, configurable; older ones move to a trash and are permanently deleted after 72 hours |
-| Accessibility | WCAG 2.2 AA: contrast, full keyboard use, screen-reader labels (see `tracer-design.md` §10) |
+| Accessibility | WCAG 2.2 AA: contrast, full keyboard use, screen-reader labels (see `design.md` §10) |
 
 ## Competitive landscape
 
@@ -389,7 +389,7 @@ Ship the smallest loop that proves value (hit an endpoint, watch the live map, j
 | **v2** | VS Code and wider reach | VS Code extension (same UI, inline values, CodeLens); ESM and bundlers; Fastify and Next.js; Kafka consumers and cron jobs; data journey; export | Extension adoption and retention |
 | **Future** | AI on top of real data | AI explanation layer; opt-in usage stats; tablet and phone layouts | Core proven |
 
-Each phase starts only when the previous gate is met. The task-level breakdown is in `tracer-implementation-plan.md`.
+Each phase starts only when the previous gate is met. The task-level breakdown is in `implementation-plan.md`.
 
 ## Risks, assumptions and open questions
 
@@ -427,10 +427,10 @@ The biggest risks are technical (instrumenting arbitrary AI-written code safely)
 
 | Document | What it covers |
 | --- | --- |
-| `tracer-tech-stack.md` | Technology choices, versions, "do not use" list |
-| `tracer-architecture.md` | Processes, folders, data flow, auth, modules, state, env vars, security, errors, decisions |
-| `tracer-data-model.md` | Database tables, keys, indexes, enums, soft delete, access rules, seed data |
-| `tracer-user-flows.md` | Screens, journeys, navigation, connection states, empty/loading/error states, edge cases |
-| `tracer-design.md` + `tracer-ui-reference.png` | Colors, type, spacing, components, layout, responsive, themes, accessibility |
-| `tracer-api-spec.md` | REST and WebSocket endpoints, types, errors, pagination, limits |
-| `tracer-implementation-plan.md` | Phases, tasks, dependencies, "done when", checkpoints, MVP line |
+| `tech-stack.md` | Technology choices, versions, "do not use" list |
+| `architecture.md` | Processes, folders, data flow, auth, modules, state, env vars, security, errors, decisions |
+| `data-model.md` | Database tables, keys, indexes, enums, soft delete, access rules, seed data |
+| `user-flows.md` | Screens, journeys, navigation, connection states, empty/loading/error states, edge cases |
+| `design.md` + `ui-reference.png` | Colors, type, spacing, components, layout, responsive, themes, accessibility |
+| `api-spec.md` | REST and WebSocket endpoints, types, errors, pagination, limits |
+| `implementation-plan.md` | Phases, tasks, dependencies, "done when", checkpoints, MVP line |

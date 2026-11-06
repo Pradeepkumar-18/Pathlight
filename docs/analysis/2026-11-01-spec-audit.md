@@ -72,7 +72,7 @@ Saved as received (it uses the old working name "Tracer"). Decisions taken on it
 - **3.15** The API's value format has a "suspicious" flag that the data model's version is missing. Fix: add it.
 - **3.16** CLAUDE.md says object IDs are ULIDs, but they're simple counters like `obj_17`. Fix: correct CLAUDE.md.
 - **3.17** Agent and collector both read `TRACER_LOG_LEVEL` with different defaults; the app inherits the collector's settings. Fix: give the agent its own setting.
-- **3.18** The docs refer to each other as `tracer-prd.md` etc., while CLAUDE.md uses `docs/prd.md`. Fix: rename the files (task 0.7).
+- **3.18** The docs refer to each other as `prd.md` etc., while CLAUDE.md uses `docs/prd.md`. Fix: rename the files (task 0.7).
 - **3.19** The folder layout is drawn differently in three docs. Fix: keep one official version, in the architecture doc.
 - **3.20** The tech stack says "two tables," but there are five. Fix: correct the wording.
 

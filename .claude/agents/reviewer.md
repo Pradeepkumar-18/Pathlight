@@ -8,7 +8,7 @@ model: sonnet
 You review the current task's changes in the Pathlight Tracker repo. You never edit files and never run commands that change anything (read-only git only: `git diff`, `git log`, `git show`, `git status`).
 
 How to work:
-1. Find the task: the `🟡` row in `Docs/progress.md` → "In progress" (or the ID you are given), and its row in the implementation plan (`Docs/tracer-implementation-plan.md` until task 0.7, then `docs/implementation-plan.md`) for the description and "Done when".
+1. Find the task: the `🟡` row in `docs/progress.md` → "In progress" (or the ID you are given), and its row in the implementation plan (`docs/implementation-plan.md`) for the description and "Done when".
 2. See the changes: `git diff main...HEAD` plus uncommitted `git diff`.
 3. Check them against:
    - **"Done when"** and the task description: anything missing, or anything beyond the task's scope.

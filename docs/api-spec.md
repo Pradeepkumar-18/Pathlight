@@ -7,7 +7,7 @@ Pathlight Tracker's backend is the **collector**, a local Node process started b
 
 Everything runs on the developer's machine at `http://127.0.0.1:<port>`. There is no cloud API.
 
-Related docs: `tracer-architecture.md` (§4 auth, §6 API approach), `tracer-data-model.md` (tables, soft delete), `tracer-user-flows.md` (which screen calls what).
+Related docs: `architecture.md` (§4 auth, §6 API approach), `data-model.md` (tables, soft delete), `user-flows.md` (which screen calls what).
 
 ---
 
@@ -661,7 +661,7 @@ A built-in, read-only example (the failing `POST /orders` from the seed data) fo
 
 ## 7. REST endpoints: delete, trash, restore, client logs
 
-Soft-delete rules are defined in `tracer-data-model.md` §7. Every change is also pushed to `/live` (`live.request.deleted`, `live.request.restored`, `live.request.purged`).
+Soft-delete rules are defined in `data-model.md` §7. Every change is also pushed to `/live` (`live.request.deleted`, `live.request.restored`, `live.request.purged`).
 
 ### 7.1 `DELETE /api/v1/requests/:requestId`
 
@@ -910,7 +910,7 @@ Connect with subprotocols `["pathlight-tracker.v1", "bearer.<token>"]`.
 ] }
 ```
 
-Event types inside a batch: `request.start`, `step.enter`, `step.exit`, `step.throw`, `boundary`, `decision` (v1), `loop` (v1), `log` (v1), `request.end`, `agent.disabled`. Field lists are in `tracer-architecture.md` §3d.
+Event types inside a batch: `request.start`, `step.enter`, `step.exit`, `step.throw`, `boundary`, `decision` (v1), `loop` (v1), `log` (v1), `request.end`, `agent.disabled`. Field lists are in `architecture.md` §3d.
 
 **Collector → agent**
 

@@ -19,7 +19,7 @@ AI writes much of our code now, and when it breaks nobody holds a mental model o
 
 ## Status
 
-🚧 **Planning complete, implementation not started.** Next task: 0.1 (validate against AppMap). Live status is in [Docs/progress.md](Docs/progress.md).
+🚧 **Phase 0 (setup) is finishing; the product itself is not built yet.** The repo has the monorepo, tooling, CI and two fixture apps. Live status is in [docs/progress.md](docs/progress.md).
 
 Planned usage once the MVP ships:
 
@@ -27,19 +27,38 @@ Planned usage once the MVP ships:
 npx pathlight-tracker dev -- <your start command>
 ```
 
+## Set up the repo
+
+You need **Node 24** and **pnpm 10** (`corepack enable` gives you the pinned pnpm). On Windows, clone into a short path such as `C:\dev\pathlight` or enable long paths (see Troubleshooting).
+
+1. `git clone https://github.com/Pradeepkumar-18/Pathlight.git`
+2. `cd Pathlight`
+3. `corepack enable`
+4. `pnpm install` (the first install downloads a MongoDB binary for the fixtures; it can take a few minutes)
+5. `pnpm build`
+6. `pnpm lint && pnpm typecheck && pnpm test`
+7. `pnpm fixtures:smoke` starts both fixture apps and checks their endpoints
+
+To run one fixture app and call it yourself: `pnpm fixture:nest` (port 3001) or `pnpm fixture:express` (port 3002). The endpoints and the deliberate bugs are listed in [fixtures/README.md](fixtures/README.md).
+
+### Troubleshooting
+
+- **`turbo` fails with ENOENT on Windows:** the repo path is too deep, so files inside `node_modules/.pnpm` pass the 260-character limit. Clone into a shorter folder, or enable long paths (`git config --system core.longpaths true` and the Windows "Enable Win32 long paths" policy).
+- **Wrong Node version:** the repo requires Node 24 (`.nvmrc`); the fixture apps themselves run on Node 20.19 or newer.
+
 ## Docs
 
 | Doc | What's in it |
 | --- | --- |
-| [PRD](Docs/tracer-prd.md) | Problem, goals, scope by phase (MVP, v1, v2) |
-| [Implementation plan](Docs/tracer-implementation-plan.md) | Every task, its dependencies and "Done when" |
-| [Progress](Docs/progress.md) | Current task, bugs, decisions, log |
-| [Architecture](Docs/tracer-architecture.md) | Packages, data flow, security, key decisions |
-| [Tech stack](Docs/tracer-tech-stack.md) | Libraries and tools, and what not to use |
-| [Data model](Docs/tracer-data-model.md) | SQLite schema, retention, soft delete |
-| [API spec](Docs/tracer-api-spec.md) | REST and WebSocket contract |
-| [User flows](Docs/tracer-user-flows.md) | Screens, states and edge cases |
-| [Design](Docs/tracer-design.md) + [UI reference](Docs/tracer-ui-reference.png) | Tokens, components, layout |
+| [PRD](docs/prd.md) | Problem, goals, scope by phase (MVP, v1, v2) |
+| [Implementation plan](docs/implementation-plan.md) | Every task, its dependencies and "Done when" |
+| [Progress](docs/progress.md) | Current task, bugs, decisions, log |
+| [Architecture](docs/architecture.md) | Packages, data flow, security, key decisions |
+| [Tech stack](docs/tech-stack.md) | Libraries and tools, and what not to use |
+| [Data model](docs/data-model.md) | SQLite schema, retention, soft delete |
+| [API spec](docs/api-spec.md) | REST and WebSocket contract |
+| [User flows](docs/user-flows.md) | Screens, states and edge cases |
+| [Design](docs/design.md) + [UI reference](docs/ui-reference.png) | Tokens, components, layout |
 | [CLAUDE.md](CLAUDE.md) | Rules for AI coding assistants in this repo |
 
-Task 0.7 moves these into `docs/` without the `tracer-` prefix.
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how work is organised (one task per session, one branch and PR per phase).

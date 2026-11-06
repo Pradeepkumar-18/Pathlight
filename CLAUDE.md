@@ -9,7 +9,6 @@ Rules for AI coding assistants working in this repo. Package-specific rules load
 ## Docs: what to read and when
 
 All specs live in `docs/`. They are the source of truth: if code and docs disagree, stop and ask.
-**Until task 0.7**, they are in `Docs/` with a `tracer-` prefix (`docs/prd.md` = `Docs/tracer-prd.md`); `progress.md` has no prefix.
 
 | Doc | Read it when you are… |
 | --- | --- |
@@ -47,15 +46,19 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | --- | --- |
 | Install | `pnpm install` |
 | Build all | `pnpm build` |
-| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` |
-| Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` |
-| Load seed data | `pnpm seed` |
+| Run a fixture app on its own | `pnpm fixture:nest` / `pnpm fixture:express` |
+| Check both fixtures (expected 200s and deliberate 500s) | `pnpm fixtures:smoke` |
+| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` (from task 4.1) |
+| Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` (from task 2.12) |
+| Load seed data | `pnpm seed` (from task 2.4) |
 | Unit tests | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
-| Behaviour corpus | `pnpm test:corpus` |
-| End-to-end tests | `pnpm test:e2e` |
-| Benchmarks | `pnpm bench` |
+| Behaviour corpus | `pnpm test:corpus` (from task 1.3) |
+| End-to-end tests | `pnpm test:e2e` (from task 5.1) |
+| Benchmarks | `pnpm bench` (from task 1.4) |
 | Lint / typecheck / format | `pnpm lint` · `pnpm typecheck` · `pnpm format` |
-| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` |
+| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` (from task 2.3) |
+
+Commands marked "from task X" don't exist yet; the task that adds them must make them work as written.
 
 Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (plus `pnpm test:corpus` for any agent change, `pnpm test:e2e` for any UI or API change).
 
@@ -75,7 +78,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 ## Do's and don'ts
 
 **Do**
-- Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); keep the PR small.
+- Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); one commit (or a few) per task.
 - Write or update tests in the same change. Cover the "Done when" condition explicitly.
 - Follow the exact shapes and examples in `api-spec.md` and `data-model.md`.
 - Update docs in the same PR when behaviour changes (and say so in the PR).
@@ -114,9 +117,10 @@ Update `docs/progress.md` at the start and end of every task, in the same PR (`/
 
 ## Commit and PR format
 
-- Branch: `task/<id>-<short-name>` (e.g. `task/2.3-database-setup`).
+- Branch: one per phase, `phase/<N>-<short-name>` (e.g. `phase/2-collector`); every task of the phase is committed on it.
+- PR: one per phase, opened when the phase's last task is done.
 - Commit messages: Conventional Commits (`feat(collector): add soft delete`, `fix(agent): …`, `test: …`, `docs: …`).
-- PR description: task ID, what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no).
+- PR description: phase, each task ID and what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no).
 
 ## Claude setup
 

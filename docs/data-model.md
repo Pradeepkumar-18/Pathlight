@@ -2,7 +2,7 @@
 
 Pathlight Tracker stores traced requests in **one local SQLite file** (`.pathlight-tracker/traces.db`), owned by the collector. This document defines every table, field, key, index, enum, timestamp rule, access rule and the seed data.
 
-Related docs: `tracer-architecture.md` (event flow, API), `tracer-tech-stack.md` (SQLite, `better-sqlite3`, Drizzle ORM).
+Related docs: `architecture.md` (event flow, API), `tech-stack.md` (SQLite, `better-sqlite3`, Drizzle ORM).
 
 ---
 
@@ -350,7 +350,7 @@ Only the **collector** opens the database. Every other part goes through the col
 | CLI (`pathlight-tracker clear --purge`) | Delete | Hard delete all (active and trashed) | Delete (cascade) | Delete (cascade) | Update |
 | Migrations | Schema only | Schema only | Schema only | Schema only | Create, update `schema_version` |
 
-API calls require the local token and pass origin checks (see `tracer-architecture.md` §4). There are no per-user or per-role rules, because there is only one user.
+API calls require the local token and pass origin checks (see `architecture.md` §4). There are no per-user or per-role rules, because there is only one user.
 
 ---
 

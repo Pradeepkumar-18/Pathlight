@@ -1,5 +1,5 @@
 # 01 · Validate against AppMap
-2026-11-01 · Task 0.1 · `Docs/analysis/2026-11-01-appmap-validation.md`, `Docs/decisions/0001-appmap-validation.md`, `0017-mcp-server-in-v1.md`, `0018-appmap-format-export.md`, PRD "Competitive landscape"
+2026-11-01 · Task 0.1 · `docs/analysis/2026-11-01-appmap-validation.md`, `docs/decisions/0001-appmap-validation.md`, `0017-mcp-server-in-v1.md`, `0018-appmap-format-export.md`, PRD "Competitive landscape"
 
 ## In one sentence
 Before writing code, we checked the closest existing tool (AppMap) to see if our idea was already taken, and the answer was "build it, but change the pitch".
@@ -81,10 +81,10 @@ Task 0.1's "Done when" was a decision file with go/adjust, and that exists, so t
 - **Redaction** → hiding secrets (tokens, passwords) before saving.
 - **Commons Clause** → a licence add-on that limits selling the software. Not OSI open source.
 - **[V] / [I]** → verified from a source / inferred (a guess to check).
-- **ADR / decision record** → a short file in `Docs/decisions/` explaining why we chose something.
+- **ADR / decision record** → a short file in `docs/decisions/` explaining why we chose something.
 
 ## Try it yourself
-(10 minutes) Open `Docs/analysis/2026-11-01-appmap-validation.md` and find the "Task 0.1 verdict" section. Pick two items in the hands-on checklist. For each, write one line: what would you see in AppMap if the report is right, and what if it is wrong? Then note which one would change the decision most.
+(10 minutes) Open `docs/analysis/2026-11-01-appmap-validation.md` and find the "Task 0.1 verdict" section. Pick two items in the hands-on checklist. For each, write one line: what would you see in AppMap if the report is right, and what if it is wrong? Then note which one would change the decision most.
 
 ## Check yourself
 1. Why did we check AppMap before writing any code, and what were the three possible outcomes?
@@ -100,6 +100,6 @@ Task 0.1's "Done when" was a decision file with go/adjust, and that exists, so t
 </details>
 
 ## Go deeper
-- `Docs/analysis/2026-11-01-appmap-validation.md`: "The user gap" and the hands-on checklist.
-- `Docs/tracer-prd.md`: "Competitive landscape".
-- `Docs/decisions/0017-mcp-server-in-v1.md` and `0018-appmap-format-export.md`.
+- `docs/analysis/2026-11-01-appmap-validation.md`: "The user gap" and the hands-on checklist.
+- `docs/prd.md`: "Competitive landscape".
+- `docs/decisions/0017-mcp-server-in-v1.md` and `0018-appmap-format-export.md`.

@@ -2,9 +2,9 @@
 
 Pathlight Tracker is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
 
-This document is the visual and interaction system for the map UI. The approved reference is the three-panel light design in `tracer-ui-reference.png` (request list · step tree · inspector). Explored alternatives are on the **Pathlight Tracker UI variants** canvas.
+This document is the visual and interaction system for the map UI. The approved reference is the three-panel light design in `ui-reference.png` (request list · step tree · inspector). Explored alternatives are on the **Pathlight Tracker UI variants** canvas.
 
-Related docs: `tracer-user-flows.md` (screens and states), `tracer-architecture.md` (UI modules), `tracer-tech-stack.md` (React, Tailwind, shadcn/ui).
+Related docs: `user-flows.md` (screens and states), `architecture.md` (UI modules), `tech-stack.md` (React, Tailwind, shadcn/ui).
 
 ---
 
@@ -350,9 +350,9 @@ Rules at every size:
 
 | Reference | Where |
 | --- | --- |
-| **Approved main screen** (request list · step tree · inspector) | `tracer-ui-reference.png` |
+| **Approved main screen** (request list · step tree · inspector) | `ui-reference.png` |
 | Explored directions A–D (Midnight IDE, Paper, Signal, Metro map) with palettes | **Pathlight Tracker UI variants** design canvas |
-| Screen list, states and flows | `tracer-user-flows.md` |
+| Screen list, states and flows | `user-flows.md` |
 
 ### Differences between the reference image and this spec
 

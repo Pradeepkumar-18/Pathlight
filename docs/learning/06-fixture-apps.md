@@ -1,5 +1,5 @@
 # 06 · Fixture apps: real apps with deliberate bugs
-2026-11-05 · Task 0.6 · `fixtures/nestjs-app`, `fixtures/express-app`, `fixtures/smoke/src/smoke.ts`, `Docs/decisions/0020-fixture-stack.md`
+2026-11-05 · Task 0.6 · `fixtures/nestjs-app`, `fixtures/express-app`, `fixtures/smoke/src/smoke.ts`, `docs/decisions/0020-fixture-stack.md`
 
 ## In one sentence
 A fixture is a small but realistic backend app, with bugs planted on purpose, that we use as the test subject for everything Pathlight will trace later.
@@ -111,5 +111,5 @@ It proves both apps work, including their planned 500s:
 </details>
 
 ## Go deeper
-- `Docs/decisions/0020-fixture-stack.md`
+- `docs/decisions/0020-fixture-stack.md`
 - `fixtures/README.md`

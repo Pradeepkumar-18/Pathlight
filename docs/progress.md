@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 6 | 🟡 |
+| 0 Setup and validation | 8 | 7 | 🟡 |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **6** | 🟡 |
+| **MVP total** | **65** | **7** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** none (next: 0.7)
+**Current task:** 0.8 Spec consistency pass
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| — | none | | |
+| 0.8 | Spec consistency pass | 2026-11-06 | Branch `phase/0-setup-finish` |
 
 ## Known bugs / issues
 
@@ -37,7 +37,7 @@ Open bugs and issues found while coding. Close a row by setting Status to `Fixed
 
 | ID | Found | Area | Description | Status | Fix (task / PR) |
 | --- | --- | --- | --- | --- | --- |
-| BUG-001 | 2026-11-01 | Dev setup (Windows) | `turbo.exe` fails to start (ENOENT) when the repo sits in a deep folder: its path inside `node_modules/.pnpm` passes ~260 characters | Open | Document in README (0.7): keep the clone path short or enable Windows long paths |
+| BUG-001 | 2026-11-01 | Dev setup (Windows) | `turbo.exe` fails to start (ENOENT) when the repo sits in a deep folder: its path inside `node_modules/.pnpm` passes ~260 characters | Fixed | 0.7: README → Troubleshooting (short clone path or Windows long paths) |
 
 IDs: `BUG-001`, `BUG-002`, …
 
@@ -67,6 +67,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 | 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
+| 2026-11-06 | One branch and one PR per phase (not per task) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
@@ -87,8 +88,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.4 | Testing setup | ✅ | [#4](https://github.com/Pradeepkumar-18/Pathlight/pull/4) | |
 | 0.5 | CI | ✅ | [#5](https://github.com/Pradeepkumar-18/Pathlight/pull/5) | Green on Ubuntu, macOS, Windows (Node 24) |
 | 0.6 | Fixture apps | ✅ | | Both fixtures + smoke script; CI runs the smoke test |
-| 0.7 | Docs in repo | ⬜ | | |
-| 0.8 | Spec consistency pass | ⬜ | | |
+| 0.7 | Docs in repo | ✅ | | Branch `phase/0-setup-finish` |
+| 0.8 | Spec consistency pass | 🟡 | | Branch `phase/0-setup-finish` |
 | ✔ | **Checkpoint 0: Setup review** | ⬜ | | |
 
 ## Phase 1: Capture spike
@@ -247,11 +248,23 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
+### 2026-11-06 · 0.8 Spec consistency pass · 🟡 In progress
+- Done when: Each audit item is fixed, or linked to a decision or a later task; `progress.md` lists any left open.
+
+### 2026-11-06 · 0.7 Docs in repo · ✅ Done
+- Done when: `docs/` contains every spec and `progress.md`; `CLAUDE.md` commands all work; README explains setup in under 10 steps.
+- What changed: `Docs/` renamed to `docs/` and the `tracer-` prefix dropped from every spec and `ui-reference.png`; all paths updated in `CLAUDE.md`, `AGENTS.md`, README, agents, skills, hooks and the specs' cross-references; "until task 0.7" notes removed; `Docs/cursorrules` → root `.cursorrules`, now only pointing at `CLAUDE.md` and `.claude/rules/`; README setup (7 steps) + Troubleshooting (BUG-001); new `CONTRIBUTING.md` with the plan's §2 session rules; `CLAUDE.md` commands table adds the fixture commands and marks the ones later tasks add ("from task X"). One branch / one PR per phase (user request): plan §2, `CLAUDE.md`, `/start-task`, `/finish-task` updated.
+- Tests: `pnpm install --frozen-lockfile`, `build`, `format:check`, `lint`, `typecheck`, `test` (9/9, plus one package via `--filter`), `fixtures:smoke` all pass; `session-context.sh` reads `docs/progress.md`.
+- Docs updated: all specs (paths only), `implementation-plan.md` §2, `CLAUDE.md`, `AGENTS.md`, README, `CONTRIBUTING.md`, `.cursorrules`, `.claude/SETUP-ROADMAP.md` (0.7 rows ✅).
+- Decisions: one branch / one PR per phase (Decisions table).
+- Bugs: BUG-001 fixed (documented workaround).
+- Follow-ups: `vibe-coding-setup-guide.md` and the architecture-guide PDF stay in `docs/`.
+
 ### 2026-11-05 · 0.6 Fixture apps · ✅ Done
 - Done when: Both apps start with one command; a script hits their endpoints and gets the expected 200s and the deliberate 500.
 - What changed: `fixtures/nestjs-app` (NestJS 11, Mongoose on `mongodb-memory-server`, TypeORM on in-memory SQLite, guard, pipes, interceptor, exception filter, the PRD `POST /orders` bug at `pricing.service.ts:27`), `fixtures/express-app` (Express 5, middleware chain, error middleware, Prisma 7 on SQLite, axios to a local stub, deliberate 500 on `GET /users/7/badge`), `fixtures/smoke` script; root scripts `fixture:nest`, `fixture:express`, `fixtures:smoke`; CI runs the smoke test and caches the MongoDB binary.
 - Tests: `pnpm fixtures:smoke` (13 status checks + 4 log checks) passes locally on Windows; unit tests pin both deliberate bugs (`pricing.service.test.ts`, `badge.service.test.ts`); lint, typecheck, test, format all green. CI (Ubuntu, macOS, Windows) runs the smoke test on the PR.
-- Docs updated: `Docs/tracer-tech-stack.md` §10 (fixture databases), `Docs/decisions/0020-fixture-stack.md`, `fixtures/README.md`.
+- Docs updated: `docs/tech-stack.md` §10 (fixture databases), `docs/decisions/0020-fixture-stack.md`, `fixtures/README.md`.
 - Decisions: 0020 (fixture databases without install, NestJS 11, install-script allowlist), approved 2026-11-05.
 - Bugs: none.
 - Follow-ups: (1) NestJS 12 is ESM-only, so new Nest apps can't be traced by the CommonJS-only MVP: check at Checkpoint 0 / product-analyst. (2) For 0.8: PRD says "Cannot read 'rate' of undefined" but Node emits "Cannot read properties of undefined (reading 'rate')"; PRD `users.findOne({ id: 7 })` vs user-flows `{_id:7}` (fixture uses numeric `id`); PRD `JwtAuthGuard` and `CreateOrderDto { userId, items }` vs fixture `AuthGuard` and `{ userId }`; seed user name, file lines other than pricing; CLAUDE.md `dev:nest` / `dev:express` are for 2.12 (fixture-only start is `fixture:nest` / `fixture:express`); fixtures need Node >=20.19, tech stack says 20+.
@@ -260,7 +273,7 @@ Newest first. One entry per task (or checkpoint). Template:
 - Done when: A PR shows all checks green on all three OSes.
 - What changed: GitHub Actions CI workflow (`.github/workflows/ci.yml`) updated to test across Ubuntu, macOS, and Windows with Node 24 only (decision 0019); Changesets initialized (`.changeset/config.json`); release workflow dropped; Lesson 05 added.
 - Tests: PR #5 CI run #3 green on Ubuntu, macOS and Windows (Node 24); the merge to `main` (run #4) is green too. Same checks pass locally on a clean checkout.
-- Docs updated: `progress.md`, `Docs/tracer-implementation-plan.md`, `Docs/decisions/0019-ci-node-24-only.md`, `Docs/learning/05-ci-github-actions-changesets.md`, `Docs/learning/README.md`.
+- Docs updated: `progress.md`, `docs/implementation-plan.md`, `docs/decisions/0019-ci-node-24-only.md`, `docs/learning/05-ci-github-actions-changesets.md`, `docs/learning/README.md`.
 - Decisions: 0019.
 - Bugs: none.
 - Follow-ups: Node 20 support for traced apps is tested later through the fixtures and the behaviour corpus (decision 0019).
@@ -269,7 +282,7 @@ Newest first. One entry per task (or checkpoint). Template:
 - Done when: `pnpm test` runs all packages and passes.
 - What changed: Vitest root config (`vitest.config.mts`, root `include`; packages run `vitest run --dir src`), `tsconfig.build.json` per package so tests stay out of `dist/`, sample unit tests in all 4 packages (`packages/*/src/index.test.ts`), `@vitest/coverage-v8` coverage, root & package `test` scripts, `turbo.json` test task; `.claude/rules/testing.md` added; `test-runner` subagent added; Lesson 04 added.
 - Tests: `pnpm test` (4/4 packages pass), `pnpm --filter <pkg> test` and `pnpm test:turbo` after a build, `pnpm test:coverage` (100% statements, branches, functions, lines), `pnpm lint`, `pnpm typecheck`, `pnpm build`.
-- Docs updated: `progress.md`, `Docs/learning/04-testing-setup-vitest.md`, `Docs/learning/README.md`.
+- Docs updated: `progress.md`, `docs/learning/04-testing-setup-vitest.md`, `docs/learning/README.md`.
 - Decisions: none.
 - Bugs: none.
 - Follow-ups: none.
@@ -278,7 +291,7 @@ Newest first. One entry per task (or checkpoint). Template:
 - Done when: `pnpm lint` passes; a badly formatted file is fixed on commit.
 - What changed: ESLint 9 flat config + `typescript-eslint` v8 (`eslint.config.mjs`), Prettier 3 (`.prettierrc`, `.prettierignore`), Lefthook pre-commit git hook (`lefthook.yml`), root & package scripts for `lint`, `format`, `format:check`; PostToolUse Prettier hook (`.claude/hooks/format-on-edit.sh`); Lesson 03 added. Review fixes: LF line endings for all text files (`.gitattributes`), exact version pins, Markdown excluded from Prettier, installed versions recorded in tech-stack §11.
 - Tests: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm format:check` all pass; Lefthook pre-commit auto-formatting verified.
-- Docs updated: `progress.md`, `Docs/learning/03-linting-and-formatting.md`, `Docs/learning/README.md`.
+- Docs updated: `progress.md`, `docs/learning/03-linting-and-formatting.md`, `docs/learning/README.md`.
 - Decisions: none.
 - Bugs: none.
 - Follow-ups: none.

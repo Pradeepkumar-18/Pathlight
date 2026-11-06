@@ -2,7 +2,7 @@
 
 Pathlight Tracker is a local developer debug visualizer: it draws a live map of each request as it hits your local Node/TypeScript server, showing every function it passed through and the real data at each step.
 
-This document describes how the system is built. The technology choices behind it are in `tracer-tech-stack.md`; the product scope is in the PRD.
+This document describes how the system is built. The technology choices behind it are in `tech-stack.md`; the product scope is in the PRD.
 
 ---
 
@@ -219,7 +219,7 @@ Captured values use one shape: `{ type, preview, objectId?, truncated?, redacted
 
 ### 3e. Data model (SQLite via Drizzle)
 
-Summary only; the full schema, keys, indexes, enums and seed data are in `tracer-data-model.md`.
+Summary only; the full schema, keys, indexes, enums and seed data are in `data-model.md`.
 
 | Table | Purpose |
 | --- | --- |
@@ -325,7 +325,7 @@ Spawns and supervises the collector, hosts the UI in a webview, adds inline valu
 
 ### REST endpoints (`/api/v1`)
 
-Main endpoints below. The complete list (including config, sessions, cURL, sample data, logs, compare and client logs), with params, response shapes, errors and limits, is in `tracer-api-spec.md`.
+Main endpoints below. The complete list (including config, sessions, cURL, sample data, logs, compare and client logs), with params, response shapes, errors and limits, is in `api-spec.md`.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -342,7 +342,7 @@ Main endpoints below. The complete list (including config, sessions, cURL, sampl
 | `GET` | `/api/v1/trash` | List trashed requests with time left before purge |
 | `DELETE` | `/api/v1/trash` | Empty the trash (hard delete) |
 
-Requests in the trash are excluded from every other endpoint; their steps are returned only with `includeDeleted=true` (trash preview). Rules for soft delete, retention and purge are in `tracer-data-model.md` §7.
+Requests in the trash are excluded from every other endpoint; their steps are returned only with `includeDeleted=true` (trash preview). Rules for soft delete, retention and purge are in `data-model.md` §7.
 
 ### WebSocket channels
 

@@ -4,7 +4,7 @@ Pathlight Tracker is a local developer debug visualizer: it draws a live map of 
 
 This document defines every screen, the main journeys step by step, navigation, connection ("logged-in vs logged-out") behaviour, empty/loading/error states and edge cases. It covers **Phase 1 (CLI + browser UI)**; Phase 2 (VS Code extension) differences are in §9.
 
-Related docs: PRD, `tracer-architecture.md` (API, auth, events), `tracer-data-model.md` (requests, steps, trash), `tracer-design.md` (visual rules, responsive layout, accessibility).
+Related docs: PRD, `architecture.md` (API, auth, events), `data-model.md` (requests, steps, trash), `design.md` (visual rules, responsive layout, accessibility).
 
 ---
 
@@ -59,7 +59,7 @@ Overlays and banners (not separate screens): agent-disabled banner, "session res
 
 ### 1c. Workspace layout (S3/S4/S5)
 
-The approved design is `tracer-ui-reference.png`; visual rules are in `tracer-design.md`. Navigation lives in the header; there is no navigation sidebar. The left request list and the right inspector are resizable and collapsible.
+The approved design is `ui-reference.png`; visual rules are in `design.md`. Navigation lives in the header; there is no navigation sidebar. The left request list and the right inspector are resizable and collapsible.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -345,7 +345,7 @@ $ npx pathlight-tracker doctor
 
 ## 5. Connected vs not connected ("logged-in vs logged-out")
 
-There are no accounts. Access is controlled by the **one-time token** for the current collector run (see `tracer-architecture.md` §4).
+There are no accounts. Access is controlled by the **one-time token** for the current collector run (see `architecture.md` §4).
 
 | State | How the user gets here | What they see | What they can do |
 | --- | --- | --- | --- |

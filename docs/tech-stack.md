@@ -62,8 +62,8 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Framework | **React** | Same build for browser and webview |
 | Build tool | **Vite** | Fast dev server and builds |
 | Language | **TypeScript** (strict mode) | Shares types with `protocol` package |
-| Styling | **Tailwind CSS** | Semantic color, spacing and radius tokens as CSS variables (see `tracer-design.md` §2–§4); mapped to VS Code theme variables in Phase 2 |
-| Theme | Light + dark, following the OS by default; `data-theme` attribute + Tailwind `darkMode` | See `tracer-design.md` §8 |
+| Styling | **Tailwind CSS** | Semantic color, spacing and radius tokens as CSS variables (see `design.md` §2–§4); mapped to VS Code theme variables in Phase 2 |
+| Theme | Light + dark, following the OS by default; `data-theme` attribute + Tailwind `darkMode` | See `design.md` §8 |
 | Fonts | **Inter** (UI) + **JetBrains Mono** (code), bundled via **Fontsource** | No CDN, so it works offline and in VS Code webviews |
 | UI component library | **shadcn/ui** (Radix primitives) | Copied into the repo, so no runtime lock-in; accessible menus, dialogs, tooltips, tabs |
 | Command palette (search) | shadcn/ui `Command` (**cmdk**) | `Ctrl K` / `Cmd K` |
@@ -75,7 +75,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Flow graph (v1) | **React Flow** (`@xyflow/react`) + **elkjs** | Auto-layout of boxes and arrows |
 | Timeline (v1) | Custom Canvas/SVG | Thousands of bars, zoom and pan |
 | Jump to source (Phase 1) | Editor link pattern, default `vscode://file/<path>:<line>` | Configurable for Cursor, WebStorm and others (`PATHLIGHT_TRACKER_EDITOR`) |
-| Design reference | `tracer-design.md` + `tracer-ui-reference.png` | Approved three-panel layout |
+| Design reference | `design.md` + `ui-reference.png` | Approved three-panel layout |
 
 ---
 
@@ -134,7 +134,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Retention | Last 100 requests, auto-pruned (configurable) | Keeps the file small |
 | Phase 2 | Collector runs as a separate Node process | Avoids native-module problems inside VS Code's Electron host |
 
-Tables: `sessions`, `requests` (with soft delete), `steps`, `object_refs`, `meta`. Full schema in `tracer-data-model.md`.
+Tables: `sessions`, `requests` (with soft delete), `steps`, `object_refs`, `meta`. Full schema in `data-model.md`.
 
 ---
 

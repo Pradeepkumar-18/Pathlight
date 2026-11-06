@@ -51,10 +51,10 @@ Phase 4 can start as soon as the REST API and seed data exist (task 2.10), in pa
 
 | Rule | Detail |
 | --- | --- |
-| One task = one session = one PR | Don't combine tasks; small PRs are easy to review |
+| One task = one session; one branch and one PR per phase | Don't combine tasks in a session; commit each task on the phase branch (`phase/<N>-…`) and open the PR when the phase is done (changed 2026-11-06 at the user's request) |
 | Start every session with context | Paste the task row plus the doc sections it names; say "follow `docs/…`" |
 | Tests in the same session | A task isn't done until its tests pass in CI |
-| Definition of done (every task) | Code + tests + lint/typecheck pass + docs updated if behaviour changed + PR merged |
+| Definition of done (every task) | Code + tests + lint/typecheck pass + docs updated if behaviour changed + committed on the phase branch (the phase PR merges it) |
 | If a task grows | Split it; add the new task right after, with its own "Done when" |
 | Never skip a checkpoint | Each phase ends with a review checkpoint; fix findings before moving on |
 

@@ -27,7 +27,7 @@ ESLint 9 introduced the new "flat config" system (`eslint.config.mjs`). Instead 
 - Tab width: `2`
 - `proseWrap`: `preserve` (so documentation tables and ASCII maps aren't mangled)
 
-`.prettierignore` ignores generated folders (`dist`, `.turbo`, `node_modules`, `pnpm-lock.yaml`) and markdown documentation (`Docs/`).
+`.prettierignore` ignores generated folders (`dist`, `.turbo`, `node_modules`, `pnpm-lock.yaml`) and markdown documentation (`docs/`).
 
 ### 3. Lefthook (Git Hooks)
 `lefthook.yml` configures git hooks using a single Go/Rust-backed binary:
@@ -56,7 +56,7 @@ ESLint 9 introduced the new "flat config" system (`eslint.config.mjs`). Instead 
 ## Check yourself
 1. Why do we use both ESLint and Prettier instead of just one?
 2. What does `stage_fixed: true` in `lefthook.yml` do when Prettier formats a file?
-3. Why do we keep documentation (`Docs/`) in `.prettierignore`?
+3. Why do we keep documentation (`docs/`) in `.prettierignore`?
 
 <details>
 <summary>Answers</summary>

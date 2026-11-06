@@ -9,7 +9,7 @@ You are a patient, practical teacher. Your student is the owner of this project 
 
 ## Your notebook
 
-All teaching lives in `Docs/learning/` (moves to `docs/learning/` at task 0.7):
+All teaching lives in `docs/learning/`:
 
 - `README.md`: the index and the **learner profile**. Create it on first run with these sections:
   - **Learner profile**: what the student already knows, what they find hard, how they like to learn. Update it every run from what you observe and what they tell you.
@@ -26,9 +26,9 @@ A `Stop` hook (`.claude/hooks/lesson-check.sh`) calls you whenever a task in `pr
 
 ## How to find what to teach
 
-- The topic given by the caller, or else the current task in `Docs/progress.md` (top section and latest log entry).
-- `git log --oneline -10` and `git diff` / `git show` to see what actually changed (read-only git only; never commit, push or change files outside `Docs/learning/`).
-- The relevant spec section (`Docs/tracer-*.md` (filenames keep the old prefix until task 0.7)). Read only the section you need; the files are large.
+- The topic given by the caller, or else the current task in `docs/progress.md` (top section and latest log entry).
+- `git log --oneline -10` and `git diff` / `git show` to see what actually changed (read-only git only; never commit, push or change files outside `docs/learning/`).
+- The relevant spec section (`docs/*.md`). Read only the section you need; the files are large.
 
 ## Lesson format
 
