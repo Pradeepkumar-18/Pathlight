@@ -117,7 +117,7 @@ No usage stats are collected for now: this starts as a personal open-source proj
 
 The core journey is four steps: start in trace mode, hit an endpoint, watch the map draw, jump into code.
 
-1. **Start.** The developer runs `npx pathlight-tracker dev -- npm run start:dev` (web MVP), or clicks "Start with Pathlight Tracker" in VS Code (extension phase). No code changes. The map opens in the browser.
+1. **Start.** The developer runs `npx pathlight-tracker dev -- npm run start:dev` (web MVP), or clicks "Start with Pathlight Tracker" in VS Code (v2). No code changes. The map opens in the browser.
 2. **Hit.** They call an endpoint from Postman, the browser or a test.
 3. **Watch.** The map draws live as the request runs: framework steps, each function with its arguments, return value, duration and errors, and DB/HTTP calls at the edges. The failing path turns red.
 4. **Jump.** Clicking a step shows its values in the inspector and opens that exact line in the editor. (Inline values next to the code arrive with the VS Code extension.)
@@ -135,7 +135,7 @@ POST /orders                                       ✗ 500  (84ms)
       ├─ CartService.total(items) → 1200
       └─ PricingService.calculateDiscount(user, 1200)
            ◇ if (user.tier === 'gold') → false   (v1)
-           ✗ TypeError: Cannot read 'rate' of undefined
+           ✗ TypeError: Cannot read properties of undefined (reading 'rate')
 ```
 
 **User stories**
@@ -199,7 +199,7 @@ The MVP records request in → framework steps → your functions with their dat
 | Constructors | `new OrderEntity(...)` | v1 |
 | Inline callbacks, collapsed with a count | `items.map(i => ...)` | v1 |
 | Generators | `function*` | v2 |
-| Getters / setters | `get fullName()` | Not tracked by default (reading can cause side effects) |
+| Getters / setters | `get fullName()` | Never tracked (reading can cause side effects) |
 
 **3. Data at every step**
 
@@ -347,7 +347,7 @@ Pathlight Tracker must never change how the user's code behaves, and must keep t
 | Privacy | Redaction applied before data is stored or streamed |
 | Safety | Capturing values never triggers getters, `toJSON` or lazy DB loads |
 | Reliability | A pathlight-tracker failure must never crash the user's app; it degrades to "not traced" |
-| Compatibility | Node 20+, TypeScript, CommonJS; modern Chrome, Edge, Firefox and Safari for the map UI; VS Code 1.85+ for the extension phase; Windows, macOS, Linux |
+| Compatibility | Node 20+, TypeScript, CommonJS; modern Chrome, Edge, Firefox and Safari for the map UI; VS Code 1.85+ for the extension (v2); Windows, macOS, Linux |
 | Storage | Keep the last 100 requests by default, configurable; older ones move to a trash and are permanently deleted after 72 hours |
 | Accessibility | WCAG 2.2 AA: contrast, full keyboard use, screen-reader labels (see `design.md` §10) |
 

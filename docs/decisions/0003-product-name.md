@@ -11,4 +11,4 @@ The one name is **pathlight-tracker**: npm package, CLI (`npx pathlight-tracker 
 `pathlight` (taken on npm); `tracer` (taken, generic).
 
 ## Consequences
-All docs, `CLAUDE.md`, rules and agents renamed on 2026-11-01. Spec filenames keep the `tracer-` prefix until task 0.7 drops it. Rename the GitHub repo from `Pathlight` to `pathlight-tracker` if you want them to match.
+All docs, `CLAUDE.md`, rules and agents renamed on 2026-11-01. Spec filenames lost the `tracer-` prefix in task 0.7. Rename the GitHub repo from `Pathlight` to `pathlight-tracker` if you want them to match.

@@ -32,7 +32,7 @@ packages/protocol    Shared types + Zod schemas (depends on nothing)
 packages/agent       Runtime agent preloaded into the user's app
 packages/collector   CLI (`pathlight-tracker dev`), Fastify server, SQLite store, ingest, live hub, REST API
 packages/ui          React map UI (browser now, VS Code webview later)
-packages/extension   VS Code extension (Phase 2 only)
+packages/extension   VS Code extension (v2 only)
 fixtures/            nestjs-app, express-app, seed data
 tests/               behaviour-corpus, bench, e2e
 docs/                All specs
@@ -68,7 +68,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 - Shared shapes come from `@pathlight-tracker/protocol`. Never redefine an event, API or value type locally.
 - Validate every external input (agent events, REST params and bodies, config, env) with Zod.
 - Files and folders: `kebab-case`. Variables and functions: `camelCase`; types, classes, React components: `PascalCase`; constants: `UPPER_SNAKE_CASE`.
-- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`, `obj_`). Env vars: `PATHLIGHT_TRACKER_` prefix. JSON and API fields: `camelCase`.
+- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`); object IDs are agent-issued counters per session (`obj_17`), not ULIDs. Env vars: `PATHLIGHT_TRACKER_` prefix. JSON and API fields: `camelCase`.
 - UI wording says **steps**, never "spans".
 - One module, one job. Keep files under ~300 lines. Named exports only (no default exports unless a framework requires it).
 - Imports ordered: Node built-ins, external packages, `@pathlight-tracker/*`, relative.
@@ -86,7 +86,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 **Don't**
 - **Don't add a dependency without asking first.** Name the package, why it's needed and the alternative you considered. Check `tech-stack.md` §12 ("Do not use") before proposing anything.
 - Don't change code outside the task's scope ("while I'm here" refactors go in a separate task).
-- Don't log, print or store tokens or captured values outside the database.
+- Don't write tokens or captured values into log files, and don't store captured values anywhere but the database. Allowed: the collector prints the UI link with the token once in the terminal, keeps the token in `.pathlight-tracker/`, and the browser keeps it in `sessionStorage`.
 - Don't send any data off the machine (no telemetry, remote logging or cloud calls) unless a task explicitly says so.
 - Don't skip or weaken a failing test to make CI pass. Fix the cause or ask.
 - Don't invent features, endpoints, fields or UI that aren't in the docs.

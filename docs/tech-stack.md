@@ -26,9 +26,9 @@ This document fixes the technology for every part of the system. Each checkpoint
 ## 1. Guiding decisions
 
 - **TypeScript end to end.** Agent, collector, UI and extension share one language and one set of types.
-- **Local only.** No backend server, cloud account, database server or user accounts. Everything runs on the developer's machine.
+- **Local only.** No remote server, cloud account, database server or user accounts (the collector is a local server on `127.0.0.1`). Everything runs on the developer's machine.
 - **Zero code changes in the traced project.** The agent is preloaded with `NODE_OPTIONS="--require @pathlight-tracker/agent"`; only the start command changes.
-- **Web app first, VS Code extension second.** Phase 1 ships a browser UI served by a local CLI. Phase 2 wraps the same collector and UI inside a VS Code extension.
+- **Web app first, VS Code extension second.** MVP ships a browser UI served by a local CLI. v2 wraps the same collector and UI inside a VS Code extension.
 - **Host-agnostic core.** Agent, collector and UI never depend on the browser or VS Code directly; only a thin host adapter changes between phases.
 
 ---
@@ -40,11 +40,11 @@ This document fixes the technology for every part of the system. Each checkpoint
 │  Runtime agent   │ ──────────▶ │  Collector (Node CLI)    │ ──────────▶ │  Map UI (React)  │
 │  inside your app │   events    │  store + local server    │   live map  │                  │
 └──────────────────┘             └──────────────────────────┘             └──────────────────┘
-                                                                            Phase 1: browser tab
-                                                                            Phase 2: VS Code webview
+                                                                            MVP: browser tab
+                                                                            v2: VS Code webview
 ```
 
-| Part | What it does | Phase 1 (web) | Phase 2 (extension) |
+| Part | What it does | MVP (web) | v2 (extension) |
 | --- | --- | --- | --- |
 | Runtime agent | Wraps functions, records calls, data, errors | Same | Same |
 | Collector | Receives events, builds trees, stores, serves UI | `npx pathlight-tracker dev` | Spawned by the extension as a child Node process |
@@ -55,26 +55,26 @@ This document fixes the technology for every part of the system. Each checkpoint
 
 ## 3. Frontend (Map UI)
 
-The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
+The same build runs in a browser tab (MVP) and a VS Code webview (v2).
 
 | Concern | Decision | Notes |
 | --- | --- | --- |
 | Framework | **React** | Same build for browser and webview |
 | Build tool | **Vite** | Fast dev server and builds |
 | Language | **TypeScript** (strict mode) | Shares types with `protocol` package |
-| Styling | **Tailwind CSS** | Semantic color, spacing and radius tokens as CSS variables (see `design.md` §2–§4); mapped to VS Code theme variables in Phase 2 |
+| Styling | **Tailwind CSS** | Semantic color, spacing and radius tokens as CSS variables (see `design.md` §2–§4); mapped to VS Code theme variables in v2 |
 | Theme | Light + dark, following the OS by default; `data-theme` attribute + Tailwind `darkMode` | See `design.md` §8 |
 | Fonts | **Inter** (UI) + **JetBrains Mono** (code), bundled via **Fontsource** | No CDN, so it works offline and in VS Code webviews |
 | UI component library | **shadcn/ui** (Radix primitives) | Copied into the repo, so no runtime lock-in; accessible menus, dialogs, tooltips, tabs |
 | Command palette (search) | shadcn/ui `Command` (**cmdk**) | `Ctrl K` / `Cmd K` |
 | Resizable panels | shadcn/ui `Resizable` (**react-resizable-panels**) | Request list and inspector widths, collapsible |
-| Toasts | **Sonner** (shadcn/ui `Toast`) | "Moved to trash · Undo" |
+| Toasts | **Sonner** (installed through shadcn/ui) | "Moved to trash · Undo" |
 | Icons | **Lucide** (`lucide-react`) | Matches shadcn/ui |
 | Large live step tree | **TanStack Virtual** | Renders thousands of rows smoothly (tree and request list) |
 | Value inspector | Custom expandable JSON component | Shows redacted, truncated and suspicious (`undefined`) markers clearly |
 | Flow graph (v1) | **React Flow** (`@xyflow/react`) + **elkjs** | Auto-layout of boxes and arrows |
 | Timeline (v1) | Custom Canvas/SVG | Thousands of bars, zoom and pan |
-| Jump to source (Phase 1) | Editor link pattern, default `vscode://file/<path>:<line>` | Configurable for Cursor, WebStorm and others (`PATHLIGHT_TRACKER_EDITOR`) |
+| Jump to source (MVP) | Editor link pattern, default `vscode://file/{path}:{line}:{column}` | Chosen in Settings and stored in the browser, which builds the link (decision 0014); presets for VS Code, Cursor, WebStorm and others |
 | Design reference | `design.md` + `ui-reference.png` | Approved three-panel layout |
 
 ---
@@ -87,7 +87,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Live feed | **Native WebSocket** with a small reconnecting client | Pushes each new step as it happens |
 | UI update rate | Batch incoming steps into one render every ~100 ms | Keeps the UI smooth on big requests |
 | History and search (request list, old maps) | **TanStack Query** over a small REST API from the collector | Caching, loading and refetch handled for free |
-| Host communication (Phase 2) | `postMessage` adapter with the same interface as the WebSocket client | UI code doesn't know which host it's in |
+| Host communication (v2) | `postMessage` adapter with the same interface as the WebSocket client | UI code doesn't know which host it's in |
 
 ---
 
@@ -98,7 +98,7 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Concern | Decision | Notes |
 | --- | --- | --- |
 | Runtime | **Node.js** (traced apps: Node 20+) | Agent must run on whatever Node the user's app uses |
-| Wrap functions with probes | **SWC** (`@swc/core`) | Fast transform at load time |
+| Wrap functions with probes | **SWC** (`@swc/core`) | Fast transform at load time. The agent depends on its own `@swc/core` and resolves it from the agent package's folder, never from the user's project, so the app's own SWC version can't clash |
 | Hook module loading (CommonJS) | **`pirates`** | Battle-tested require hook |
 | Hook module loading (ESM, v2) | Node **`module.register()`** loader hooks | Official ESM hook API |
 | Patch libraries (NestJS, DB, HTTP) | **`require-in-the-middle`** + **`diagnostics_channel`** | Same approach as OpenTelemetry; its instrumentations are reference code only |
@@ -129,10 +129,10 @@ The same build runs in a browser tab (Phase 1) and a VS Code webview (Phase 2).
 | Concern | Decision | Notes |
 | --- | --- | --- |
 | Database | **SQLite** (one local file, e.g. `.pathlight-tracker/traces.db`) | No database server |
-| Driver | **`better-sqlite3`** | Fast, synchronous, works in a plain Node CLI |
+| Driver | **`better-sqlite3`** | Fast, synchronous, works in a plain Node CLI. Native module: installs from prebuilt binaries; task 5.6 checks they exist for every supported OS, CPU and Node version so `npx` never needs a compiler |
 | ORM / query layer | **Drizzle ORM** (`drizzle-orm` + `drizzle-kit`) | Typed schema and queries, lightweight, built-in migrations |
 | Retention | Last 100 requests, auto-pruned (configurable) | Keeps the file small |
-| Phase 2 | Collector runs as a separate Node process | Avoids native-module problems inside VS Code's Electron host |
+| v2 | Collector runs as a separate Node process | Avoids native-module problems inside VS Code's Electron host |
 
 Tables: `sessions`, `requests` (with soft delete), `steps`, `object_refs`, `meta`. Full schema in `data-model.md`.
 
@@ -169,8 +169,8 @@ There is nothing to host: Pathlight Tracker runs entirely on the developer's mac
 | Concern | Decision |
 | --- | --- |
 | CLI and agent distribution | **npm** (`npx pathlight-tracker dev -- <your command>`) |
-| Extension distribution (Phase 2) | **VS Code Marketplace** (`@vscode/vsce`) + **Open VSX** (`ovsx`) for Cursor and Windsurf users |
-| Extension bundling (Phase 2) | **esbuild** |
+| Extension distribution (v2) | **VS Code Marketplace** (`@vscode/vsce`) + **Open VSX** (`ovsx`) for Cursor and Windsurf users |
+| Extension bundling (v2) | **esbuild** |
 | CI | **GitHub Actions** on Windows, macOS and Linux |
 | Releases and versioning | **Changesets** |
 | Docs / landing page (later) | Static site on GitHub Pages |
@@ -191,24 +191,9 @@ There is nothing to host: Pathlight Tracker runs entirely on the developer's mac
 | Fixture apps | Sample **Express** app (Prisma 7 on SQLite, axios) and sample **NestJS** 11 app (Mongoose on `mongodb-memory-server`, TypeORM on in-memory SQLite) in the repo; no database install or Docker. NestJS 11 because 12 is ESM-only (see `fixtures/README.md`) |
 | UI end-to-end tests | **Playwright** |
 | Performance benchmarks | **autocannon** against fixtures, traced vs untraced |
-| Extension tests (Phase 2) | **`@vscode/test-electron`** |
+| Extension tests (v2) | **`@vscode/test-electron`** |
 
-Repo layout:
-
-```
-pathlight-tracker/
-├── packages/
-│   ├── agent/        # runtime agent (preloaded into the user's app)
-│   ├── protocol/     # shared event types and Zod schemas
-│   ├── collector/    # CLI: receives events, builds trees, stores, serves UI
-│   ├── ui/           # React map UI (browser + webview)
-│   └── extension/    # VS Code extension (Phase 2)
-├── fixtures/
-│   ├── express-app/
-│   └── nestjs-app/
-└── tests/
-    └── behaviour-corpus/
-```
+Repo layout: see `architecture.md` §2 (the one official version).
 
 ---
 
@@ -244,7 +229,7 @@ Pinned by major version. At project setup, install the latest stable release wit
 | Prettier | 3.x (installed: 3.9.10) |
 | lefthook | 2.2.2 |
 | turbo | 2.11.10 |
-| VS Code engine (Phase 2) | `^1.85.0` minimum |
+| VS Code engine (v2) | `^1.85.0` minimum |
 
 Rules:
 
@@ -267,7 +252,7 @@ Rules:
 | Monkey-patching globals (`Object`, `JSON`, `Promise`) | Changes app behaviour | Wrap only user functions and specific library hooks |
 | Heavy runtime dependencies in the agent (lodash, moment, etc.) | Loads inside the user's app; bloats and risks conflicts | Small hand-written helpers |
 | `better-sqlite3` inside the VS Code extension host | Native module breaks across Electron versions | Run the collector as a separate Node process |
-| Heavy ORMs (Prisma, TypeORM) in the collector | Overkill for two tables; Prisma needs extra engines and a generate step | Drizzle ORM |
+| Heavy ORMs (Prisma, TypeORM) in the collector | Overkill for a handful of tables (five in the MVP); Prisma needs extra engines and a generate step | Drizzle ORM |
 | Any cloud backend, remote database or remote logging of trace data | Breaks the local-only promise | Local SQLite, local logs |
 | Redux / MobX | More boilerplate than this UI needs | Zustand |
 | Socket.IO | Extra protocol and payload overhead for a local link | Plain WebSocket (`ws`, `@fastify/websocket`) |

@@ -107,9 +107,9 @@ Small uppercase badges after the step name. Neutral badges keep the tree calm; o
 | `HANDLER`, `CONTROLLER`, `SERVICE`, `REPOSITORY`, `FN` | Your code (layer, see note) | `#4B5563` / `#F3F4F6` / none | `#B4BAC6` / `#1C2029` |
 | `DB` | Database boundary | `#15803D` / `#F0FDF4` / `#86EFAC` | `#86EFAC` / `#10261B` |
 | `HTTP` | Outgoing HTTP boundary | `#0369A1` / `#F0F9FF` / `#7DD3FC` | `#7DD3FC` / `#0E2433` |
-| `IF`, `SWITCH` (MVP), `LOOP` (v1) | Decisions and loops | `#92400E` / `#FFFBEB` / `#FDE68A` | `#FCD34D` / `#2E2410` |
+| `IF`, `SWITCH` (MVP); `TERNARY`, `LOGIC` (`&&` / `||`), `OPTIONAL` (`?.`), `LOOP` (v1) | Decisions and loops | `#92400E` / `#FFFBEB` / `#FDE68A` | `#FCD34D` / `#2E2410` |
 
-**Layer badge rule:** for `method` steps the badge is derived in the UI from the class name suffix (`…Controller` → CONTROLLER, `…Service` → SERVICE, `…Repository` / `…Repo` → REPOSITORY); anything else shows `FN`. No database change is needed.
+**Layer badge rule:** for `method` steps the **collector** derives the layer from the class name suffix (`…Controller` → CONTROLLER, `…Service` → SERVICE, `…Repository` / `…Repo` → REPOSITORY; anything else `FN`) and sends it as `layer` in the API; the UI only displays it. No database change is needed.
 
 ### 2.6 Code and value colours
 
@@ -175,7 +175,7 @@ Fixed sizes:
 | --- | --- |
 | Header height | 56 px |
 | Request list row | 64 px (two lines) |
-| Step tree row | 40 px (comfortable) / 32 px (compact setting) |
+| Step tree row | 32 px (default). A 40 px "comfortable" density comes with the v1 density setting (task 6.14) |
 | Tree indent per level | 24 px, with a 1 px guide line in `--border` |
 | Buttons and inputs | 36 px tall (default), 32 px (small, in panel headers) |
 | Icon size | 16 px (in buttons and rows), 20 px (header) |
@@ -212,7 +212,7 @@ Flat by default. Shadows only for floating layers:
 | `Button` (variants: default, outline, ghost, destructive, link) | All actions |
 | `Input` | Filters, connect token |
 | `Switch` | Follow latest |
-| `Tabs` | Trace / Graph / Timeline / Logs; Details / Error / Raw JSON |
+| `Tabs` | Map: Trace only in the MVP (Graph, Timeline and Logs are hidden until v1, no "coming soon" tabs, decision 0008); inspector: Details / Error / Raw JSON |
 | `Badge` | Method, kind, status badges |
 | `Tooltip` | Icon buttons, truncated names |
 | `DropdownMenu` | Row "⋯" menus, project/session menu |
@@ -231,7 +231,7 @@ Flat by default. Shadows only for floating layers:
 | --- | --- | --- |
 | `AppHeader` | Logo, project name, connection pill, agent info, search, icon actions | Connected / reconnecting / stopped |
 | `ConnectionPill` | Dot + label | Connected (green), Reconnecting (blue spinner), Stopped (red) |
-| `RequestList` | Filter, Follow latest toggle, virtualized rows, restart dividers | Loading, empty, filtered-empty |
+| `RequestList` | Path filter, "Errors only" toggle, Follow latest toggle, Pin button, virtualized rows, restart dividers | Loading, empty, filtered-empty |
 | `RequestRow` | Method chip, path, status code, duration · step count, time | Default, hover, selected, in progress, incomplete, error |
 | `MethodChip` | `GET` / `POST` / … coloured per §2.4 | — |
 | `StatusCode` | `200` text or solid `500` badge | 2xx / 3xx / 4xx / 5xx |
@@ -241,7 +241,7 @@ Flat by default. Shadows only for floating layers:
 | `KindBadge` | §2.5 badges | — |
 | `StatusIcon` | ✓ / ✕ / spinner / caught dot | success, error, running, caught |
 | `StatusLegend` | Legend above the tree | — |
-| `Inspector` | Step name, layer badge, file:line, tabs (Details / Error / Raw JSON) | No selection, loading, error step |
+| `Inspector` | Step name, layer badge, file:line, **Copy link** to this step (`/requests/req_…?step=stp_…`), **Open in code**, tabs (Details / Error / Raw JSON) | No selection, loading, error step |
 | `ValueView` | Expandable JSON-like value with syntax colours, suspicious-value highlight, redacted and truncated markers | Collapsed, expanded, lazy-loading |
 | `ArgumentBlock` | `ARGS[0] · USER` label + `ValueView` | — |
 | `ErrorCard` | Error type, message, `.ts` stack (Node internals collapsed) | — |
@@ -259,12 +259,12 @@ Flat by default. Shadows only for floating layers:
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────────┐
-│ Header 56px: Logo · project ▾ · ● Connected · Agent pid · NestJS   [Search  Ctrl K] ⟳ 🗑 ⚙ │
+│ Header 56px: Logo · project ▾ · ● Connected · Agent pid · NestJS   [Search: v1]     ⟳ 🗑 ⚙ │
 ├──────────────────────┬────────────────────────────────────────────┬──────────────────────┤
 │ Request list         │ Map                                        │ Inspector            │
 │ 320px (240–420)      │ fluid, min 480px                           │ 400px (320–560)      │
 │ resizable,           │ RequestHeader                              │ resizable,           │
-│ collapsible          │ Tabs: Trace · Graph · Timeline · Logs      │ collapsible          │
+│ collapsible          │ Tabs: Trace (Graph · Timeline · Logs: v1)  │ collapsible          │
 │                      │ Legend                                     │                      │
 │                      │ StepTree (Step / Status / Duration / ⋯)    │ Details · Error ·    │
 │                      │                                            │ Raw JSON             │
@@ -274,8 +274,9 @@ Flat by default. Shadows only for floating layers:
 | Rule | Value |
 | --- | --- |
 | Header | 56 px, full width, `--bg`, bottom `--border`; not sticky-scrolling (the panels scroll, the header never does) |
-| Navigation | In the header only. **No navigation sidebar** (Requests, Search, Trash and Settings are the only destinations) |
+| Navigation | In the header only. **No navigation sidebar** (Requests, Trash and Settings are the only MVP destinations; Search arrives in v1) |
 | Request list | Left panel. Default 320 px; drag to resize 240–420 px; collapse with `[` or the panel button; width remembered per browser |
+| Follow latest and Pin | The list toolbar holds the **Follow latest** switch; the open request's header holds a **Pin** icon button (`ghost`, tooltip "Keep this request open"). Rules: with Follow latest on and nothing pinned, each new request opens automatically. Pinning the open request pauses auto-open (Follow latest stays on but shows "paused"). Clicking another request in the list opens it; if a request was pinned, the pin moves to the one just opened. Unpinning, or turning Follow latest off and on, resumes auto-open. Turning Follow latest off never changes the open request |
 | Map | Centre, takes remaining width, minimum 480 px |
 | Inspector | Right panel. Default 400 px; resize 320–560 px; collapse with `]`; opens automatically when a step is selected |
 | Page width | Full window; no max-width (a tool, not a document). Content inside panels is left-aligned |
@@ -303,7 +304,7 @@ There is **no user avatar**: Pathlight Tracker has no accounts.
 | Element | Rule |
 | --- | --- |
 | Request header | Method chip (large), path (`text-title`), status badge, `84 ms · 9 steps · 12:04:58`, then right-aligned actions: **Copy link**, **Open in code** (opens the handler), `⋯` (Copy as cURL, Delete) |
-| Tabs | Trace (MVP), Graph (v1), Timeline (v1), Logs (v1, captured `console.log` output for this request) |
+| Tabs | Trace (MVP). Graph, Timeline and Logs (captured `console.log` output) arrive in v1 and are not shown before then |
 | Legend | Right of tabs, `text-caption` |
 | Tree columns | Step · Status · Duration · ⋯ |
 | Inline values | After a step name, the return value preview in `code-small`; suspicious values in `--warning-text` on `--warning-subtle` |
@@ -314,7 +315,7 @@ There is **no user avatar**: Pathlight Tracker has no accounts.
 
 ## 7. Responsive behaviour
 
-Pathlight Tracker is **desktop-first** (it runs next to your editor), but every screen works down to phone width.
+Pathlight Tracker is **desktop-first** (it runs next to your editor). **The MVP supports 1100 px and up** (decision 0008, task 4.15): the desktop layout and the small-laptop layout from 1100 px. The tablet and phone layouts below are the target for the Future task 8.4 and are not built in the MVP.
 
 | Width | Layout |
 | --- | --- |
@@ -329,7 +330,7 @@ Rules at every size:
 - Wide values in the inspector wrap; the Raw JSON tab scrolls horizontally inside its own box.
 - Touch targets are 44 × 44 px below 1024 px.
 
-**Phase 2 (VS Code webview):** the panel is often narrow (beside the editor), so the same breakpoints apply to the panel width, not the window width.
+**v2 (VS Code webview):** the panel is often narrow (beside the editor), so the same breakpoints apply to the panel width, not the window width.
 
 ---
 
@@ -341,7 +342,7 @@ Rules at every size:
 | Default | Follow the operating system (`prefers-color-scheme`) |
 | Override | Settings → Theme: System / Light / Dark, remembered per browser |
 | Implementation | Tokens as CSS variables on `:root` and `[data-theme="dark"]`; Tailwind `darkMode: ["class", '[data-theme="dark"]']` |
-| Phase 2 | In VS Code, follow the editor theme by mapping tokens to VS Code theme variables (`--vscode-editor-background`, etc.); status colours stay Pathlight Tracker's own so meaning never changes |
+| v2 | In VS Code, follow the editor theme by mapping tokens to VS Code theme variables (`--vscode-editor-background`, etc.); status colours stay Pathlight Tracker's own so meaning never changes |
 | Rule | No component may hard-code a colour; every new colour is a token with both light and dark values, checked for contrast |
 
 ---
@@ -485,4 +486,4 @@ Rule: text ≥ 4.5 : 1, icons and control borders ≥ 3 : 1. Decorative dividers
 
 - Respect `prefers-reduced-motion`: no row slide-in animation and a static "running" indicator instead of a spinner.
 - UI works at 200% browser zoom without losing content (panels collapse into drawers).
-- Minimum text size 11 px; users can switch the tree to the comfortable 40 px row height in Settings.
+- Minimum text size 11 px; from v1, users can switch the tree to the comfortable 40 px row height in Settings (density setting, task 6.14).

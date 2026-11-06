@@ -8,19 +8,19 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
-| 0 Setup and validation | 8 | 7 | 🟡 |
+| 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 0 | ⬜ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **7** | 🟡 |
+| **MVP total** | **65** | **8** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 0: Setup and validation (in progress)
-**Current task:** 0.8 Spec consistency pass
+**Current phase:** Phase 0: Setup and validation (tasks done; Checkpoint 0 and the phase PR pending)
+**Current task:** none (next: Checkpoint 0, then 1.1)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 0.8 | Spec consistency pass | 2026-11-06 | Branch `phase/0-setup-finish` |
+| — | none | | |
 
 ## Known bugs / issues
 
@@ -67,14 +67,15 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 | 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
+| 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ❓ Open | `decisions/0021-spec-consistency-choices.md` (approve in the Phase 0 PR) |
 | 2026-11-06 | One branch and one PR per phase (not per task) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. Hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md` → "Task 0.1 verdict")
-2. 0.7 Docs in repo (`/start-task 0.7`)
-3. 0.8 Spec consistency pass (also the fixture vs spec mismatches logged in the 0.6 entry) → fix `docs/analysis/2026-11-01-spec-audit.md` using decisions 0003–0016
+1. Open the Phase 0 PR from `phase/0-setup-finish` (tasks 0.7 and 0.8); review "Spec changes to review" in `docs/analysis/2026-11-06-spec-audit-resolution.md`
+2. Checkpoint 0: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
+3. Phase 1: `/start-task 1.1` on a new `phase/1-capture-spike` branch
 
 ---
 
@@ -89,7 +90,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.5 | CI | ✅ | [#5](https://github.com/Pradeepkumar-18/Pathlight/pull/5) | Green on Ubuntu, macOS, Windows (Node 24) |
 | 0.6 | Fixture apps | ✅ | | Both fixtures + smoke script; CI runs the smoke test |
 | 0.7 | Docs in repo | ✅ | | Branch `phase/0-setup-finish` |
-| 0.8 | Spec consistency pass | 🟡 | | Branch `phase/0-setup-finish` |
+| 0.8 | Spec consistency pass | ✅ | | Branch `phase/0-setup-finish`; every audit item resolved |
 | ✔ | **Checkpoint 0: Setup review** | ⬜ | | |
 
 ## Phase 1: Capture spike
@@ -221,7 +222,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 7.8 | Queue consumers and cron entry points | ⬜ | | |
 | 7.9 | More frameworks | ⬜ | | |
 | 7.10 | Export and share | ⬜ | | |
-| ✔ | **Checkpoint 7: Phase 2 product review** | ⬜ | | |
+| ✔ | **Checkpoint 7: v2 review** | ⬜ | | |
 
 ## Phase 8: Future
 
@@ -248,8 +249,14 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-06 · 0.8 Spec consistency pass · 🟡 In progress
+### 2026-11-06 · 0.8 Spec consistency pass · ✅ Done
 - Done when: Each audit item is fixed, or linked to a decision or a later task; `progress.md` lists any left open.
+- What changed: all ~95 audit items (plus the fixture mismatches from 0.6) resolved across `prd.md`, `architecture.md`, `api-spec.md`, `data-model.md`, `user-flows.md`, `design.md`, `tech-stack.md`, `implementation-plan.md` and `CLAUDE.md`. Highlights: decision 0011 schema gaps applied (entry type, unhandled error, warnings, exit code, argument names, request-level object refs, `logs` table for v1, `auto_vacuum`); `api-spec.md` §11.1 is now the master event list; `if` / `switch` decisions are MVP everywhere; editor link built in the browser (`PATHLIGHT_TRACKER_EDITOR` removed, decision 0014); per-project token wording (0015); seed uses 26-character ULIDs, `null` params, times matching the API, `{ id: 7 }`, a mapped stack and the red path ending at the throwing step; releases named MVP / v1 / v2 outside the plan.
+- Tests: the data-model schema (§9) and seed (§10) run cleanly in SQLite (`better-sqlite3`): 3 requests, 14 steps, no foreign-key violations, `auto_vacuum` incremental, red path = steps 3, 4, 8; `pnpm lint && pnpm typecheck && pnpm test` green.
+- Docs updated: the specs above, `CLAUDE.md` (token rule, object IDs), plan 2.6 / 2.7 / 2.9 / 4.1 / 4.9 / 5.6; `docs/analysis/2026-11-06-spec-audit-resolution.md` (where each item was fixed); the audit file links to it.
+- Decisions: 0021 (Proposed): the choices beyond decisions 0003–0016 (event fields, close code 4008, two env vars, `/health` warnings, `absolutePath`, exact schema columns, CLAUDE.md token rule, object ID format, `clear --purge`, CSP); approve in the Phase 0 PR.
+- Bugs: none.
+- Open items: none; detail left to later tasks is linked there (router 4.1, redaction list 3.4, tuning numbers 2.8 / 3.1 / 3.2 / 3.15, prebuilt binaries 5.6).
 
 ### 2026-11-06 · 0.7 Docs in repo · ✅ Done
 - Done when: `docs/` contains every spec and `progress.md`; `CLAUDE.md` commands all work; README explains setup in under 10 steps.

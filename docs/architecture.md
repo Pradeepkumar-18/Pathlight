@@ -37,7 +37,7 @@ Pathlight Tracker runs as **three processes on the developer's machine**. Nothin
 │ 1. YOUR APP PROCESS          │            │ 2. COLLECTOR (Node CLI)      │            │ 3. MAP UI (browser tab)      │
 │    runtime agent preloaded   │            │                              │            │                              │
 │                              │  WebSocket │  ingest ─▶ trace builder     │  WebSocket │  request list                │
-│  loader hook (wrap fns)      │ ─────────▶ │       ─▶ store (SQLite)      │ ─────────▶ │  live map (call tree)        │
+│  loader hook (wrap fns)      │ ─────────▶ │       ─▶ store (SQLite)      │ ─────────▶ │  live map (step tree)        │
 │  library patches             │  /agent    │       ─▶ live hub            │  /live     │  inspector                   │
 │  request context (ALS)       │  events    │  REST API /api/v1            │  + REST    │  jump links ─▶ VS Code       │
 │  serializer + event buffer   │            │  static UI server            │            │                              │
@@ -51,7 +51,7 @@ Pathlight Tracker runs as **three processes on the developer's machine**. Nothin
 | **Collector** | Build request trees from events, store them, serve the UI and API | The source of truth; all heavy logic lives here |
 | **Map UI** | Show the live map, values and errors; link to source | Knows nothing about instrumentation; host-agnostic |
 
-**Phase 2 (VS Code extension):** the extension spawns the same collector as a child process and loads the same UI build in a webview. Only the host adapter changes (`vscode://` links become editor API calls; inline values and CodeLens are added).
+**v2 (VS Code extension):** the extension spawns the same collector as a child process and loads the same UI build in a webview. Only the host adapter changes (`vscode://` links become editor API calls; inline values and CodeLens are added).
 
 ---
 
@@ -108,13 +108,13 @@ pathlight-tracker/
 │   │       ├── queries/           # TanStack Query hooks for /api/v1
 │   │       ├── features/
 │   │       │   ├── request-list/  # Recent requests panel
-│   │       │   ├── call-tree/     # Live map (primary view)
+│   │       │   ├── step-tree/     # Live map (primary view)
 │   │       │   ├── inspector/     # Args, return values, errors
 │   │       │   ├── flow-graph/    # v1
 │   │       │   └── timeline/      # v1
 │   │       └── components/ui/     # shadcn/ui components
 │   │
-│   └── extension/                 # VS Code extension (Phase 2)
+│   └── extension/                 # VS Code extension (v2)
 │       └── src/
 │           ├── activate.ts        # Commands, lifecycle
 │           ├── collector.ts       # Spawns and supervises the collector process
@@ -122,9 +122,11 @@ pathlight-tracker/
 │           ├── decorations.ts     # Inline values in the editor
 │           └── codelens.ts        # "called 3× in last request"
 │
-├── fixtures/                      # Real apps used for tests and demos
-│   ├── express-app/
-│   └── nestjs-app/                # With Mongoose and TypeORM
+├── fixtures/                      # Real apps used for tests and demos (see fixtures/README.md)
+│   ├── express-app/               # Express 5, Prisma, axios
+│   ├── nestjs-app/                # NestJS 11, Mongoose, TypeORM
+│   ├── smoke/                     # pnpm fixtures:smoke
+│   └── seed/                      # sample.sql for pnpm seed (task 2.4)
 ├── tests/
 │   ├── behaviour-corpus/          # Tricky code run with and without the agent
 │   └── bench/                     # autocannon benchmarks, traced vs untraced
@@ -139,8 +141,12 @@ pathlight-tracker/
     ├── implementation-plan.md
     ├── progress.md
     ├── ui-reference.png
-    └── decisions/                 # One file per decision record (see §11)
+    ├── decisions/                 # One file per decision record (see §11)
+    ├── analysis/                  # Research and audit reports
+    └── learning/                  # Lessons, one per task
 ```
+
+This is the **official** folder layout; other docs link here instead of drawing their own.
 
 **Dependency rule:** `protocol` depends on nothing. `agent`, `collector` and `ui` depend only on `protocol`, never on each other. `extension` depends on `protocol` and starts `collector` as a process (not as a library).
 
@@ -164,7 +170,7 @@ pathlight-tracker/
 2. Every time a user file (not `node_modules`) is required, the loader hook passes its source through the SWC transform.
 3. The transform wraps each function body so it calls `__pathlightTracker.enter(...)`, `__pathlightTracker.exit(...)` and `__pathlightTracker.throw(...)`. It also adds `if` / `else if` / `switch` condition probes (MVP); v1 adds expression conditions (ternary, `&&` / `||`, `?.`) and loop probes.
 4. The transformed code is compiled in memory. Nothing is written to disk.
-5. The agent connects to the collector over `/agent` WebSocket and sends a `hello` event (process id, Node version, protocol version).
+5. The agent connects to the collector over `/agent` WebSocket and sends a `hello` message (process id, Node version, agent version). The framework is reported later, with the first `request.start`, because NestJS has not loaded yet at this point.
 
 ### 3c. One request, end to end
 
@@ -197,25 +203,19 @@ Client        App + agent                 Collector                    UI
 6. **Collector ingest.** Each batch is validated, then the builder links each `enter` to its parent step, pairs it with its `exit`/`throw`, and writes the steps to SQLite.
 7. **Live push.** The live hub sends `live.steps.appended` to every connected UI subscribed to that request.
 8. **Request ends.** The HTTP patch emits `request.end` with status code, response body (truncated, redacted) and total duration. The builder marks the error path, and the hub sends `live.request.completed`.
-9. **UI.** The live map appends steps as they arrive (rendered in ~100 ms batches). Clicking a step shows its values in the inspector; the jump link opens `vscode://file/<path>:<line>`.
+9. **UI.** The live map appends steps as they arrive (rendered in small batches; no fixed latency promise, decision 0013). Clicking a step shows its values in the inspector; "Open in code" opens the link the browser builds from the step's absolute path, line and column and the editor chosen in Settings (default `vscode://file/{path}:{line}:{column}`, decision 0014).
 
 ### 3d. Event model (agent → collector)
 
-All events carry `v` (protocol version), `pid` (process id), `traceId` and `ts` (high-resolution timestamp).
+The full event list, with every field, is in `api-spec.md` §11.1 (the master copy). In short: the agent sends `hello`, then batches (with `v` and `pid` once per batch) of `request.start`, `step.enter` / `step.exit` / `step.throw`, `boundary`, `decision`, `warning`, `request.end` and `agent.disabled` events; v1 adds `loop` and `log`. Each event carries `e`, `traceId` and `ts`.
 
-| Event | Key fields |
-| --- | --- |
-| `hello` | `nodeVersion`, `framework`, `agentVersion` |
-| `request.start` | `method`, `path`, `route`, `params`, `query`, `body`, `headers` |
-| `step.enter` | `stepId`, `parentStepId`, `kind` (`function`, `guard`, `pipe`, `interceptor`, `middleware`, `handler`, `filter`), `name`, `file`, `line`, `args`, `thisClass` |
-| `step.exit` | `stepId`, `returnValue`, `durationNs` |
-| `step.throw` | `stepId`, `error` (type, message, stack, file, line), `caught` (true if swallowed later) |
-| `boundary` | `stepId`, `parentStepId`, `kind` (MVP: `db`, `http`; v1: `redis`, `queue`, `log` for `console.log` output shown in the Logs tab), `request`, `response`, `durationNs`, `error` |
-| `decision` (MVP: `if`, `switch`; v1: `ternary`, `logical`, `optional`) | `stepId`, `kind`, `expression`, `values`, `result` |
-| `loop` (v1) | `stepId`, `kind`, `iterations`, `durationNs`, `samples` (first, last, failing) |
-| `request.end` | `status`, `responseBody`, `durationNs`, `unhandledError` |
+Naming rules used across the protocol and the database:
 
-Captured values use one shape: `{ type, preview, objectId?, truncated?, redacted?, children? }`.
+- `kind` always means the step kind (`StepKind`). Boundaries use `boundaryType`, decisions `decisionType`, loops `loopType`.
+- One idea, three names: an error that was caught and ignored is `swallowed` in the database (`error_handling`), and **Caught** in the UI legend. The collector decides it after the fact (decision 0010); the agent does not send it.
+- `console.*` output is a log entry (v1, `logs` table), not a step.
+
+Captured values use one shape: `CapturedValue` in `api-spec.md` §4.1.
 
 ### 3e. Data model (SQLite via Drizzle)
 
@@ -227,7 +227,8 @@ Summary only; the full schema, keys, indexes, enums and seed data are in `data-m
 | `requests` | One row per traced request; soft-deletable (`deleted_at`) |
 | `steps` | One row per step (function, framework step, boundary, decision, loop), a tree via `parent_id` |
 | `object_refs` | Where each captured object appeared (for the v2 data journey) |
-| `meta` | Schema version and settings |
+| `meta` | Schema version and bookkeeping |
+| `logs` (v1) | Captured `console.*` output per request |
 
 ---
 
@@ -242,7 +243,7 @@ Pathlight Tracker has **no users, no login and no roles**. It is a single-develo
 | Project token | Generated once per project with `crypto.randomBytes(32)` and kept in `.pathlight-tracker/`, so links survive restarts; required on every connection; deleting the file rotates it (details in task 2.7) |
 | Agent connection | Agent sends the token from `PATHLIGHT_TRACKER_TOKEN` in the `/agent` WebSocket handshake; wrong or missing token → rejected |
 | UI connection | Token arrives in the URL fragment (`#token=…`, never sent to servers or logs), is moved to `sessionStorage`, then sent as `Authorization: Bearer <token>` on REST and as the WebSocket subprotocol `bearer.<token>` on `/live` (browsers can't set WebSocket headers; the agent uses the same subprotocol on `/agent`) |
-| Origin check | `/live` and `/api` accept only `Origin: http://127.0.0.1:<port>` (and the VS Code webview origin in Phase 2); blocks malicious websites and DNS rebinding |
+| Origin check | `/live` and `/api` accept only `Origin: http://127.0.0.1:<port>` or `http://localhost:<port>` (and the VS Code webview origin in v2); blocks malicious websites and DNS rebinding |
 | Host header check | Requests must have `Host: 127.0.0.1:<port>` or `localhost:<port>` |
 
 **Protected routes:** every route except the static UI files requires the token.
@@ -251,6 +252,7 @@ Pathlight Tracker has **no users, no login and no roles**. It is a single-develo
 | --- | --- | --- |
 | `GET /` and static assets | No | UI shell only; contains no data |
 | `GET /api/v1/*` | Yes | Bearer token + origin check |
+| `POST /api/v1/*` | Yes | Bearer token + origin check (restore, compare, client logs) |
 | `DELETE /api/v1/*` | Yes | Bearer token + origin check |
 | `WS /agent` | Yes | Token in handshake |
 | `WS /live` | Yes | Token in handshake + origin check |
@@ -309,7 +311,7 @@ Owns every message type and Zod schema shared by agent, collector and UI, plus t
 | `features/logs` (v1) | Logs tab: captured `console.log` output for the request |
 | `features/flow-graph`, `features/timeline` | v1 secondary views, linked by selection |
 
-### Extension (`packages/extension`, Phase 2)
+### Extension (`packages/extension`, v2)
 
 Spawns and supervises the collector, hosts the UI in a webview, adds inline value decorations, CodeLens and a one-click "Start with Pathlight Tracker" command.
 
@@ -398,7 +400,7 @@ The **collector is the source of truth**. The UI never invents data; it holds a 
 
 ## 8. Environment variables
 
-No variable holds a real secret. The token is generated per run and passed automatically.
+No variable holds a real secret. The token is generated once per project, kept in `.pathlight-tracker/` and passed automatically (decision 0015).
 
 ### Read by the agent (set automatically by the CLI)
 
@@ -406,16 +408,17 @@ No variable holds a real secret. The token is generated per run and passed autom
 | --- | --- | --- |
 | `NODE_OPTIONS` | Preloads the agent (`--require @pathlight-tracker/agent`) | Set by CLI |
 | `PATHLIGHT_TRACKER_COLLECTOR_URL` | Collector WebSocket URL | Set by CLI |
-| `PATHLIGHT_TRACKER_TOKEN` | One-time connection token | Set by CLI per run |
+| `PATHLIGHT_TRACKER_TOKEN` | Per-project connection token | Set by CLI from `.pathlight-tracker/` |
 | `PATHLIGHT_TRACKER_DISABLED` | Kill switch: `1` loads the agent but does nothing | `0` |
 | `PATHLIGHT_TRACKER_INCLUDE` | Glob(s) of files to instrument | `src/**` |
 | `PATHLIGHT_TRACKER_EXCLUDE` | Glob(s) to skip (in addition to `node_modules`) | `**/*.spec.ts,**/*.test.ts` |
-| `PATHLIGHT_TRACKER_REDACT_KEYS` | Extra keys to redact (comma-separated) | Built-in list (password, token, authorization, secret, cookie, apiKey…) |
+| `PATHLIGHT_TRACKER_REDACT_KEYS` | Extra keys to redact (comma-separated), added to the built-in list | Built-in list: `password`, `passwd`, `secret`, `token`, `authorization`, `cookie`, `apikey`, `privatekey`, `credential`, `session`, `otp`. Matching: key lower-cased with `-` and `_` removed, then **contains** (so `accessToken`, `x-api-key`, `set-cookie` and `Authorization` all match). Applies to object keys, headers and query params. The exact list is finalised in task 3.4 |
 | `PATHLIGHT_TRACKER_MAX_DEPTH` | Max depth of captured objects | `3` |
 | `PATHLIGHT_TRACKER_MAX_ARRAY` | Max array items captured | `10` |
 | `PATHLIGHT_TRACKER_MAX_STRING` | Max string length captured | `200` |
 | `PATHLIGHT_TRACKER_MAX_STEPS` | Max steps per request before truncating | `5000` |
-| `PATHLIGHT_TRACKER_LOG_LEVEL` | Agent self-diagnostics level | `warn` |
+| `PATHLIGHT_TRACKER_AGENT_LOG_LEVEL` | Agent self-diagnostics level (separate from the collector's, so the app doesn't inherit it) | `warn` |
+| `PATHLIGHT_TRACKER_ALLOW_PRODUCTION` | `1` lets the agent run when `NODE_ENV=production` (the production guard's "force") | `0` |
 
 ### Read by the collector
 
@@ -425,11 +428,10 @@ No variable holds a real secret. The token is generated per run and passed autom
 | `PATHLIGHT_TRACKER_DB_PATH` | SQLite file location | `.pathlight-tracker/traces.db` |
 | `PATHLIGHT_TRACKER_RETENTION` | Number of active requests kept (older ones move to the trash) | `100` |
 | `PATHLIGHT_TRACKER_TRASH_TTL_HOURS` | Hours a trashed request is kept before permanent deletion | `72` |
-| `PATHLIGHT_TRACKER_EDITOR` | Editor link pattern for "Open in code" (`{path}`, `{line}`, `{column}` placeholders) | `vscode://file/{path}:{line}:{column}` |
 | `PATHLIGHT_TRACKER_OPEN_BROWSER` | Open the UI automatically | `1` |
 | `PATHLIGHT_TRACKER_LOG_LEVEL` | Collector log level | `info` |
 
-All settings can also live in an optional `pathlight-tracker.config.json` in the project root. Precedence: CLI flags > env vars > config file > defaults. `.pathlight-tracker/` is added to `.gitignore` on first run (with a printed notice).
+All settings can also live in an optional `pathlight-tracker.config.json` in the project root: one key per variable, camelCase without the prefix (`PATHLIGHT_TRACKER_MAX_DEPTH` → `"maxDepth": 3`; lists as arrays), validated with Zod (unknown keys are a warning). MVP CLI flags on `pathlight-tracker dev`: `--port <n>` and `--no-open`; `--quiet` and others are v1 (task 6.14). Precedence: CLI flags > env vars > config file > defaults. `.pathlight-tracker/` is added to `.gitignore` on first run (with a printed notice).
 
 ---
 
@@ -446,7 +448,7 @@ All settings can also live in an optional `pathlight-tracker.config.json` in the
 | **Code safety in the agent** | No `eval` / `new Function`; no disk writes of transformed code; never call getters or `toJSON` on user objects; never monkey-patch globals. |
 | **UI safety** | Captured values are rendered as text, never as HTML, so a captured string cannot inject script. Strict Content Security Policy on the served UI (no inline scripts, no external origins). |
 | **Dependencies** | Minimal runtime dependencies in the agent; lockfile with frozen installs in CI; Renovate for updates; `pnpm audit` in CI. |
-| **Production guard** | Agent refuses to activate when `NODE_ENV=production` unless explicitly forced, and prints a warning. |
+| **Production guard** | Agent refuses to activate when `NODE_ENV=production` unless `PATHLIGHT_TRACKER_ALLOW_PRODUCTION=1`, and prints a warning. |
 
 ---
 
@@ -462,8 +464,8 @@ All settings can also live in an optional `pathlight-tracker.config.json` in the
 
 | Process | Approach |
 | --- | --- |
-| **Agent** | Every hook, patch and runtime helper is wrapped in `try/catch`. Internal errors increment a counter; after N errors in a short window the agent **auto-disables itself** for that process and prints one clear warning. If the transform fails on a file, that file loads untransformed. If the collector is unreachable, the agent retries with backoff, buffers a bounded number of events, then drops the oldest. |
-| **Collector** | Invalid events are rejected with an error code and logged; one bad batch never stops ingest. Unfinished requests (app crashed or restarted mid-request) are finalized after a timeout and marked `incomplete`. The launcher always forwards the user's command output and exit code, even if the collector has problems. Uncaught errors are logged and the server stays up where possible. |
+| **Agent** | Every hook, patch and runtime helper is wrapped in `try/catch`. Internal errors increment a counter; after 20 internal errors within 60 s the agent **auto-disables itself** for that process, sends `agent.disabled` and prints one clear warning. If the transform fails on a file, that file loads untransformed and a `warning` event names it. If the collector is unreachable, the agent retries with backoff and buffers up to 10,000 events (or 8 MB); past that it drops whole requests, oldest first, never part of one. Under `slow_down` it first collapses repeated calls, then stops recording new steps for the busiest request (marking it `truncated`); it never drops an `exit` / `throw` whose `enter` was sent, so the tree stays valid. These numbers are starting values, tuned in tasks 3.1, 3.2 and 3.15. |
+| **Collector** | Invalid events are rejected with an error code and logged; one bad batch never stops ingest; 10 invalid messages in a row close the socket (`4008`). `slow_down` is sent when more than 5,000 events wait to be stored, `resume` below 1,000 (starting values, tuned in task 2.8). A request is marked `incomplete` when its session disconnects (app crashed, exited or restarted) while it is still running; a long request in a connected app stays `in_progress` however long it takes. The launcher always forwards the user's command output and exit code, even if the collector has problems. Uncaught errors are logged and the server stays up where possible. |
 | **UI** | React error boundaries per panel (one broken view doesn't blank the app). Live connection status shown in the header (connected / reconnecting / collector stopped). REST errors use the shared error envelope and show a readable message with the error code. |
 
 ### What the developer sees
@@ -504,7 +506,7 @@ All settings can also live in an optional `pathlight-tracker.config.json` in the
 | 10 | **No user auth; local token + origin checks** | Single-developer local tool; the real threat is other local programs and websites | User accounts (unnecessary complexity) |
 | 11 | **Fail open, auto-disable on internal errors** | The traced app must never break because of Pathlight Tracker | Fail closed (would crash the developer's app) |
 | 12 | **Capture object IDs from day one** | The v2 data journey needs them; they can't be added to old recordings | Adding identity tracking later |
-| 13 | **Collector runs as a separate process in Phase 2** | Avoids native-module breakage inside VS Code's Electron host | Running the collector inside the extension host |
+| 13 | **Collector runs as a separate process in v2** | Avoids native-module breakage inside VS Code's Electron host | Running the collector inside the extension host |
 | 14 | **Batch UI rendering every ~100 ms** | Keeps the live map smooth on large requests | Rendering on every event (janky on big requests) |
 | 15 | **Soft delete with a 72-hour trash, then purge** | Developers can undo mistakes, but captured values (which may be sensitive) are still erased for good | Hard delete only (no undo); soft delete forever (data never really gone) |
 | 16 | **Three-panel layout, navigation in the header, no nav sidebar** | Only four destinations exist; width goes to the step tree and values | Icon rail sidebar (costs width for little gain) |

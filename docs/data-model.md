@@ -28,9 +28,10 @@ Related docs: `architecture.md` (event flow, API), `tech-stack.md` (SQLite, `bet
 | --- | --- | --- |
 | `sessions` | Node process the agent ran in (each app start or restart) | MVP |
 | `requests` | Traced request (one map) | MVP |
-| `steps` | Step in a request: function call, framework step, boundary call, decision or loop summary | MVP (decision and loop rows from v1) |
-| `object_refs` | Appearance of a captured object in a step (argument, return value, `this`, thrown) | Written from MVP, read by the data journey in v2 |
-| `meta` | Key/value setting or schema info for the database | MVP |
+| `steps` | Step in a request: function call, framework step, boundary call, decision or loop summary | MVP (`if` / `switch` decision rows in the MVP; expression decisions and loop rows from v1) |
+| `object_refs` | Appearance of a captured object in a step (argument, return value, `this`, thrown) or in the request itself (body, params) | Written from MVP (task 2.9), read by the data journey in v2 |
+| `logs` | One `console.*` call captured during a request (Logs tab) | v1 (task 6.7); not created by the MVP migration |
+| `meta` | Key/value schema info and bookkeeping for the database | MVP |
 
 There is no `users` table: Pathlight Tracker is a single-developer, local-only tool with no accounts.
 
@@ -42,7 +43,7 @@ There is no `users` table: Pathlight Tracker is a single-developer, local-only t
 
 | Topic | Rule |
 | --- | --- |
-| IDs | Prefixed ULIDs stored as `TEXT` (sortable by creation time): `ses_…`, `req_…`, `stp_…` |
+| IDs | Prefixed ULIDs stored as `TEXT` (sortable by creation time): `ses_…`, `req_…`, `stp_…`. A ULID is 26 characters, so an ID is 30 (`req_` + 26). Object IDs are different: agent-issued counters per session (`obj_17`), not ULIDs |
 | Booleans | `INTEGER` `0` / `1` (SQLite has no boolean type) |
 | Enums | `TEXT` with a `CHECK (… IN (…))` constraint |
 | JSON | `TEXT` holding JSON, validated by Zod before insert |
@@ -51,6 +52,7 @@ There is no `users` table: Pathlight Tracker is a single-developer, local-only t
 | Names | Tables and columns in `snake_case`; Drizzle maps them to `camelCase` in TypeScript |
 | Foreign keys | Enforced: `PRAGMA foreign_keys = ON` at every connection |
 | Journal mode | `PRAGMA journal_mode = WAL` for fast concurrent reads while ingesting |
+| Vacuum | `PRAGMA auto_vacuum = INCREMENTAL`, set before the first table is created (it cannot be turned on later without a full `VACUUM`), so purged data is really removed from the file (decision 0011) |
 
 ---
 
@@ -74,8 +76,12 @@ One row per Node process that loaded the agent. A `nest start --watch` restart c
 | `disabled_reason` | TEXT | No | `NULL` | Set when the agent auto-disables |
 | `connected_at` | INTEGER | Yes | — | Epoch ms |
 | `disconnected_at` | INTEGER | No | `NULL` | Epoch ms |
+| `exit_code` | INTEGER | No | `NULL` | The app process's exit code, when the launcher saw it exit |
+| `warnings_json` | TEXT | No | `NULL` | Array of `{ code, message, file? }`: setup warnings (e.g. no source maps) and files that couldn't be recorded (transform failed, loaded untransformed) |
 | `created_at` | INTEGER | Yes | now | Epoch ms |
 | `updated_at` | INTEGER | Yes | now | Epoch ms, set on every update |
+
+`framework` is `unknown` at `hello` time (NestJS has not loaded yet); the collector sets it from the first `request.start`, which carries `framework` (audit 7.12).
 
 ### 3.2 `requests`
 
@@ -85,8 +91,9 @@ One row per traced request.
 | --- | --- | --- | --- | --- |
 | `id` | TEXT | Yes | ULID `req_…` | **PK**; equals the agent's `traceId` |
 | `session_id` | TEXT | Yes | — | **FK** → `sessions.id` |
-| `method` | TEXT | Yes | — | Enum `http_method` |
-| `path` | TEXT | Yes | — | Actual path, e.g. `/orders/42` |
+| `entry_type` | TEXT | Yes | `'http'` | Enum `entry_type`: what started this trace (decision 0011) |
+| `method` | TEXT | No | `NULL` | Enum `http_method`; required when `entry_type = 'http'` |
+| `path` | TEXT | No | `NULL` | Actual path, e.g. `/orders/42`; required when `entry_type = 'http'` |
 | `route` | TEXT | No | `NULL` | Route pattern, e.g. `/orders/:id` |
 | `state` | TEXT | Yes | `'in_progress'` | Enum `request_state` |
 | `http_status` | INTEGER | No | `NULL` | Set at `request.end` |
@@ -96,6 +103,7 @@ One row per traced request.
 | `truncated` | INTEGER | Yes | `0` | `1` if `PATHLIGHT_TRACKER_MAX_STEPS` was hit |
 | `request_json` | TEXT | Yes | — | `{ params, query, body, headers }` as captured values, redacted |
 | `response_json` | TEXT | No | `NULL` | `{ headers, body }` as captured values, redacted |
+| `unhandled_error_json` | TEXT | No | `NULL` | `{ type, message, stack }` of an error that reached the response unhandled (from `request.end`) |
 | `started_at` | INTEGER | Yes | — | Epoch ms |
 | `ended_at` | INTEGER | No | `NULL` | Epoch ms |
 | `duration_ns` | INTEGER | No | `NULL` | Total time |
@@ -103,7 +111,9 @@ One row per traced request.
 | `created_at` | INTEGER | Yes | now | Epoch ms |
 | `updated_at` | INTEGER | Yes | now | Epoch ms |
 
-Check constraint: a request can be soft-deleted only after it has finished (`deleted_at IS NULL OR state <> 'in_progress'`).
+Check constraints: a request can be soft-deleted only after it has finished (`deleted_at IS NULL OR state <> 'in_progress'`); an HTTP request has a method and path (`entry_type <> 'http' OR (method IS NOT NULL AND path IS NOT NULL)`).
+
+Empty `params` and `query` are stored as `null`, not `{}`, matching the API.
 
 ### 3.3 `steps`
 
@@ -114,7 +124,7 @@ One row per step in a request. Rows form a tree through `parent_id`.
 | `id` | TEXT | Yes | ULID `stp_…` | **PK** |
 | `request_id` | TEXT | Yes | — | **FK** → `requests.id` |
 | `parent_id` | TEXT | No | `NULL` | **FK** → `steps.id`; `NULL` for root steps |
-| `seq` | INTEGER | Yes | — | Order of entry within the request, starting at 1 |
+| `seq` | INTEGER | Yes | — | Order of entry within the request, starting at 1. Assigned by the collector in arrival order (the agent doesn't send it); a re-sent event whose step `id` already exists is ignored, so duplicates never get new numbers |
 | `depth` | INTEGER | Yes | `0` | Tree depth (root = 0) |
 | `kind` | TEXT | Yes | — | Enum `step_kind` |
 | `name` | TEXT | Yes | — | Display name, e.g. `OrdersService.create` |
@@ -126,12 +136,13 @@ One row per step in a request. Rows form a tree through `parent_id`.
 | `is_async` | INTEGER | Yes | `0` | `1` for async functions and promises |
 | `status` | TEXT | Yes | `'running'` | Enum `step_status` |
 | `args_json` | TEXT | No | `NULL` | Array of captured values |
+| `arg_names_json` | TEXT | No | `NULL` | Array of parameter names from the source, e.g. `["user","total"]` (`NULL` when unknown) |
 | `return_json` | TEXT | No | `NULL` | Captured value |
 | `this_class` | TEXT | No | `NULL` | Class name of `this`, if any |
-| `error_json` | TEXT | No | `NULL` | `{ type, message, stack, file, line }` |
+| `error_json` | TEXT | No | `NULL` | `{ type, message, stack, file, line, column }`. The agent maps the stack to `.ts` locations through source maps before sending (task 3.7) |
 | `error_handling` | TEXT | No | `NULL` | Enum `error_handling`; set when `status = 'threw'` |
 | `boundary_type` | TEXT | No | `NULL` | Enum `boundary_type`; required when `kind = 'boundary'` |
-| `detail_json` | TEXT | No | `NULL` | Kind-specific detail: boundary request/response, decision values, loop summary |
+| `detail_json` | TEXT | No | `NULL` | Kind-specific detail (shapes below): boundary request/response, guard, pipe, interceptor, filter, decision values, loop summary |
 | `on_error_path` | INTEGER | Yes | `0` | `1` if this step is on the path from root to an error |
 | `collapsed_count` | INTEGER | Yes | `1` | > 1 when repeated callbacks are collapsed into one row (v1) |
 | `start_offset_ns` | INTEGER | Yes | — | Nanoseconds since request start |
@@ -147,16 +158,16 @@ Check constraints:
 
 ### 3.4 `object_refs`
 
-One row each time a captured object appears in a step. Object IDs are issued by the agent (unique within one session), so they are scoped by `request_id`, which belongs to exactly one session.
+One row each time a captured object appears in a step, or in the request itself. Object IDs are issued by the agent (unique within one session), so they are scoped by `request_id`, which belongs to exactly one session. The builder writes these rows from the `objectId`s inside captured values (task 2.9).
 
 | Field | Type | Required | Default | Notes |
 | --- | --- | --- | --- | --- |
 | `id` | INTEGER | Yes | auto-increment | **PK** |
 | `request_id` | TEXT | Yes | — | **FK** → `requests.id` |
-| `step_id` | TEXT | Yes | — | **FK** → `steps.id` |
+| `step_id` | TEXT | No | `NULL` | **FK** → `steps.id`; `NULL` for request-level objects (role `request`) |
 | `object_id` | TEXT | Yes | — | Agent-issued, e.g. `obj_17` |
 | `role` | TEXT | Yes | — | Enum `object_role` |
-| `path` | TEXT | Yes | `''` | Where inside the value, e.g. `args[0]`, `return.user` |
+| `path` | TEXT | Yes | `''` | Where the object sits, as a JS-like path from the step or request: `args[0]`, `args[1].items[2]`, `return`, `return.user`, `this`, `thrown`, `request.body`, `request.params` |
 | `type_name` | TEXT | No | `NULL` | e.g. `User`, `Object`, `Array` |
 | `created_at` | INTEGER | Yes | now | Epoch ms |
 
@@ -168,7 +179,7 @@ One row each time a captured object appears in a step. Object IDs are issued by 
 | `value` | TEXT | Yes | — | String or JSON |
 | `updated_at` | INTEGER | Yes | now | Epoch ms |
 
-Known keys: `schema_version`, `created_by_version`, `retention_limit`, `trash_ttl_hours`, `last_pruned_at`, `last_trash_purge_at`.
+Known keys: `schema_version`, `created_by_version`, `last_pruned_at`, `last_trash_purge_at`. Retention and trash settings are **not** stored here: config (env vars, config file) is their only source.
 
 ### 3.6 Captured value shape (inside `*_json` columns)
 
@@ -181,13 +192,29 @@ type CapturedValue = {
       | 'date' | 'error' | 'buffer' | 'promise' | 'circular';
   preview: string;             // short display text, e.g. "{ id: 7, tier: undefined }"
   className?: string;          // e.g. "User", "CreateOrderDto"
-  objectId?: string;           // e.g. "obj_17" (objects and arrays only)
+  objectId?: string;           // e.g. "obj_17" (objects, arrays and errors)
   size?: number;               // array length / map size / key count
   truncated?: boolean;         // depth, length or size cap hit
   redacted?: boolean;          // value replaced with [REDACTED]
+  suspicious?: boolean;        // undefined or NaN where a value was expected (decision 0016)
   children?: Record<string, CapturedValue> | CapturedValue[];
 };
 ```
+
+### 3.7 `logs` (v1)
+
+One row per `console.*` call made while a request was running (decision 0011). Logs are not steps: they take no step number, don't count toward `PATHLIGHT_TRACKER_MAX_STEPS` and don't appear in the step tree. Created by the v1 migration (task 6.7).
+
+| Field | Type | Required | Default | Notes |
+| --- | --- | --- | --- | --- |
+| `id` | INTEGER | Yes | auto-increment | **PK** |
+| `request_id` | TEXT | Yes | — | **FK** → `requests.id` |
+| `step_id` | TEXT | No | `NULL` | Step that was running when it printed (not a FK; the step may be truncated away) |
+| `seq` | INTEGER | Yes | — | Print order within the request, starting at 1 |
+| `level` | TEXT | Yes | — | Enum `log_level` |
+| `message_json` | TEXT | Yes | — | Array of captured values (the `console` arguments), redacted |
+| `offset_ns` | INTEGER | Yes | — | Nanoseconds since request start |
+| `created_at` | INTEGER | Yes | now | Epoch ms |
 
 ---
 
@@ -200,6 +227,7 @@ erDiagram
   STEPS ||--o{ STEPS : "parent of"
   STEPS ||--o{ OBJECT_REFS : "references"
   REQUESTS ||--o{ OBJECT_REFS : "scopes"
+  REQUESTS ||--o{ LOGS : "prints (v1)"
 ```
 
 | Relationship | Type | Foreign key | On delete |
@@ -207,8 +235,9 @@ erDiagram
 | Session → requests | One-to-many | `requests.session_id` → `sessions.id` | `CASCADE` |
 | Request → steps | One-to-many | `steps.request_id` → `requests.id` | `CASCADE` |
 | Step → child steps | One-to-many (self, tree) | `steps.parent_id` → `steps.id` | `CASCADE` |
-| Step → object refs | One-to-many | `object_refs.step_id` → `steps.id` | `CASCADE` |
+| Step → object refs | One-to-many | `object_refs.step_id` → `steps.id` (nullable for request-level objects) | `CASCADE` |
 | Request → object refs | One-to-many | `object_refs.request_id` → `requests.id` | `CASCADE` |
+| Request → logs (v1) | One-to-many | `logs.request_id` → `requests.id` | `CASCADE` |
 | Steps ↔ objects | **Many-to-many** (logical) | Through `object_refs`: one object appears in many steps; one step holds many objects | — |
 | Request → error step | Reference (not enforced) | `requests.error_step_id` holds a `steps.id` | Cleared by the app if the step is removed |
 
@@ -230,14 +259,15 @@ erDiagram
 | `requests` | `idx_requests_active (started_at DESC) WHERE deleted_at IS NULL` | Partial index | Default request list (active only) and retention count |
 | `requests` | `idx_requests_trash (deleted_at) WHERE deleted_at IS NOT NULL` | Partial index | Trash view and the purge job |
 | `steps` | `PRIMARY KEY (id)` | Unique | Lookups |
-| `steps` | `uq_steps_request_seq UNIQUE (request_id, seq)` | Unique | Ordering; prevents duplicate events |
+| `steps` | `uq_steps_request_seq UNIQUE (request_id, seq)` | Unique | Ordering (`seq` is assigned by the collector; duplicate events are caught by step `id`) |
 | `steps` | `idx_steps_parent (request_id, parent_id)` | Index | Loading children lazily |
 | `steps` | `idx_steps_error_path (request_id, on_error_path)` | Index | Highlighting the red path |
 | `steps` | `idx_steps_name (name)` | Index | Search by function name (v1) |
 | `object_refs` | `PRIMARY KEY (id)` | Unique | — |
-| `object_refs` | `uq_object_refs UNIQUE (step_id, object_id, role, path)` | Unique | No duplicate references |
+| `object_refs` | `uq_object_refs UNIQUE (request_id, step_id, object_id, role, path)` | Unique | No duplicate references (SQLite treats `NULL` step IDs as distinct, so request-level rows are de-duplicated by the builder) |
 | `object_refs` | `idx_object_refs_object (request_id, object_id)` | Index | Data journey: "every step this object passed through" |
 | `meta` | `PRIMARY KEY (key)` | Unique | Lookups |
+| `logs` (v1) | `idx_logs_request (request_id, seq)` | Index | Logs tab, in print order |
 
 ---
 
@@ -247,13 +277,17 @@ erDiagram
 | --- | --- | --- |
 | `framework` | `sessions.framework` | `nestjs`, `express`, `unknown` (v2: `fastify`, `nextjs`) |
 | `session_status` | `sessions.status` | `connected`, `disconnected`, `disabled` |
+| `entry_type` | `requests.entry_type` | MVP: `http`; v1: `test`; v2: `queue`, `cron` |
 | `http_method` | `requests.method` | `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS` |
 | `request_state` | `requests.state` | `in_progress`, `completed`, `incomplete` (app crashed or restarted mid-request) |
-| `step_kind` | `steps.kind` | MVP: `function`, `method`, `middleware`, `guard`, `interceptor`, `pipe`, `handler`, `filter`, `boundary`; v1: `constructor`, `callback`, `decision`, `loop` |
+| `step_kind` | `steps.kind` | MVP: `function`, `method`, `middleware`, `guard`, `interceptor`, `pipe`, `handler`, `filter`, `boundary`, `decision` (`if` / `switch` only, decision 0004); v1: `constructor`, `callback`, `loop` |
 | `step_status` | `steps.status` | `running`, `returned`, `threw` |
-| `error_handling` | `steps.error_handling` | `propagated` (passed to caller), `swallowed` (caught and ignored), `converted` (turned into an HTTP response), `unhandled` (unhandled rejection) |
-| `boundary_type` | `steps.boundary_type` | MVP: `db`, `http`; v1: `redis`, `queue`, `log`; v2: `fs` |
-| `object_role` | `object_refs.role` | `arg`, `return`, `this`, `thrown` |
+| `error_handling` | `steps.error_handling` | `propagated` (passed to caller), `swallowed` (caught and ignored), `converted` (turned into an HTTP response), `unhandled` (reached the response unhandled). Set by the collector after the fact (decision 0010). "Swallowed" here, `caught` in events and **Caught** in the UI legend all mean the same thing |
+| `boundary_type` | `steps.boundary_type` | MVP: `db`, `http`; v1: `redis`, `queue`; v2: `fs`. `console.*` output is **not** a step: it goes to `logs` (decision 0011) |
+| `object_role` | `object_refs.role` | `arg`, `return`, `this`, `thrown`, `request` (request body or params; `step_id` is `NULL`) |
+| `log_level` (v1) | `logs.level` | `log`, `info`, `warn`, `error`, `debug` |
+| `decision_type` | `detail_json.decisionType` of `decision` steps | MVP: `if`, `switch`; v1: `ternary`, `logical`, `optional` |
+| `loop_type` (v1) | `detail_json.loopType` of `loop` steps | `for`, `for_of`, `for_in`, `while`, `do_while`, `array_method` |
 
 `detail_json` shapes by kind:
 
@@ -261,10 +295,14 @@ erDiagram
 | --- | --- |
 | `boundary` (`db`) | `{ driver, operation, collectionOrTable, query, resultSummary }` |
 | `boundary` (`http`) | `{ client, method, url, requestBody, status, responseBody }` |
-| `decision` | `{ type, expression, values: { "user.tier": CapturedValue, … }, result, branch }` |
-| `loop` | `{ type, iterations, samples: { first, last, failing? } }` |
+| `decision` | `{ decisionType, expression, values: { "user.tier": CapturedValue, … }, result, branch }` |
+| `loop` (v1) | `{ loopType, iterations, samples: { first, last, failing? } }` |
 | `guard` | `{ allowed: boolean }` |
 | `pipe` | `{ input: CapturedValue, output: CapturedValue }` |
+| `interceptor` | `{ before: CapturedValue | null, after: CapturedValue | null }`: the handler result before and after the interceptor's `map` / `tap` (`null` when it didn't change or there was none) |
+| `filter` | `{ error: { type, message }, response: { status: number, body: CapturedValue } }`: which error became which response |
+| `middleware` (Express) | `{ calledNext: boolean, nextError: boolean }` |
+| any kind (v1, task 6.5) | adds `argChanges: [{ index, before: CapturedValue, after: CapturedValue }]` when a function changed one of its arguments |
 
 ---
 
@@ -307,10 +345,11 @@ How rows are removed:
 | `DELETE /api/v1/requests` / `pathlight-tracker clear` (UI "Clear all") | **Soft** | Sets `deleted_at` on all finished active requests |
 | `POST /api/v1/requests/:requestId/restore` | Restore | Clears `deleted_at` |
 | `DELETE /api/v1/requests/:requestId?permanent=true` | **Hard** | Deletes the request, its steps and object refs immediately |
-| `DELETE /api/v1/trash` / `pathlight-tracker clear --purge` (UI "Empty trash") | **Hard** | Deletes every trashed request immediately |
+| `DELETE /api/v1/trash` (UI "Empty trash") | **Hard** | Deletes every trashed request immediately |
+| `pathlight-tracker clear --purge` | **Hard** | Deletes **every** request, active and trashed, immediately (after a confirmation prompt; `--yes` skips it) |
 | Purge job (on startup, then hourly) | **Hard** | Deletes trashed requests older than `PATHLIGHT_TRACKER_TRASH_TTL_HOURS` |
 | Retention (after each completed request) | **Soft** first | Moves the oldest **active** requests beyond `PATHLIGHT_TRACKER_RETENTION` (default 100) to the trash; the purge job removes them later |
-| Trash size guard | **Hard** | If the trash holds more than `PATHLIGHT_TRACKER_RETENTION` requests, the oldest trashed ones are purged early, so the file cannot grow without limit |
+| Trash size guard (v1, task 6.14, decision 0012) | **Hard** | If the trash holds more than `PATHLIGHT_TRACKER_RETENTION` requests, the oldest trashed ones are purged early. Not in the MVP, which keeps the plain 72-hour promise |
 | Session cleanup | **Hard** | Disconnected sessions with no remaining requests (active or trashed) |
 
 Example queries:
@@ -342,10 +381,10 @@ Only the **collector** opens the database. Every other part goes through the col
 | Collector ingest | Create, update | Create, update | Create, update | Create | — |
 | Collector builder | — | Update (state, status, error fields, counts) | Update (status, error path, durations) | — | — |
 | Collector retention job | — | Soft delete (oldest active beyond limit) | — | — | Update |
-| Collector purge job | Delete (empty sessions) | Hard delete (trashed past TTL, or trash over limit) | Delete (cascade) | Delete (cascade) | Update |
+| Collector purge job | Delete (empty sessions) | Hard delete (trashed past TTL; trash over limit from v1) | Delete (cascade) | Delete (cascade) | Update |
 | Collector REST API | Read (`/health`) | Read active; read trash; soft delete; restore; hard delete (`permanent=true`, empty trash) | Read (only for active requests, or with `includeDeleted=true`) | Read (v2) | — |
 | Map UI | Read via API | Read, soft delete, restore, delete permanently, empty trash via API | Read via API | Read via API (v2) | — |
-| VS Code extension (Phase 2) | Read via API | Read active via API | Read via API | Read via API | — |
+| VS Code extension (v2) | Read via API | Read active via API | Read via API | Read via API | — |
 | CLI (`pathlight-tracker clear`) | — | Soft delete all finished requests | — | — | — |
 | CLI (`pathlight-tracker clear --purge`) | Delete | Hard delete all (active and trashed) | Delete (cascade) | Delete (cascade) | Update |
 | Migrations | Schema only | Schema only | Schema only | Schema only | Create, update `schema_version` |
@@ -359,6 +398,8 @@ API calls require the local token and pass origin checks (see `architecture.md` 
 The Drizzle schema in `packages/collector/src/store/schema.ts` mirrors this SQL; migrations are generated with `drizzle-kit`.
 
 ```sql
+-- auto_vacuum must be set before the first table is created
+PRAGMA auto_vacuum = INCREMENTAL;
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 
@@ -377,6 +418,8 @@ CREATE TABLE sessions (
   disabled_reason  TEXT,
   connected_at     INTEGER NOT NULL,
   disconnected_at  INTEGER,
+  exit_code        INTEGER,
+  warnings_json    TEXT,
   created_at       INTEGER NOT NULL,
   updated_at       INTEGER NOT NULL
 );
@@ -385,9 +428,11 @@ CREATE INDEX idx_sessions_status ON sessions (status);
 CREATE TABLE requests (
   id             TEXT PRIMARY KEY,
   session_id     TEXT NOT NULL REFERENCES sessions (id) ON DELETE CASCADE,
-  method         TEXT NOT NULL
+  entry_type     TEXT NOT NULL DEFAULT 'http'
+                 CHECK (entry_type IN ('http','test','queue','cron')),
+  method         TEXT
                  CHECK (method IN ('GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS')),
-  path           TEXT NOT NULL,
+  path           TEXT,
   route          TEXT,
   state          TEXT NOT NULL DEFAULT 'in_progress'
                  CHECK (state IN ('in_progress','completed','incomplete')),
@@ -398,13 +443,15 @@ CREATE TABLE requests (
   truncated      INTEGER NOT NULL DEFAULT 0 CHECK (truncated IN (0,1)),
   request_json   TEXT NOT NULL,
   response_json  TEXT,
+  unhandled_error_json TEXT,
   started_at     INTEGER NOT NULL,
   ended_at       INTEGER,
   duration_ns    INTEGER,
   deleted_at     INTEGER,
   created_at     INTEGER NOT NULL,
   updated_at     INTEGER NOT NULL,
-  CHECK (deleted_at IS NULL OR state <> 'in_progress')
+  CHECK (deleted_at IS NULL OR state <> 'in_progress'),
+  CHECK (entry_type <> 'http' OR (method IS NOT NULL AND path IS NOT NULL))
 );
 CREATE INDEX idx_requests_started_at ON requests (started_at DESC);
 CREATE INDEX idx_requests_session    ON requests (session_id);
@@ -432,11 +479,12 @@ CREATE TABLE steps (
   status           TEXT NOT NULL DEFAULT 'running'
                    CHECK (status IN ('running','returned','threw')),
   args_json        TEXT,
+  arg_names_json   TEXT,
   return_json      TEXT,
   this_class       TEXT,
   error_json       TEXT,
   error_handling   TEXT CHECK (error_handling IN ('propagated','swallowed','converted','unhandled')),
-  boundary_type    TEXT CHECK (boundary_type IN ('db','http','redis','queue','log','fs')),
+  boundary_type    TEXT CHECK (boundary_type IN ('db','http','redis','queue','fs')),
   detail_json      TEXT,
   on_error_path    INTEGER NOT NULL DEFAULT 0 CHECK (on_error_path IN (0,1)),
   collapsed_count  INTEGER NOT NULL DEFAULT 1 CHECK (collapsed_count >= 1),
@@ -455,13 +503,14 @@ CREATE INDEX idx_steps_name       ON steps (name);
 CREATE TABLE object_refs (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   request_id  TEXT NOT NULL REFERENCES requests (id) ON DELETE CASCADE,
-  step_id     TEXT NOT NULL REFERENCES steps (id) ON DELETE CASCADE,
+  step_id     TEXT REFERENCES steps (id) ON DELETE CASCADE,
   object_id   TEXT NOT NULL,
-  role        TEXT NOT NULL CHECK (role IN ('arg','return','this','thrown')),
+  role        TEXT NOT NULL CHECK (role IN ('arg','return','this','thrown','request')),
   path        TEXT NOT NULL DEFAULT '',
   type_name   TEXT,
   created_at  INTEGER NOT NULL,
-  UNIQUE (step_id, object_id, role, path)
+  UNIQUE (request_id, step_id, object_id, role, path),
+  CHECK ((role = 'request') = (step_id IS NULL))
 );
 CREATE INDEX idx_object_refs_object ON object_refs (request_id, object_id);
 
@@ -470,6 +519,19 @@ CREATE TABLE meta (
   value      TEXT NOT NULL,
   updated_at INTEGER NOT NULL
 );
+
+-- v1 (task 6.7): created by the v1 migration, not the MVP one
+CREATE TABLE logs (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  request_id   TEXT NOT NULL REFERENCES requests (id) ON DELETE CASCADE,
+  step_id      TEXT,
+  seq          INTEGER NOT NULL CHECK (seq >= 1),
+  level        TEXT NOT NULL CHECK (level IN ('log','info','warn','error','debug')),
+  message_json TEXT NOT NULL,
+  offset_ns    INTEGER NOT NULL,
+  created_at   INTEGER NOT NULL
+);
+CREATE INDEX idx_logs_request ON logs (request_id, seq);
 ```
 
 ---
@@ -478,141 +540,144 @@ CREATE TABLE meta (
 
 The seed reproduces the failing `POST /orders` example from the PRD: a NestJS app where `UserService.findById` returns a user without `tier`, and `PricingService.calculateDiscount` throws. It lives in `fixtures/seed/sample.sql` and loads with `pnpm seed`, so the UI can be built and tested without running a traced app.
 
+The seed follows the PRD's example names (`JwtAuthGuard`, user "Ravi", `items: [2]`). The real fixture `fixtures/nestjs-app` reproduces the same bug at the same lines of `src/pricing/pricing.service.ts` (method on 22, `if` on 24, throw on 27) but uses its own names elsewhere (e.g. `AuthGuard`, no `items`), so a recorded fixture run matches the seed in shape, not in every name.
+
 ```sql
 INSERT INTO meta (key, value, updated_at) VALUES
-  ('schema_version',     '1',     1761824400000),
-  ('created_by_version', '0.1.0', 1761824400000),
-  ('retention_limit',    '100',   1761824400000),
-  ('trash_ttl_hours',    '72',    1761824400000);
+  ('schema_version',     '1',     1793342100000),
+  ('created_by_version', '0.1.0', 1793342100000);
+
 
 INSERT INTO sessions (id, pid, command, cwd, node_version, agent_version, protocol_version,
                       framework, status, connected_at, created_at, updated_at) VALUES
-  ('ses_01JBSEED0000000000000001', 48213, 'npm run start:dev', '/home/dev/shop-api',
-   'v24.10.0', '0.1.0', 1, 'nestjs', 'connected', 1761824400000, 1761824400000, 1761824400000);
+  ('ses_01JBSEED000000000000000001', 48213, 'npm run start:dev', '/home/dev/shop-api',
+   'v24.10.0', '0.1.0', 1, 'nestjs', 'connected', 1793342100000, 1793342100000, 1793342100000);
 
 INSERT INTO requests (id, session_id, method, path, route, state, http_status, has_error,
                       error_step_id, step_count, request_json, response_json,
                       started_at, ended_at, duration_ns, created_at, updated_at) VALUES
-  ('req_01JBSEED0000000000000001', 'ses_01JBSEED0000000000000001', 'POST', '/orders', '/orders',
-   'completed', 500, 1, 'stp_01JBSEED0000000000000008', 9,
-   '{"params":{},"query":{},"body":{"type":"object","preview":"{ userId: 7, items: [2] }","objectId":"obj_1","size":2},"headers":{"type":"object","preview":"{ authorization: [REDACTED], content-type: application/json }"}}',
+  ('req_01JBSEED000000000000000001', 'ses_01JBSEED000000000000000001', 'POST', '/orders', '/orders',
+   'completed', 500, 1, 'stp_01JBSEED000000000000000008', 9,
+   '{"params":null,"query":null,"body":{"type":"object","preview":"{ userId: 7, items: [2] }","objectId":"obj_1","size":2},"headers":{"type":"object","preview":"{ authorization: [REDACTED], content-type: application/json }"}}',
    '{"headers":{},"body":{"type":"object","preview":"{ statusCode: 500, message: Internal server error }"}}',
-   1761824405120, 1761824405204, 84000000, 1761824405120, 1761824405204),
-  ('req_01JBSEED0000000000000002', 'ses_01JBSEED0000000000000001', 'GET', '/orders/42', '/orders/:id',
+   1793342105120, 1793342105204, 84000000, 1793342105120, 1793342105204),
+  ('req_01JBSEED000000000000000002', 'ses_01JBSEED000000000000000001', 'GET', '/orders/42', '/orders/:id',
    'completed', 200, 0, NULL, 4,
-   '{"params":{"type":"object","preview":"{ id: \"42\" }"},"query":{},"body":{"type":"undefined","preview":"undefined"},"headers":{"type":"object","preview":"{ authorization: [REDACTED] }"}}',
+   '{"params":{"type":"object","preview":"{ id: \"42\" }"},"query":null,"body":{"type":"undefined","preview":"undefined"},"headers":{"type":"object","preview":"{ authorization: [REDACTED] }"}}',
    '{"headers":{},"body":{"type":"object","preview":"{ id: 42, total: 1200, status: \"paid\" }"}}',
-   1761824410010, 1761824410031, 21000000, 1761824410010, 1761824410031);
+   1793342110010, 1793342110031, 21000000, 1793342110010, 1793342110031);
 
 -- A request the developer moved to the trash (soft-deleted, restorable for 72 hours)
 INSERT INTO requests (id, session_id, method, path, route, state, http_status, has_error,
                       step_count, request_json, response_json,
                       started_at, ended_at, duration_ns, deleted_at, created_at, updated_at) VALUES
-  ('req_01JBSEED0000000000000003', 'ses_01JBSEED0000000000000001', 'GET', '/health', '/health',
+  ('req_01JBSEED000000000000000003', 'ses_01JBSEED000000000000000001', 'GET', '/health', '/health',
    'completed', 200, 0, 1,
-   '{"params":{},"query":{},"body":{"type":"undefined","preview":"undefined"},"headers":{}}',
+   '{"params":null,"query":null,"body":{"type":"undefined","preview":"undefined"},"headers":{}}',
    '{"headers":{},"body":{"type":"object","preview":"{ status: \"ok\" }"}}',
-   1761824401000, 1761824401002, 2000000, 1761824420000, 1761824401000, 1761824420000);
+   1793342101000, 1793342101002, 2000000, 1793342120000, 1793342101000, 1793342120000);
 
 -- Steps for the failing POST /orders (seq order = order of entry)
 INSERT INTO steps (id, request_id, parent_id, seq, depth, kind, name, class_name, function_name,
                    file, line, "column", is_async, status, args_json, return_json, this_class,
                    error_json, error_handling, boundary_type, detail_json, on_error_path,
                    start_offset_ns, duration_ns, created_at, updated_at) VALUES
-  ('stp_01JBSEED0000000000000001', 'req_01JBSEED0000000000000001', NULL, 1, 0, 'guard',
+  ('stp_01JBSEED000000000000000001', 'req_01JBSEED000000000000000001', NULL, 1, 0, 'guard',
    'JwtAuthGuard.canActivate', 'JwtAuthGuard', 'canActivate', 'src/auth/jwt-auth.guard.ts', 12, 3,
    1, 'returned', NULL, '{"type":"boolean","preview":"true"}', 'JwtAuthGuard', NULL, NULL, NULL,
-   '{"allowed":true}', 0, 400000, 1100000, 1761824405120, 1761824405121),
+   '{"allowed":true}', 0, 400000, 1100000, 1793342105120, 1793342105121),
 
-  ('stp_01JBSEED0000000000000002', 'req_01JBSEED0000000000000001', NULL, 2, 0, 'pipe',
+  ('stp_01JBSEED000000000000000002', 'req_01JBSEED000000000000000001', NULL, 2, 0, 'pipe',
    'ValidationPipe.transform', 'ValidationPipe', 'transform', NULL, NULL, NULL,
    1, 'returned', NULL, '{"type":"object","className":"CreateOrderDto","preview":"CreateOrderDto { userId: 7, items: [2] }","objectId":"obj_2"}',
    'ValidationPipe', NULL, NULL, NULL,
    '{"input":{"type":"object","preview":"{ userId: 7, items: [2] }","objectId":"obj_1"},"output":{"type":"object","className":"CreateOrderDto","preview":"CreateOrderDto { userId: 7, items: [2] }","objectId":"obj_2"}}',
-   0, 1600000, 900000, 1761824405122, 1761824405123),
+   0, 1600000, 900000, 1793342105122, 1793342105123),
 
-  ('stp_01JBSEED0000000000000003', 'req_01JBSEED0000000000000001', NULL, 3, 0, 'handler',
+  ('stp_01JBSEED000000000000000003', 'req_01JBSEED000000000000000001', NULL, 3, 0, 'handler',
    'OrdersController.create', 'OrdersController', 'create', 'src/orders/orders.controller.ts', 18, 3,
    1, 'threw', '[{"type":"object","className":"CreateOrderDto","preview":"CreateOrderDto { userId: 7, items: [2] }","objectId":"obj_2"}]',
    NULL, 'OrdersController',
    '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","file":"src/pricing/pricing.service.ts","line":27}',
-   'converted', NULL, NULL, 1, 2600000, 81000000, 1761824405123, 1761824405204),
+   'converted', NULL, NULL, 1, 2600000, 81000000, 1793342105123, 1793342105204),
 
-  ('stp_01JBSEED0000000000000004', 'req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000003', 4, 1, 'method',
+  ('stp_01JBSEED000000000000000004', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000003', 4, 1, 'method',
    'OrdersService.create', 'OrdersService', 'create', 'src/orders/orders.service.ts', 31, 3,
    1, 'threw', '[{"type":"object","className":"CreateOrderDto","preview":"CreateOrderDto { userId: 7, items: [2] }","objectId":"obj_2"}]',
    NULL, 'OrdersService',
    '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","file":"src/pricing/pricing.service.ts","line":27}',
-   'propagated', NULL, NULL, 1, 2900000, 80500000, 1761824405123, 1761824405204),
+   'propagated', NULL, NULL, 1, 2900000, 80500000, 1793342105123, 1793342105204),
 
-  ('stp_01JBSEED0000000000000005', 'req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000004', 5, 2, 'method',
+  ('stp_01JBSEED000000000000000005', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000004', 5, 2, 'method',
    'UserService.findById', 'UserService', 'findById', 'src/users/user.service.ts', 14, 3,
    1, 'returned', '[{"type":"number","preview":"7"}]',
    '{"type":"object","className":"User","preview":"User { id: 7, name: \"Ravi\", tier: undefined }","objectId":"obj_3"}',
-   'UserService', NULL, NULL, NULL, NULL, 0, 3200000, 41000000, 1761824405124, 1761824405165),
+   'UserService', NULL, NULL, NULL, NULL, 0, 3200000, 41000000, 1793342105124, 1793342105165),
 
-  ('stp_01JBSEED0000000000000006', 'req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000005', 6, 3, 'boundary',
+  ('stp_01JBSEED000000000000000006', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000005', 6, 3, 'boundary',
    'users.findOne', NULL, NULL, 'src/users/user.service.ts', 15, 5,
-   1, 'returned', NULL, '{"type":"object","preview":"{ _id: 7, name: \"Ravi\" }"}', NULL, NULL, NULL, 'db',
-   '{"driver":"mongoose","operation":"findOne","collectionOrTable":"users","query":"{ _id: 7 }","resultSummary":"1 document"}',
-   0, 3500000, 39000000, 1761824405124, 1761824405164),
+   1, 'returned', NULL, '{"type":"object","preview":"{ id: 7, name: \"Ravi\" }"}', NULL, NULL, NULL, 'db',
+   '{"driver":"mongoose","operation":"findOne","collectionOrTable":"users","query":"{ id: 7 }","resultSummary":"1 document"}',
+   0, 3500000, 39000000, 1793342105124, 1793342105164),
 
-  ('stp_01JBSEED0000000000000007', 'req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000004', 7, 2, 'method',
+  ('stp_01JBSEED000000000000000007', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000004', 7, 2, 'method',
    'CartService.total', 'CartService', 'total', 'src/cart/cart.service.ts', 9, 3,
    0, 'returned', '[{"type":"array","preview":"[2 items]","size":2,"objectId":"obj_4"}]',
    '{"type":"number","preview":"1200"}', 'CartService', NULL, NULL, NULL, NULL, 0,
-   44500000, 600000, 1761824405165, 1761824405165),
+   44500000, 600000, 1793342105165, 1793342105165),
 
-  ('stp_01JBSEED0000000000000008', 'req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000004', 8, 2, 'method',
+  ('stp_01JBSEED000000000000000008', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000004', 8, 2, 'method',
    'PricingService.calculateDiscount', 'PricingService', 'calculateDiscount', 'src/pricing/pricing.service.ts', 22, 3,
    0, 'threw', '[{"type":"object","className":"User","preview":"User { id: 7, name: \"Ravi\", tier: undefined }","objectId":"obj_3"},{"type":"number","preview":"1200"}]',
    NULL, 'PricingService',
-   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","file":"src/pricing/pricing.service.ts","line":27}',
-   'propagated', NULL, NULL, 1, 45200000, 300000, 1761824405166, 1761824405166),
+   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","stack":"TypeError: Cannot read properties of undefined (reading ''rate'')
+    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)
+    at OrdersService.create (src/orders/orders.service.ts:35:41)","file":"src/pricing/pricing.service.ts","line":27,"column":31}',
+   'propagated', NULL, NULL, 1, 45200000, 300000, 1793342105166, 1793342105166),
 
-  ('stp_01JBSEED0000000000000009', 'req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000008', 9, 3, 'decision',
+  ('stp_01JBSEED000000000000000009', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000008', 9, 3, 'decision',
    'if (user.tier === ''gold'')', NULL, NULL, 'src/pricing/pricing.service.ts', 24, 5,
    0, 'returned', NULL, NULL, NULL, NULL, NULL, NULL,
-   '{"type":"if","expression":"user.tier === ''gold''","values":{"user.tier":{"type":"undefined","preview":"undefined"}},"result":false,"branch":"else"}',
-   1, 45300000, 10000, 1761824405166, 1761824405166);
+   '{"decisionType":"if","expression":"user.tier === ''gold''","values":{"user.tier":{"type":"undefined","preview":"undefined","suspicious":true}},"result":false,"branch":"else"}',
+   0, 45300000, 10000, 1793342105166, 1793342105166);
 
 -- One successful request (GET /orders/42), shortened
 INSERT INTO steps (id, request_id, parent_id, seq, depth, kind, name, class_name, function_name,
                    file, line, is_async, status, args_json, return_json, boundary_type, detail_json,
                    start_offset_ns, duration_ns, created_at, updated_at) VALUES
-  ('stp_01JBSEED0000000000000010', 'req_01JBSEED0000000000000002', NULL, 1, 0, 'guard',
+  ('stp_01JBSEED000000000000000010', 'req_01JBSEED000000000000000002', NULL, 1, 0, 'guard',
    'JwtAuthGuard.canActivate', 'JwtAuthGuard', 'canActivate', 'src/auth/jwt-auth.guard.ts', 12,
    1, 'returned', NULL, '{"type":"boolean","preview":"true"}', NULL, '{"allowed":true}',
-   300000, 1000000, 1761824410010, 1761824410011),
-  ('stp_01JBSEED0000000000000011', 'req_01JBSEED0000000000000002', NULL, 2, 0, 'handler',
+   300000, 1000000, 1793342110010, 1793342110011),
+  ('stp_01JBSEED000000000000000011', 'req_01JBSEED000000000000000002', NULL, 2, 0, 'handler',
    'OrdersController.findOne', 'OrdersController', 'findOne', 'src/orders/orders.controller.ts', 26,
    1, 'returned', '[{"type":"string","preview":"\"42\""}]',
    '{"type":"object","className":"Order","preview":"Order { id: 42, total: 1200, status: \"paid\" }","objectId":"obj_9"}',
-   NULL, NULL, 1500000, 19000000, 1761824410011, 1761824410030),
-  ('stp_01JBSEED0000000000000012', 'req_01JBSEED0000000000000002', 'stp_01JBSEED0000000000000011', 3, 1, 'method',
+   NULL, NULL, 1500000, 19000000, 1793342110011, 1793342110030),
+  ('stp_01JBSEED000000000000000012', 'req_01JBSEED000000000000000002', 'stp_01JBSEED000000000000000011', 3, 1, 'method',
    'OrdersService.findOne', 'OrdersService', 'findOne', 'src/orders/orders.service.ts', 52,
    1, 'returned', '[{"type":"number","preview":"42"}]',
    '{"type":"object","className":"Order","preview":"Order { id: 42, total: 1200, status: \"paid\" }","objectId":"obj_9"}',
-   NULL, NULL, 1800000, 18500000, 1761824410011, 1761824410030),
-  ('stp_01JBSEED0000000000000013', 'req_01JBSEED0000000000000002', 'stp_01JBSEED0000000000000012', 4, 2, 'boundary',
+   NULL, NULL, 1800000, 18500000, 1793342110011, 1793342110030),
+  ('stp_01JBSEED000000000000000013', 'req_01JBSEED000000000000000002', 'stp_01JBSEED000000000000000012', 4, 2, 'boundary',
    'orders.findOne', NULL, NULL, 'src/orders/orders.service.ts', 53,
-   1, 'returned', NULL, '{"type":"object","preview":"{ _id: 42, total: 1200, status: \"paid\" }"}', 'db',
-   '{"driver":"mongoose","operation":"findOne","collectionOrTable":"orders","query":"{ _id: 42 }","resultSummary":"1 document"}',
-   2000000, 17000000, 1761824410012, 1761824410029),
+   1, 'returned', NULL, '{"type":"object","preview":"{ id: 42, total: 1200, status: \"paid\" }"}', 'db',
+   '{"driver":"mongoose","operation":"findOne","collectionOrTable":"orders","query":"{ id: 42 }","resultSummary":"1 document"}',
+   2000000, 17000000, 1793342110012, 1793342110029),
   -- The single step of the trashed GET /health request
-  ('stp_01JBSEED0000000000000014', 'req_01JBSEED0000000000000003', NULL, 1, 0, 'handler',
+  ('stp_01JBSEED000000000000000014', 'req_01JBSEED000000000000000003', NULL, 1, 0, 'handler',
    'HealthController.check', 'HealthController', 'check', 'src/health/health.controller.ts', 8,
    0, 'returned', '[]', '{"type":"object","preview":"{ status: \"ok\" }"}', NULL, NULL,
-   200000, 1500000, 1761824401000, 1761824401002);
+   200000, 1500000, 1793342101000, 1793342101002);
 
 -- The user object (obj_3) followed across steps: the data journey in v2
 INSERT INTO object_refs (request_id, step_id, object_id, role, path, type_name, created_at) VALUES
-  ('req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000002', 'obj_2', 'return', 'return',  'CreateOrderDto', 1761824405123),
-  ('req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000003', 'obj_2', 'arg',    'args[0]', 'CreateOrderDto', 1761824405123),
-  ('req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000004', 'obj_2', 'arg',    'args[0]', 'CreateOrderDto', 1761824405123),
-  ('req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000005', 'obj_3', 'return', 'return',  'User',           1761824405165),
-  ('req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000008', 'obj_3', 'arg',    'args[0]', 'User',           1761824405166),
-  ('req_01JBSEED0000000000000001', 'stp_01JBSEED0000000000000007', 'obj_4', 'arg',    'args[0]', 'Array',          1761824405165);
+  ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000002', 'obj_2', 'return', 'return',  'CreateOrderDto', 1793342105123),
+  ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000003', 'obj_2', 'arg',    'args[0]', 'CreateOrderDto', 1793342105123),
+  ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000004', 'obj_2', 'arg',    'args[0]', 'CreateOrderDto', 1793342105123),
+  ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000005', 'obj_3', 'return', 'return',  'User',           1793342105165),
+  ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000008', 'obj_3', 'arg',    'args[0]', 'User',           1793342105166),
+  ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000007', 'obj_4', 'arg',    'args[0]', 'Array',          1793342105165);
 ```
 
 What the seed demonstrates:
@@ -622,7 +687,7 @@ What the seed demonstrates:
 | Framework steps (guard, pipe, handler) | `stp_…01`, `stp_…02`, `stp_…03` |
 | Nested service calls and depth | `stp_…04` → `stp_…05`, `stp_…07`, `stp_…08` |
 | DB boundary nodes | `stp_…06`, `stp_…13` |
-| Error path in red (`on_error_path = 1`) | `stp_…03`, `stp_…04`, `stp_…08`, `stp_…09` |
+| Error path in red (`on_error_path = 1`), from the root down to the step that threw (decision 0010) | `stp_…03`, `stp_…04`, `stp_…08` (the `if` row `stp_…09` is not on it) |
 | Error handling values | `propagated` (service), `converted` (handler → 500) |
 | Decision row (MVP) | `stp_…09`: `user.tier === 'gold'` → `false` because `user.tier` is `undefined` |
 | Data journey (v2) | `obj_3` (User) returned by `findById`, then passed into `calculateDiscount` |

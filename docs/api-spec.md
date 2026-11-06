@@ -89,7 +89,7 @@ Pathlight Tracker has **no users and no roles**. Every protected call must prove
 | Token | 32 random bytes (base64url), generated once per project and kept in `.pathlight-tracker/` so links survive restarts (architecture §11 #19); given to the agent via `PATHLIGHT_TRACKER_TOKEN` and to the UI via the URL fragment `#token=…` |
 | REST | `Authorization: Bearer <token>` |
 | WebSocket | Browsers cannot set headers on WebSockets, so both channels pass the token as a subprotocol: `new WebSocket(url, ["pathlight-tracker.v1", "bearer.<token>"])`. The server answers with subprotocol `pathlight-tracker.v1` |
-| Origin check | `/api/*` and `/live` accept only `Origin: http://127.0.0.1:<port>` or `http://localhost:<port>` (Phase 2: the VS Code webview origin). `/agent` must send **no** `Origin` (it is a Node process, not a browser) |
+| Origin check | `/api/*` and `/live` accept only `Origin: http://127.0.0.1:<port>` or `http://localhost:<port>` (v2: the VS Code webview origin). `/agent` must send **no** `Origin` (it is a Node process, not a browser) |
 | Host check | `Host` must be `127.0.0.1:<port>` or `localhost:<port>` (blocks DNS rebinding) |
 | Network | Server binds `127.0.0.1` only |
 
@@ -124,11 +124,14 @@ type CapturedValue = {
 type HttpMethod   = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 type RequestState = 'in_progress' | 'completed' | 'incomplete';
 type StepKind     = 'function' | 'method' | 'middleware' | 'guard' | 'interceptor' | 'pipe'
-                  | 'handler' | 'filter' | 'boundary' | 'constructor' | 'callback' | 'decision' | 'loop';
+                  | 'handler' | 'filter' | 'boundary' | 'decision'      // MVP (decision: if / switch)
+                  | 'constructor' | 'callback' | 'loop';               // v1
 type StepStatus   = 'running' | 'returned' | 'threw';
 type ErrorHandling = 'propagated' | 'swallowed' | 'converted' | 'unhandled';
-type BoundaryType = 'db' | 'http' | 'redis' | 'queue' | 'log' | 'fs';
-type Layer        = 'controller' | 'service' | 'repository' | 'fn';   // derived from class name
+type BoundaryType = 'db' | 'http' | 'redis' | 'queue' | 'fs';         // console output is a log entry (v1), not a boundary
+type DecisionType = 'if' | 'switch' | 'ternary' | 'logical' | 'optional'; // MVP: if, switch
+type EntryType    = 'http' | 'test' | 'queue' | 'cron';             // MVP: http
+type Layer        = 'controller' | 'service' | 'repository' | 'fn';   // set by the collector from the class name suffix; the UI only displays it
 
 // 4.3 Session
 type Session = {
@@ -207,10 +210,11 @@ type StepDetail = StepSummary & {
   args: CapturedValue[] | null;
   argNames: string[] | null;      // ["user", "total"] when known from source
   returnValue: CapturedValue | null;
-  error: { type: string; message: string; stack: StackFrame[]; file: string | null; line: number | null } | null;
+  error: { type: string; message: string; stack: StackFrame[]; file: string | null; line: number | null; column: number | null } | null;
   detail: Record<string, unknown> | null;   // boundary / decision / loop / guard / pipe detail (data-model §6)
   calledBy: { id: string; name: string } | null;
-  editorUrl: string | null;       // built from PATHLIGHT_TRACKER_EDITOR, e.g. "vscode://file/…:22:3"
+  absolutePath: string | null;    // absolute path of `file`; the browser builds the editor link (decision 0014)
+  fileChangedSince: boolean;      // the file's modification time is later than the request start (collector checks with fs.stat)
 };
 
 type StackFrame = { fn: string | null; file: string; line: number; column: number; internal: boolean };
@@ -233,7 +237,7 @@ type ApiError = {
 
 ### 5.1 `GET /api/v1/health`
 
-Collector status, used by the header connection pill and `pathlight-tracker doctor`.
+Collector status, used by the header connection pill and the Settings screen's setup warnings. (`pathlight-tracker doctor` does not call it: doctor runs without a collector.)
 
 **Params:** none.
 
@@ -247,13 +251,16 @@ Collector status, used by the header connection pill and `pathlight-tracker doct
   "startedAt": "2026-10-30T06:30:00.000Z",
   "project": { "name": "shop-api", "cwd": "/home/dev/shop-api" },
   "agents": [
-    { "sessionId": "ses_01JBSEED0000000000000001", "pid": 48213, "framework": "nestjs", "status": "connected" }
+    { "sessionId": "ses_01JBSEED000000000000000001", "pid": 48213, "framework": "nestjs", "status": "connected",
+      "warnings": [ { "code": "NO_SOURCE_MAP", "message": "src/legacy/util.js has no source map; lines point at compiled code", "file": "src/legacy/util.js" } ] }
   ],
   "storage": { "mode": "sqlite", "activeRequests": 2, "trashedRequests": 1 }
 }
 ```
 
-`storage.mode` is `"memory"` when `.pathlight-tracker/` could not be written (data is lost when the collector stops).
+`agents[].warnings` lists setup warnings and files that couldn't be recorded (from `sessions.warnings_json`); empty array when there are none.
+
+`storage.mode` is `"memory"` when `.pathlight-tracker/` could not be written (data is lost when the collector stops). The in-memory fallback is v1 (task 6.14); in the MVP, `storage.mode` is always `"sqlite"`.
 
 **Errors:** `401`, `403`, `429`.
 
@@ -274,8 +281,7 @@ Effective configuration for the Settings screen. Read-only.
     "maxString":      { "value": 200, "source": "default" },
     "maxSteps":       { "value": 5000, "source": "default" },
     "retention":      { "value": 100, "source": "default" },
-    "trashTtlHours":  { "value": 72, "source": "default" },
-    "editor":         { "value": "vscode://file/{path}:{line}:{column}", "source": "config-file" }
+    "trashTtlHours":  { "value": 72, "source": "default" }
   }
 }
 ```
@@ -325,8 +331,8 @@ List active (not trashed) requests for the request list.
 {
   "data": [
     {
-      "id": "req_01JBSEED0000000000000002",
-      "sessionId": "ses_01JBSEED0000000000000001",
+      "id": "req_01JBSEED000000000000000002",
+      "sessionId": "ses_01JBSEED000000000000000001",
       "method": "GET",
       "path": "/orders/42",
       "route": "/orders/:id",
@@ -339,8 +345,8 @@ List active (not trashed) requests for the request list.
       "durationNs": "21000000"
     },
     {
-      "id": "req_01JBSEED0000000000000001",
-      "sessionId": "ses_01JBSEED0000000000000001",
+      "id": "req_01JBSEED000000000000000001",
+      "sessionId": "ses_01JBSEED000000000000000001",
       "method": "POST",
       "path": "/orders",
       "route": "/orders",
@@ -373,8 +379,8 @@ One request with captured input and output, used by the map header.
 ```json
 {
   "data": {
-    "id": "req_01JBSEED0000000000000001",
-    "sessionId": "ses_01JBSEED0000000000000001",
+    "id": "req_01JBSEED000000000000000001",
+    "sessionId": "ses_01JBSEED000000000000000001",
     "method": "POST",
     "path": "/orders",
     "route": "/orders",
@@ -396,15 +402,15 @@ One request with captured input and output, used by the map header.
       "headers": null,
       "body": { "type": "object", "preview": "{ statusCode: 500, message: \"Internal server error\" }" }
     },
-    "errorStepId": "stp_01JBSEED0000000000000008",
+    "errorStepId": "stp_01JBSEED000000000000000008",
     "errorPath": [
-      "stp_01JBSEED0000000000000003",
-      "stp_01JBSEED0000000000000004",
-      "stp_01JBSEED0000000000000008"
+      "stp_01JBSEED000000000000000003",
+      "stp_01JBSEED000000000000000004",
+      "stp_01JBSEED000000000000000008"
     ],
     "deletedAt": null,
     "session": {
-      "id": "ses_01JBSEED0000000000000001",
+      "id": "ses_01JBSEED000000000000000001",
       "pid": 48213,
       "command": "npm run start:dev",
       "framework": "nestjs",
@@ -441,8 +447,8 @@ Steps of a request, in entry order (`seq`). Values are previews only; full value
 {
   "data": [
     {
-      "id": "stp_01JBSEED0000000000000005",
-      "parentId": "stp_01JBSEED0000000000000004",
+      "id": "stp_01JBSEED000000000000000005",
+      "parentId": "stp_01JBSEED000000000000000004",
       "seq": 5,
       "depth": 2,
       "kind": "method",
@@ -465,8 +471,8 @@ Steps of a request, in entry order (`seq`). Values are previews only; full value
       "hasSuspiciousValue": true
     },
     {
-      "id": "stp_01JBSEED0000000000000008",
-      "parentId": "stp_01JBSEED0000000000000004",
+      "id": "stp_01JBSEED000000000000000008",
+      "parentId": "stp_01JBSEED000000000000000004",
       "seq": 8,
       "depth": 2,
       "kind": "method",
@@ -511,9 +517,9 @@ One step with full captured values, for the inspector.
 ```json
 {
   "data": {
-    "id": "stp_01JBSEED0000000000000008",
-    "requestId": "req_01JBSEED0000000000000001",
-    "parentId": "stp_01JBSEED0000000000000004",
+    "id": "stp_01JBSEED000000000000000008",
+    "requestId": "req_01JBSEED000000000000000001",
+    "parentId": "stp_01JBSEED000000000000000004",
     "seq": 8,
     "depth": 2,
     "kind": "method",
@@ -566,8 +572,9 @@ One step with full captured values, for the inspector.
       ]
     },
     "detail": null,
-    "calledBy": { "id": "stp_01JBSEED0000000000000004", "name": "OrdersService.create" },
-    "editorUrl": "vscode://file/home/dev/shop-api/src/pricing/pricing.service.ts:22:3"
+    "calledBy": { "id": "stp_01JBSEED000000000000000004", "name": "OrdersService.create" },
+    "absolutePath": "/home/dev/shop-api/src/pricing/pricing.service.ts",
+    "fileChangedSince": false
   }
 }
 ```
@@ -587,7 +594,9 @@ curl -X POST 'http://localhost:3000/orders' \
   --data-raw '{"userId":7,"items":[{"sku":"A1","qty":2},{"sku":"B4","qty":1}]}'
 ```
 
-If the body was truncated during capture, the response adds the header `X-Pathlight-Tracker-Truncated: true` and the UI warns that the command is incomplete.
+The address comes from the captured `host` request header (here `localhost:3000`); if it is missing, the command uses `http://localhost:<port>` as a placeholder for the developer to fill in.
+
+If the body was truncated during capture, the UI warns that the command is incomplete (the `X-Pathlight-Tracker-Truncated` header is v1, task 6.14).
 
 **Errors:** `401`, `403`, `404 REQUEST_NOT_FOUND`, `404 REQUEST_IN_TRASH`, `409 REQUEST_IN_PROGRESS`, `429`.
 
@@ -628,8 +637,8 @@ If the body was truncated during capture, the response adds the header `X-Pathli
 ```json
 {
   "data": {
-    "a": "req_01JBSEED0000000000000001",
-    "b": "req_01JBSEED0000000000000004",
+    "a": "req_01JBSEED000000000000000001",
+    "b": "req_01JBSEED000000000000000004",
     "differences": [
       { "type": "value_changed", "aStepId": "stp_…05", "bStepId": "stp_…21", "path": "return.tier", "a": "undefined", "b": "\"gold\"" },
       { "type": "step_missing", "aStepId": null, "bStepId": "stp_…25", "name": "OrdersRepository.save" },
@@ -651,7 +660,7 @@ Data journey: every step where the object appeared, in order.
 
 ### 6.10 `GET /api/v1/sample`
 
-A built-in, read-only example (the failing `POST /orders` from the seed data) for the onboarding screen. Nothing is written to the database.
+A built-in, read-only example (the failing `POST /orders` from the seed data) for the onboarding screen. Nothing is written to the database. The UI shows it at its own page, `/sample` (the request map in read-only "sample" mode). The data is built from `data-model.md` §10 at build time and shipped inside the npm package (`dist/sample.json` in the collector), so it works offline.
 
 **200 OK:** `{ "data": { "request": RequestDetail, "steps": StepSummary[], "stepDetails": Record<string, StepDetail> } }` with `"sample": true` on the request.
 
@@ -672,7 +681,7 @@ Move one **finished** request to the trash.
 **200 OK**
 
 ```json
-{ "data": { "id": "req_01JBSEED0000000000000001", "deletedAt": "2026-10-30T06:40:00.000Z", "purgeAt": "2026-11-02T06:40:00.000Z" } }
+{ "data": { "id": "req_01JBSEED000000000000000001", "deletedAt": "2026-10-30T06:40:00.000Z", "purgeAt": "2026-11-02T06:40:00.000Z" } }
 ```
 
 Deleting an already-trashed request returns the same `200` (idempotent).
@@ -712,7 +721,7 @@ Restore a trashed request. If this pushes active requests over the retention lim
 **200 OK**
 
 ```json
-{ "data": { "request": { "id": "req_01JBSEED0000000000000003", "method": "GET", "path": "/health", "state": "completed", "httpStatus": 200, "hasError": false, "stepCount": 1, "truncated": false, "startedAt": "2026-10-30T06:35:01.000Z", "durationNs": "2000000", "sessionId": "ses_01JBSEED0000000000000001", "route": "/health" }, "movedToTrash": [] } }
+{ "data": { "request": { "id": "req_01JBSEED000000000000000003", "method": "GET", "path": "/health", "state": "completed", "httpStatus": 200, "hasError": false, "stepCount": 1, "truncated": false, "startedAt": "2026-10-30T06:35:01.000Z", "durationNs": "2000000", "sessionId": "ses_01JBSEED000000000000000001", "route": "/health" }, "movedToTrash": [] } }
 ```
 
 **Errors:** `401`, `403`, `404 REQUEST_NOT_FOUND` (already purged), `409 REQUEST_NOT_IN_TRASH`, `429`.
@@ -731,8 +740,8 @@ Restore a trashed request. If this pushes active requests over the retention lim
 {
   "data": [
     {
-      "id": "req_01JBSEED0000000000000003",
-      "sessionId": "ses_01JBSEED0000000000000001",
+      "id": "req_01JBSEED000000000000000003",
+      "sessionId": "ses_01JBSEED000000000000000001",
       "method": "GET",
       "path": "/health",
       "route": "/health",
@@ -794,7 +803,7 @@ Every non-2xx REST response uses the envelope:
 | `400` | `INVALID_CURSOR` | Cursor is malformed or from another sort order |
 | `400` | `INVALID_BODY` | JSON body fails validation |
 | `401` | `MISSING_TOKEN` | No `Authorization` header / subprotocol |
-| `401` | `INVALID_TOKEN` | Token doesn't match this collector run (e.g. collector restarted) |
+| `401` | `INVALID_TOKEN` | Token doesn't match this project's token (e.g. it was rotated by deleting the token file) |
 | `403` | `ORIGIN_NOT_ALLOWED` | Request from another website or origin |
 | `403` | `HOST_NOT_ALLOWED` | Unexpected `Host` header (DNS rebinding protection) |
 | `404` | `ROUTE_NOT_FOUND` | Unknown endpoint |
@@ -819,7 +828,8 @@ WebSocket close codes:
 | `1001` | Collector shutting down |
 | `4001` | Missing or invalid token |
 | `4003` | Origin or host not allowed |
-| `4009` | Protocol version mismatch (`details` sent first in an `error` message) |
+| `4008` | Too many invalid messages (after repeated `error` replies) |
+| `4009` | Protocol version mismatch (an `error` message with code `PROTOCOL_MISMATCH` and `details: { agentVersion, collectorVersion }` is sent first) |
 | `4013` | Message too large |
 | `4029` | Too many connections |
 
@@ -883,7 +893,9 @@ Implementation: `@fastify/rate-limit` for REST; manual counters for WebSocket co
 
 ## 11. WebSocket protocol
 
-All messages are JSON objects with `type` and `v`. Messages are validated with Zod; an invalid message gets an `error` reply (and repeated invalid messages close the socket with `4003`).
+All messages are JSON objects with `type` and `v`. Messages are validated with Zod; an invalid message gets an `error` reply, and repeated invalid messages close the socket with `4008` (the exact threshold is set in task 2.8).
+
+WebSocket `error` message codes: `INVALID_EVENT` (bad event in a batch), `INVALID_MESSAGE` (message fails validation), `PROTOCOL_MISMATCH` (agent and collector protocol majors differ).
 
 ### 11.1 `WS /agent` (agent → collector)
 
@@ -898,8 +910,8 @@ Connect with subprotocols `["pathlight-tracker.v1", "bearer.<token>"]`.
 
 ```json
 { "type": "batch", "v": 1, "pid": 48213, "seq": 42, "events": [
-  { "e": "request.start", "traceId": "req_01J…", "ts": "1761805505120000000",
-    "method": "POST", "path": "/orders", "route": "/orders", "params": null, "query": null,
+  { "e": "request.start", "traceId": "req_01J…", "ts": "1793342105120000000",
+    "framework": "nestjs", "method": "POST", "path": "/orders", "route": "/orders", "params": null, "query": null,
     "body": { "type": "object", "preview": "{ userId: 7, items: [2] }", "objectId": "obj_1" },
     "headers": { "type": "object", "preview": "{ authorization: [REDACTED] }" } },
   { "e": "step.enter", "traceId": "req_01J…", "ts": "…", "stepId": "stp_01J…", "parentStepId": null,
@@ -910,7 +922,23 @@ Connect with subprotocols `["pathlight-tracker.v1", "bearer.<token>"]`.
 ] }
 ```
 
-Event types inside a batch: `request.start`, `step.enter`, `step.exit`, `step.throw`, `boundary`, `decision` (v1), `loop` (v1), `log` (v1), `request.end`, `agent.disabled`. Field lists are in `architecture.md` §3d.
+This section is the **master copy** of the agent protocol; `architecture.md` §3d only summarises it. `v` and `pid` are sent once per batch, not per event. Every event carries `e` (its type), `traceId` and `ts` (wall-clock time in nanoseconds since the Unix epoch, as a string: the agent reads the clock once at request start and adds high-resolution offsets).
+
+| Event (`e`) | Phase | Fields besides `e`, `traceId`, `ts` |
+| --- | --- | --- |
+| `request.start` | MVP | `framework` (`nestjs` / `express` / `unknown`; the app has loaded by now, unlike at `hello`), `method`, `path`, `route`, `params`, `query`, `body`, `headers` |
+| `step.enter` | MVP | `stepId`, `parentStepId`, `kind` (`StepKind`), `name`, `file`, `line`, `column`, `args`, `argNames`, `thisClass`, `isAsync` |
+| `step.exit` | MVP | `stepId`, `returnValue`, `durationNs`, `detail` (kind-specific, see `data-model.md` §6) |
+| `step.throw` | MVP | `stepId`, `error` (`type`, `message`, `stack` mapped to `.ts`, `file`, `line`, `column`), `durationNs`. Whether it was swallowed, converted or unhandled is decided by the collector afterwards (decision 0010) |
+| `boundary` | MVP | `stepId`, `parentStepId`, `boundaryType` (MVP: `db`, `http`; v1: `redis`, `queue`), `request`, `response`, `durationNs`, `error` |
+| `decision` | MVP (`if`, `switch`); v1 (`ternary`, `logical`, `optional`) | `stepId`, `parentStepId`, `decisionType`, `expression`, `values`, `result`, `branch`, `file`, `line`, `column` |
+| `loop` | v1 | `stepId`, `parentStepId`, `loopType`, `iterations`, `durationNs`, `samples` (`first`, `last`, `failing`) |
+| `log` | v1 | `stepId` (running step, if any), `level`, `args` (captured values). Stored in `logs`, not as a step |
+| `warning` | MVP | `code`, `message`, `file?`: a setup warning or a file that couldn't be recorded (stored in `sessions.warnings_json`) |
+| `request.end` | MVP | `status`, `responseHeaders`, `responseBody`, `durationNs`, `unhandledError` |
+| `agent.disabled` | MVP | `reason`, `internalErrorCount` |
+
+Fields that may be empty are optional and can be left out: `argNames` (unknown names), `detail` (kinds without one), `column`, `file` / `line` (no source map), `parentStepId` (root steps). The examples above leave some out.
 
 **Collector → agent**
 

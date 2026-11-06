@@ -1,7 +1,7 @@
 # Spec audit
 Date: 2026-11-01 · Cross-check of all planning docs before coding
 
-Saved as received (it uses the old working name "Tracer"). Decisions taken on it: `docs/decisions/0003`–`0016` and `progress.md` → "Decisions". Fixing every item is task **0.8 Spec consistency pass**.
+Saved as received (it uses the old working name "Tracer"). Decisions taken on it: `docs/decisions/0003`–`0016` and `progress.md` → "Decisions". **Resolved in task 0.8:** see `2026-11-06-spec-audit-resolution.md` for where each item was fixed.
 
 ## Words you'll see a lot
 
