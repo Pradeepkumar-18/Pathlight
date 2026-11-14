@@ -1,5 +1,5 @@
 # 0021 · Spec consistency choices (task 0.8)
-Date: 2026-11-06 · Status: Proposed (approve or change in the Phase 0 PR review)
+Date: 2026-11-06 · Status: Accepted (approved by the user on 2026-11-14)
 
 ## Context
 Task 0.8 resolved every item of the 2026-11-01 spec audit. Most fixes follow decisions 0003–0016. Some needed a concrete choice those decisions did not make, and they touch areas `CLAUDE.md` lists under "Ask before changing". This record collects them in one place so they can be approved together. Item numbers refer to the audit; where each change lives is in `docs/analysis/2026-11-06-spec-audit-resolution.md`.

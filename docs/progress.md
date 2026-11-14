@@ -67,15 +67,14 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 | 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
-| 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ❓ Open | `decisions/0021-spec-consistency-choices.md` (waiting for the user's approval) |
+| 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ✅ Decided (2026-11-14) | `decisions/0021-spec-consistency-choices.md` |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. Approve or change decision 0021 (`docs/decisions/0021-spec-consistency-choices.md`)
-2. Checkpoint 0: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
-3. Phase 1: `/start-task 1.1` (directly on `main`)
+1. Checkpoint 0: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
+2. Phase 1: `/start-task 1.1` (directly on `main`)
 
 ---
 
@@ -254,7 +253,7 @@ Newest first. One entry per task (or checkpoint). Template:
 - What changed: all ~95 audit items (plus the fixture mismatches from 0.6) resolved across `prd.md`, `architecture.md`, `api-spec.md`, `data-model.md`, `user-flows.md`, `design.md`, `tech-stack.md`, `implementation-plan.md` and `CLAUDE.md`. Highlights: decision 0011 schema gaps applied (entry type, unhandled error, warnings, exit code, argument names, request-level object refs, `logs` table for v1, `auto_vacuum`); `api-spec.md` §11.1 is now the master event list; `if` / `switch` decisions are MVP everywhere; editor link built in the browser (`PATHLIGHT_TRACKER_EDITOR` removed, decision 0014); per-project token wording (0015); seed uses 26-character ULIDs, `null` params, times matching the API, `{ id: 7 }`, a mapped stack and the red path ending at the throwing step; releases named MVP / v1 / v2 outside the plan.
 - Tests: the data-model schema (§9) and seed (§10) run cleanly in SQLite (`better-sqlite3`): 3 requests, 14 steps, no foreign-key violations, `auto_vacuum` incremental, red path = steps 3, 4, 8; `pnpm lint && pnpm typecheck && pnpm test` green.
 - Docs updated: the specs above, `CLAUDE.md` (token rule, object IDs), plan 2.6 / 2.7 / 2.9 / 4.1 / 4.9 / 5.6; `docs/analysis/2026-11-06-spec-audit-resolution.md` (where each item was fixed); the audit file links to it.
-- Decisions: 0021 (Proposed): the choices beyond decisions 0003–0016 (event fields, close code 4008, two env vars, `/health` warnings, `absolutePath`, exact schema columns, CLAUDE.md token rule, object ID format, `clear --purge`, CSP); approve in the Phase 0 PR.
+- Decisions: 0021 (Accepted 2026-11-14): the choices beyond decisions 0003–0016 (event fields, close code 4008, two env vars, `/health` warnings, `absolutePath`, exact schema columns, CLAUDE.md token rule, object ID format, `clear --purge`, CSP); approve in the Phase 0 PR.
 - Bugs: none.
 - Open items: none; detail left to later tasks is linked there (router 4.1, redaction list 3.4, tuning numbers 2.8 / 3.1 / 3.2 / 3.15, prebuilt binaries 5.6).
 
