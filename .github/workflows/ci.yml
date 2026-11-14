@@ -62,3 +62,6 @@ jobs:
 
       - name: Fixture smoke test
         run: pnpm fixtures:smoke
+
+      - name: Agent spike trace (task 1.1)
+        run: pnpm spike:trace

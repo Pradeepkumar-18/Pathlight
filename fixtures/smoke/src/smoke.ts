@@ -1,9 +1,8 @@
 // Starts each fixture app, hits its endpoints and checks the status codes,
 // including the deliberate 500s. Run with `pnpm fixtures:smoke` (builds first).
-import { spawn } from 'node:child_process';
-import type { ChildProcess } from 'node:child_process';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import { FIXTURES_DIR, startApp } from './run-app.ts';
 
 interface Check {
   name: string;
@@ -22,15 +21,7 @@ interface Fixture {
   expectedLog: string[];
 }
 
-interface RunningApp {
-  child: ChildProcess;
-  url: string;
-  output: () => string;
-}
-
-const STARTUP_TIMEOUT_MS = 120_000;
 const LOG_SETTLE_MS = 300;
-const FIXTURES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const NEST_AUTH = { authorization: 'Bearer fixture-token' };
 const EXPRESS_AUTH = { 'x-api-key': 'fixture-key' };
 
@@ -115,39 +106,6 @@ const FIXTURES: Fixture[] = [
   },
 ];
 
-function startApp(fixture: Fixture): Promise<RunningApp> {
-  const child = spawn(process.execPath, ['--enable-source-maps', fixture.entry], {
-    env: { ...process.env, PORT: '0' },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  let output = '';
-  const collect = (chunk: Buffer): void => {
-    output += chunk.toString();
-  };
-  child.stdout.on('data', collect);
-  child.stderr.on('data', collect);
-
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      child.kill();
-      reject(new Error(`${fixture.name} did not start within ${STARTUP_TIMEOUT_MS}ms\n${output}`));
-    }, STARTUP_TIMEOUT_MS);
-    const onData = (): void => {
-      const match = /listening on (http:\/\/[\w.[\]:]+)/.exec(output);
-      if (match?.[1]) {
-        clearTimeout(timer);
-        child.stdout.off('data', onData);
-        resolve({ child, url: match[1], output: () => output });
-      }
-    };
-    child.stdout.on('data', onData);
-    child.once('exit', (code) => {
-      clearTimeout(timer);
-      reject(new Error(`${fixture.name} exited early with code ${code}\n${output}`));
-    });
-  });
-}
-
 async function runCheck(url: string, check: Check): Promise<string | null> {
   const response = await fetch(`${url}${check.path}`, {
     method: check.method,
@@ -162,7 +120,7 @@ async function runCheck(url: string, check: Check): Promise<string | null> {
 
 async function runFixture(fixture: Fixture): Promise<number> {
   console.log(`\n${fixture.name}`);
-  const app = await startApp(fixture);
+  const app = await startApp(fixture.name, fixture.entry);
   let failures = 0;
   try {
     for (const check of fixture.checks) {
@@ -181,8 +139,7 @@ async function runFixture(fixture: Fixture): Promise<number> {
     }
     if (failures > 0) console.log(`\n--- ${fixture.name} output ---\n${app.output()}`);
   } finally {
-    app.child.removeAllListeners('exit');
-    app.child.kill();
+    app.stop();
   }
   return failures;
 }

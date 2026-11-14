@@ -9,18 +9,18 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
-| 1 Capture spike | 4 | 0 | ⬜ |
+| 1 Capture spike | 4 | 1 | 🟡 |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **8** | 🟡 |
+| **MVP total** | **65** | **9** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 0: Setup and validation (tasks done and merged in PR #9; Checkpoint 0 pending)
-**Current task:** none (next: Checkpoint 0, then 1.1)
+**Current phase:** Phase 1: Capture spike (in progress)
+**Current task:** 1.2 Request context spike
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| — | none | | |
+| 1.2 | Request context spike | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -96,8 +96,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
-| 1.1 | Require hook + SWC transform spike | ⬜ | | |
-| 1.2 | Request context spike | ⬜ | | |
+| 1.1 | Require hook + SWC transform spike | ✅ | | `pnpm spike:trace` |
+| 1.2 | Request context spike | 🟡 | | |
 | 1.3 | Behaviour-preservation corpus v0 | ⬜ | | |
 | 1.4 | Performance spike | ⬜ | | |
 | ✔ | **Checkpoint 1: Go / no-go on capture approach** | ⬜ | | |
@@ -247,6 +247,18 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-14 · 1.2 Request context spike · 🟡 In progress
+- Done when: Firing 20 concurrent requests produces 20 separate trees with no mixed lines.
+
+### 2026-11-14 · 1.1 Require hook + SWC transform spike · ✅ Done
+- Done when: Running the NestJS fixture with the hook prints an indented step tree for `POST /orders`, ending in the `TypeError`.
+- What changed: `packages/agent/src/spike/` (`register.ts` `--require` entry with `pirates`; `source-map.ts` finds the original `.ts` file and lines with `@jridgewell/trace-mapping`, decision 0009; `hook.ts` instruments only `src/**` minus tests and fails open; `wrap.ts` parses with SWC and splices enter / exit / throw probes into functions, methods, static methods and arrows, skipping getters, setters, constructors, generators and compiler-generated helpers; `runtime.ts` prints the indented tree and ends a step that returned a promise when it settles). `fixtures/smoke/src/run-app.ts` shared by `smoke.ts` and the new `spike-trace.ts`; `pnpm spike:trace` (also in CI). New deps (approved 2026-11-14): `pirates` 4.0.7, `@swc/core` 1.16.22, `@jridgewell/trace-mapping` 0.3.31.
+- Tests: 19 unit tests (wrapping kinds, names and `.ts` lines, rethrows the same error, async timing, directives, skipped kinds, multi-byte offsets, unparsable file, source maps, fail-open); `pnpm spike:trace` prints guard → controller → service → `UserService.findById` → `CartService.total` → `PricingService.calculateDiscount (src/pricing/pricing.service.ts:22)` and ends in the `TypeError`; lint, typecheck, tests, smoke green.
+- Docs updated: `CLAUDE.md` commands (`pnpm spike:trace`).
+- Decisions: none (findings go into decision 0002 in task 1.4).
+- Bugs: none.
+- Findings for 0002: (1) stack-trace columns shift on lines where probes are inserted (lines stay right): production needs a chained source map (3.6 / 3.7); (2) a non-async function returning a promise ends when the promise settles; the caller then gets a follow-on promise (same settle, different object), as OpenTelemetry does; (3) SWC 1.16 names function bodies `FunctionBody` and some nodes carry no span; (4) tsc helpers (`__decorate`) have no source position and are skipped. (5) one global depth counter only works for a single sequential request (fixed in 1.2); (6) arrows in default parameters and parameter decorators are not wrapped yet; (7) the project root is `process.cwd()`, so starting the app from another folder instruments nothing (3.6 should warn). Review fixes: insertion order for `{return 1}`, directives without `;`, shebangs, a re-parse safety net that loads the original on any bad output, and runtime helpers that never run user code (Proxy traps, overridden `then`, error getters).
 
 ### 2026-11-06 · 0.8 Spec consistency pass · ✅ Done
 - Done when: Each audit item is fixed, or linked to a decision or a later task; `progress.md` lists any left open.

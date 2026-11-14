@@ -5,7 +5,7 @@
 - Writes short, informal English. Keep words simple.
 - Prefers practical explanations. Often asks "what is the use of X?" (e.g. pnpm, the AppMap check), so every lesson starts with the use.
 - Asked about pnpm (answered in lesson 02). Likes real-world bugs tied to the task.
-- Still unknown: how comfortable they are with Node internals (async, hooks) and TypeScript. Update after the next lessons.
+- Still unknown: how comfortable they are with Node internals (async, hooks) and TypeScript. Lesson 09 (Task 1.1) is the first deep Node lesson; watch how the quiz goes.
 
 ## Lessons
 1. [Validate against AppMap](01-validate-against-appmap.md) (Task 0.1)
@@ -16,6 +16,7 @@
 6. [Fixture apps: real apps with deliberate bugs](06-fixture-apps.md) (Task 0.6)
 7. [Docs in the repo: one place, one name](07-docs-in-repo.md) (Task 0.7)
 8. [Spec consistency pass: fix the docs before coding](08-spec-consistency-pass.md) (Task 0.8)
+9. [Require hook + SWC transform spike](09-require-hook-swc-spike.md) (Task 1.1)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -52,9 +53,16 @@
 - Why specs drift and why to fix them before coding: [08](08-spec-consistency-pass.md)
 - Master copy (`api-spec.md` §11.1) and decision status Proposed vs accepted (0021): [08](08-spec-consistency-pass.md)
 - SQLite `auto_vacuum` before the first table; 26-char ULIDs; red error path rule; validating a seed in real SQLite: [08](08-spec-consistency-pass.md)
+- `node --require` and require hooks (`pirates`): [09](09-require-hook-swc-spike.md)
+- Source maps to find the original `.ts` file and line (decision 0009): [09](09-require-hook-swc-spike.md)
+- SWC parsing, inserting text at byte offsets, keeping `"use strict"` first: [09](09-require-hook-swc-spike.md)
+- Async functions, `ret`, follow-on promises and unhandled rejections: [09](09-require-hook-swc-spike.md)
+- Fail open ("the user's app always wins"): [09](09-require-hook-swc-spike.md)
+- Spike findings: shifted stack columns, `FunctionBody`, skipped tsc helpers: [09](09-require-hook-swc-spike.md)
 
 ## Open questions
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).
 - Hands-on AppMap checklist is pending until `fixtures/nestjs-app` exists (after task 0.6). Decision 0001 may change.
 - BUG-001 (Windows long paths): README note added in task 0.7; confirm it can be closed.
+- Spike risk: stack-trace columns shift where probes are inserted (task 3.6 / 3.7 chained source map). The `(anonymous)` arrow steps in `CartService.total` are noisy; naming policy is undecided.
 - Decision 0021 is Proposed and needs your approval or changes in the Phase 0 PR review.

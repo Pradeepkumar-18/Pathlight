@@ -11,5 +11,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
     "test": "vitest run --dir src"
+  },
+  "dependencies": {
+    "@jridgewell/trace-mapping": "0.3.31",
+    "@swc/core": "1.16.22",
+    "pirates": "4.0.7"
   }
 }
