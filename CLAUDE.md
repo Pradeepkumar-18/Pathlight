@@ -23,7 +23,7 @@ All specs live in `docs/`. They are the source of truth: if code and docs disagr
 | `docs/design.md` + `docs/ui-reference.png` | Writing any UI: colors, type, spacing, components, layout, accessibility |
 | `docs/decisions/` | Before reversing an earlier technical decision |
 
-The specs are large: read only the sections a task needs (or ask the `spec-reader` agent), and quote the section you followed in the PR description.
+The specs are large: read only the sections a task needs (or ask the `spec-reader` agent), and quote the section you followed in the commit message.
 
 ## Repo map
 
@@ -81,7 +81,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 - Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); one commit (or a few) per task.
 - Write or update tests in the same change. Cover the "Done when" condition explicitly.
 - Follow the exact shapes and examples in `api-spec.md` and `data-model.md`.
-- Update docs in the same PR when behaviour changes (and say so in the PR).
+- Update docs in the same commit when behaviour changes (and say so in the commit message).
 
 **Don't**
 - **Don't add a dependency without asking first.** Name the package, why it's needed and the alternative you considered. Check `tech-stack.md` §12 ("Do not use") before proposing anything.
@@ -113,14 +113,13 @@ When asking: say what you want to change, why, and what else it affects. After a
 
 ## Progress tracking
 
-Update `docs/progress.md` at the start and end of every task, in the same PR (`/start-task` and `/finish-task` do this). Never mark a task done unless its "Done when" condition is met and all checks pass. If you split a task, add the new tasks to both `progress.md` and `implementation-plan.md`.
+Update `docs/progress.md` at the start and end of every task, in the task's commit (`/start-task` and `/finish-task` do this). Never mark a task done unless its "Done when" condition is met and all checks pass. If you split a task, add the new tasks to both `progress.md` and `implementation-plan.md`.
 
-## Commit and PR format
+## Commit format
 
-- Branch: one per phase, `phase/<N>-<short-name>` (e.g. `phase/2-collector`); every task of the phase is committed on it.
-- PR: one per phase, opened when the phase's last task is done.
-- Commit messages: Conventional Commits (`feat(collector): add soft delete`, `fix(agent): …`, `test: …`, `docs: …`).
-- PR description: phase, each task ID and what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no).
+- Work directly on `main` (since 2026-11-14): no task or phase branches, no PRs. Push only when the human asks.
+- Nothing reviews a change before it lands, so run every check before each commit and check CI after each push; fix a red `main` before anything else.
+- Commit messages: Conventional Commits (`feat(collector): add soft delete`, `fix(agent): …`, `test: …`, `docs: …`). The body names the task ID, what changed, the docs sections followed and how it was tested.
 
 ## Claude setup
 

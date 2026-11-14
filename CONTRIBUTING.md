@@ -9,14 +9,14 @@ These come from the implementation plan, §2.
 | Rule | Detail |
 | --- | --- |
 | One task per session | Pick the next task in [docs/progress.md](docs/progress.md). Don't combine tasks in one session. |
-| One branch and one PR per phase | Commit each task on the phase branch (`phase/<N>-<short-name>`). Open the PR when the phase's last task is done. |
+| Work on `main` | Commit each task directly on `main` (no branches or PRs). Run every check before committing; CI runs on every push. |
 | Start with context | Read the task's row (description, dependencies, "Done when") and only the spec sections it names. |
 | Tests in the same change | A task isn't done until its tests pass. |
 | Definition of done | Code + tests + `pnpm lint && pnpm typecheck && pnpm test` pass + docs updated if behaviour changed + `progress.md` updated. |
 | If a task grows | Split it. Add the new task right after it, with its own "Done when", in both the plan and `progress.md`. |
 | Never skip a checkpoint | Each phase ends with a review checkpoint; fix its findings before the next phase. |
 
-With Claude Code, `/start-task <id>` and `/finish-task` do the bookkeeping: dependency check, branch, `progress.md`, reviews and the lesson.
+With Claude Code, `/start-task <id>` and `/finish-task` do the bookkeeping: dependency check, `progress.md`, reviews and the lesson.
 
 ## Before you change these, ask first
 

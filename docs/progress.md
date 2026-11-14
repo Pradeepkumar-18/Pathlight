@@ -19,7 +19,7 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 0: Setup and validation (tasks done; Checkpoint 0 and the phase PR pending)
+**Current phase:** Phase 0: Setup and validation (tasks done and merged in PR #9; Checkpoint 0 pending)
 **Current task:** none (next: Checkpoint 0, then 1.1)
 **Blockers:** none
 
@@ -67,15 +67,15 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Read-only MCP server moves to v1 (6.16) | ✅ Decided | `decisions/0017-mcp-server-in-v1.md` |
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 | 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
-| 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ❓ Open | `decisions/0021-spec-consistency-choices.md` (approve in the Phase 0 PR) |
-| 2026-11-06 | One branch and one PR per phase (not per task) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
+| 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ❓ Open | `decisions/0021-spec-consistency-choices.md` (waiting for the user's approval) |
+| 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. Open the Phase 0 PR from `phase/0-setup-finish` (tasks 0.7 and 0.8); review "Spec changes to review" in `docs/analysis/2026-11-06-spec-audit-resolution.md`
+1. Approve or change decision 0021 (`docs/decisions/0021-spec-consistency-choices.md`)
 2. Checkpoint 0: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
-3. Phase 1: `/start-task 1.1` on a new `phase/1-capture-spike` branch
+3. Phase 1: `/start-task 1.1` (directly on `main`)
 
 ---
 
@@ -89,8 +89,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 0.4 | Testing setup | ✅ | [#4](https://github.com/Pradeepkumar-18/Pathlight/pull/4) | |
 | 0.5 | CI | ✅ | [#5](https://github.com/Pradeepkumar-18/Pathlight/pull/5) | Green on Ubuntu, macOS, Windows (Node 24) |
 | 0.6 | Fixture apps | ✅ | | Both fixtures + smoke script; CI runs the smoke test |
-| 0.7 | Docs in repo | ✅ | | Branch `phase/0-setup-finish` |
-| 0.8 | Spec consistency pass | ✅ | | Branch `phase/0-setup-finish`; every audit item resolved |
+| 0.7 | Docs in repo | ✅ | [#9](https://github.com/Pradeepkumar-18/Pathlight/pull/9) | |
+| 0.8 | Spec consistency pass | ✅ | [#9](https://github.com/Pradeepkumar-18/Pathlight/pull/9) | Every audit item resolved |
 | ✔ | **Checkpoint 0: Setup review** | ⬜ | | |
 
 ## Phase 1: Capture spike
