@@ -1,7 +1,8 @@
 ---
 paths:
-  - "packages/collector/src/db/**"
-  - "**/migrations/**"
+  - "packages/collector/src/store/**"
+  - "packages/collector/drizzle/**"
+  - "packages/collector/drizzle.config.ts"
   - "fixtures/seed/**"
 ---
 

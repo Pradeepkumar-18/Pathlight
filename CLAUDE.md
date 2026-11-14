@@ -58,7 +58,7 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | End-to-end tests | `pnpm test:e2e` (from task 5.1) |
 | Benchmarks | `pnpm bench` |
 | Lint / typecheck / format | `pnpm lint` · `pnpm typecheck` · `pnpm format` |
-| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` (from task 2.3) |
+| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` |
 
 Commands marked "from task X" don't exist yet; the task that adds them must make them work as written.
 

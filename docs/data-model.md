@@ -543,7 +543,8 @@ The seed reproduces the failing `POST /orders` example from the PRD: a NestJS ap
 The seed follows the PRD's example names (`JwtAuthGuard`, user "Ravi", `items: [2]`). The real fixture `fixtures/nestjs-app` reproduces the same bug at the same lines of `src/pricing/pricing.service.ts` (method on 22, `if` on 24, throw on 27) but uses its own names elsewhere (e.g. `AuthGuard`, no `items`), so a recorded fixture run matches the seed in shape, not in every name.
 
 ```sql
-INSERT INTO meta (key, value, updated_at) VALUES
+-- OR REPLACE: the collector writes these keys when it creates the store
+INSERT OR REPLACE INTO meta (key, value, updated_at) VALUES
   ('schema_version',     '1',     1793342100000),
   ('created_by_version', '0.1.0', 1793342100000);
 

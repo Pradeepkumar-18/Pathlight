@@ -14,7 +14,7 @@ cmd=$(field command)
 reason=""
 
 case "$path" in
-  */migrations/*|*/db/schema*) reason="the database schema or a migration" ;;
+  */migrations/*|*/db/schema*|*/collector/src/store/schema.ts|*/collector/drizzle/*) reason="the database schema or a migration" ;;
   */packages/ui/src/theme/*) reason="design tokens" ;;
   */package.json|*/pnpm-lock.yaml|*/pnpm-workspace.yaml) reason="dependencies or the workspace" ;;
   */.env|*/.env.*) reason="an env file" ;;

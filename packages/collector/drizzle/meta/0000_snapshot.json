@@ -1,0 +1,846 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "6c2cc337-11e3-49c5-98d7-f4d30c351a19",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "meta": {
+      "name": "meta",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "object_refs": {
+      "name": "object_refs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "step_id": {
+          "name": "step_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "object_id": {
+          "name": "object_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "path": {
+          "name": "path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "type_name": {
+          "name": "type_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_object_refs_object": {
+          "name": "idx_object_refs_object",
+          "columns": ["request_id", "object_id"],
+          "isUnique": false
+        },
+        "uq_object_refs": {
+          "name": "uq_object_refs",
+          "columns": ["request_id", "step_id", "object_id", "role", "path"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "object_refs_request_id_requests_id_fk": {
+          "name": "object_refs_request_id_requests_id_fk",
+          "tableFrom": "object_refs",
+          "tableTo": "requests",
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "object_refs_step_id_steps_id_fk": {
+          "name": "object_refs_step_id_steps_id_fk",
+          "tableFrom": "object_refs",
+          "tableTo": "steps",
+          "columnsFrom": ["step_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "object_refs_role": {
+          "name": "object_refs_role",
+          "value": "\"object_refs\".\"role\" IN ('arg','return','this','thrown','request')"
+        },
+        "object_refs_request_role": {
+          "name": "object_refs_request_role",
+          "value": "(\"object_refs\".\"role\" = 'request') = (\"object_refs\".\"step_id\" IS NULL)"
+        }
+      }
+    },
+    "requests": {
+      "name": "requests",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entry_type": {
+          "name": "entry_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'http'"
+        },
+        "method": {
+          "name": "method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "path": {
+          "name": "path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "route": {
+          "name": "route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'in_progress'"
+        },
+        "http_status": {
+          "name": "http_status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "has_error": {
+          "name": "has_error",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "error_step_id": {
+          "name": "error_step_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "step_count": {
+          "name": "step_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "truncated": {
+          "name": "truncated",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "request_json": {
+          "name": "request_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "response_json": {
+          "name": "response_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unhandled_error_json": {
+          "name": "unhandled_error_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "duration_ns": {
+          "name": "duration_ns",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_requests_started_at": {
+          "name": "idx_requests_started_at",
+          "columns": ["\"started_at\" DESC"],
+          "isUnique": false
+        },
+        "idx_requests_session": {
+          "name": "idx_requests_session",
+          "columns": ["session_id"],
+          "isUnique": false
+        },
+        "idx_requests_error": {
+          "name": "idx_requests_error",
+          "columns": ["has_error", "\"started_at\" DESC"],
+          "isUnique": false
+        },
+        "idx_requests_route": {
+          "name": "idx_requests_route",
+          "columns": ["method", "route"],
+          "isUnique": false
+        },
+        "idx_requests_active": {
+          "name": "idx_requests_active",
+          "columns": ["\"started_at\" DESC"],
+          "isUnique": false,
+          "where": "\"requests\".\"deleted_at\" IS NULL"
+        },
+        "idx_requests_trash": {
+          "name": "idx_requests_trash",
+          "columns": ["deleted_at"],
+          "isUnique": false,
+          "where": "\"requests\".\"deleted_at\" IS NOT NULL"
+        }
+      },
+      "foreignKeys": {
+        "requests_session_id_sessions_id_fk": {
+          "name": "requests_session_id_sessions_id_fk",
+          "tableFrom": "requests",
+          "tableTo": "sessions",
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "requests_entry_type": {
+          "name": "requests_entry_type",
+          "value": "\"requests\".\"entry_type\" IN ('http','test','queue','cron')"
+        },
+        "requests_method": {
+          "name": "requests_method",
+          "value": "\"requests\".\"method\" IN ('GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS')"
+        },
+        "requests_state": {
+          "name": "requests_state",
+          "value": "\"requests\".\"state\" IN ('in_progress','completed','incomplete')"
+        },
+        "requests_has_error": {
+          "name": "requests_has_error",
+          "value": "\"requests\".\"has_error\" IN (0,1)"
+        },
+        "requests_truncated": {
+          "name": "requests_truncated",
+          "value": "\"requests\".\"truncated\" IN (0,1)"
+        },
+        "requests_soft_delete_finished": {
+          "name": "requests_soft_delete_finished",
+          "value": "\"requests\".\"deleted_at\" IS NULL OR \"requests\".\"state\" <> 'in_progress'"
+        },
+        "requests_http_has_method_path": {
+          "name": "requests_http_has_method_path",
+          "value": "\"requests\".\"entry_type\" <> 'http' OR (\"requests\".\"method\" IS NOT NULL AND \"requests\".\"path\" IS NOT NULL)"
+        }
+      }
+    },
+    "sessions": {
+      "name": "sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pid": {
+          "name": "pid",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "command": {
+          "name": "command",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "cwd": {
+          "name": "cwd",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "node_version": {
+          "name": "node_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "agent_version": {
+          "name": "agent_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "protocol_version": {
+          "name": "protocol_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "framework": {
+          "name": "framework",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'unknown'"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'connected'"
+        },
+        "disabled_reason": {
+          "name": "disabled_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "connected_at": {
+          "name": "connected_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "disconnected_at": {
+          "name": "disconnected_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "exit_code": {
+          "name": "exit_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "warnings_json": {
+          "name": "warnings_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_sessions_status": {
+          "name": "idx_sessions_status",
+          "columns": ["status"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sessions_framework": {
+          "name": "sessions_framework",
+          "value": "\"sessions\".\"framework\" IN ('nestjs','express','unknown')"
+        },
+        "sessions_status": {
+          "name": "sessions_status",
+          "value": "\"sessions\".\"status\" IN ('connected','disconnected','disabled')"
+        }
+      }
+    },
+    "steps": {
+      "name": "steps",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "depth": {
+          "name": "depth",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "class_name": {
+          "name": "class_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "function_name": {
+          "name": "function_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "file": {
+          "name": "file",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "line": {
+          "name": "line",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "column": {
+          "name": "column",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_async": {
+          "name": "is_async",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'running'"
+        },
+        "args_json": {
+          "name": "args_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "arg_names_json": {
+          "name": "arg_names_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "return_json": {
+          "name": "return_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "this_class": {
+          "name": "this_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "error_json": {
+          "name": "error_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "error_handling": {
+          "name": "error_handling",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "boundary_type": {
+          "name": "boundary_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "detail_json": {
+          "name": "detail_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "on_error_path": {
+          "name": "on_error_path",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "collapsed_count": {
+          "name": "collapsed_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "start_offset_ns": {
+          "name": "start_offset_ns",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "duration_ns": {
+          "name": "duration_ns",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_steps_parent": {
+          "name": "idx_steps_parent",
+          "columns": ["request_id", "parent_id"],
+          "isUnique": false
+        },
+        "idx_steps_error_path": {
+          "name": "idx_steps_error_path",
+          "columns": ["request_id", "on_error_path"],
+          "isUnique": false
+        },
+        "idx_steps_name": {
+          "name": "idx_steps_name",
+          "columns": ["name"],
+          "isUnique": false
+        },
+        "uq_steps_request_seq": {
+          "name": "uq_steps_request_seq",
+          "columns": ["request_id", "seq"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "steps_request_id_requests_id_fk": {
+          "name": "steps_request_id_requests_id_fk",
+          "tableFrom": "steps",
+          "tableTo": "requests",
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "steps_parent_id_steps_id_fk": {
+          "name": "steps_parent_id_steps_id_fk",
+          "tableFrom": "steps",
+          "tableTo": "steps",
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "steps_seq": {
+          "name": "steps_seq",
+          "value": "\"steps\".\"seq\" >= 1"
+        },
+        "steps_depth": {
+          "name": "steps_depth",
+          "value": "\"steps\".\"depth\" >= 0"
+        },
+        "steps_kind": {
+          "name": "steps_kind",
+          "value": "\"steps\".\"kind\" IN ('function','method','middleware','guard','interceptor','pipe','handler','filter','boundary','constructor','callback','decision','loop')"
+        },
+        "steps_is_async": {
+          "name": "steps_is_async",
+          "value": "\"steps\".\"is_async\" IN (0,1)"
+        },
+        "steps_status": {
+          "name": "steps_status",
+          "value": "\"steps\".\"status\" IN ('running','returned','threw')"
+        },
+        "steps_error_handling": {
+          "name": "steps_error_handling",
+          "value": "\"steps\".\"error_handling\" IN ('propagated','swallowed','converted','unhandled')"
+        },
+        "steps_boundary_type": {
+          "name": "steps_boundary_type",
+          "value": "\"steps\".\"boundary_type\" IN ('db','http','redis','queue','fs')"
+        },
+        "steps_on_error_path": {
+          "name": "steps_on_error_path",
+          "value": "\"steps\".\"on_error_path\" IN (0,1)"
+        },
+        "steps_collapsed_count": {
+          "name": "steps_collapsed_count",
+          "value": "\"steps\".\"collapsed_count\" >= 1"
+        },
+        "steps_boundary_iff_kind": {
+          "name": "steps_boundary_iff_kind",
+          "value": "(\"steps\".\"kind\" = 'boundary') = (\"steps\".\"boundary_type\" IS NOT NULL)"
+        },
+        "steps_error_handling_threw": {
+          "name": "steps_error_handling_threw",
+          "value": "\"steps\".\"error_handling\" IS NULL OR \"steps\".\"status\" = 'threw'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {
+      "idx_requests_started_at": {
+        "columns": {
+          "\"started_at\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_requests_error": {
+        "columns": {
+          "\"started_at\" DESC": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_requests_active": {
+        "columns": {
+          "\"started_at\" DESC": {
+            "isExpression": true
+          }
+        }
+      }
+    }
+  }
+}

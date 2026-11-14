@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 2 | 🟡 |
+| 2 Protocol and collector | 13 | 3 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **14** | 🟡 |
+| **MVP total** | **65** | **15** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.3 Database setup
+**Current task:** 2.4 Seed data
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.3 | Database setup | 2026-11-14 | On `main` |
+| 2.4 | Seed data | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -112,8 +112,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | --- | --- | --- | --- | --- |
 | 2.1 | Protocol package: types and schemas | ✅ | | 35 schema tests |
 | 2.2 | Collector CLI skeleton + config | ✅ | | `pathlight-tracker --help` |
-| 2.3 | Database setup | 🟡 | | |
-| 2.4 | Seed data | ⬜ | | |
+| 2.3 | Database setup | ✅ | | Migration `0000_init` |
+| 2.4 | Seed data | 🟡 | | |
 | 2.5 | Store layer | ⬜ | | |
 | 2.6 | Soft delete, retention and purge | ⬜ | | |
 | 2.7 | Server + auth | ⬜ | | |
@@ -252,8 +252,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.3 Database setup · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.3.
+### 2026-11-14 · 2.4 Seed data · 🟡 In progress
+- Done when: `pnpm seed` loads 3 requests and 14 steps; a test checks the error path and the trashed request.
+
+### 2026-11-14 · 2.3 Database setup · ✅ Done
+- Done when: Fresh start creates the DB; migration test runs; schema test inserts the seed data and passes all constraints.
+- What changed: `packages/collector/src/store/schema.ts` (Drizzle schema for `sessions`, `requests`, `steps`, `object_refs`, `meta`, column for column as `data-model.md` §9, with every check, cascade, unique rule and partial index); `drizzle.config.ts` + `db:generate`; first migration `drizzle/0000_init.sql`; `src/store/open.ts` (creates `.pathlight-tracker/` 0700 and the file 0600, sets `auto_vacuum = INCREMENTAL` before any table, WAL and foreign keys, applies migrations, writes `meta.schema_version` / `created_by_version`, throws `STORE_UNAVAILABLE` with the path when it cannot; `ensureGitignored` adds `.pathlight-tracker/` once). New deps `drizzle-orm` 0.45.4, `better-sqlite3` 12.11.1, `drizzle-kit` 0.31.11 (dev); also `@types/better-sqlite3` 9.6.0 (dev, type definitions only: flagged to the user).
+- Tests: 15 tests: fresh DB has the 5 tables, WAL, foreign keys, incremental vacuum and meta; reopening does not re-migrate; 0700 / 0600 (Linux and macOS; skipped on Windows); the seed SQL from `data-model.md` §10 loads (3 requests, 14 steps, 6 object refs, no foreign-key problems); 6 constraint violations are rejected; purge cascades; an unwritable path gives `STORE_UNAVAILABLE`; `.gitignore` created, appended once, or left alone.
+- Docs updated: `data-model.md` §10 seed writes `meta` with `INSERT OR REPLACE` (the collector already writes those keys); plan 2.3 says `STORE_UNAVAILABLE` instead of the in-memory fallback (v1, decision 0008); `CLAUDE.md` `db:generate` exists now; `.claude/rules/database.md` paths and the `ask-before-change` hook now cover `src/store/schema.ts` and `drizzle/` (setup roadmap 2.3 ✅).
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: "incompatible older DB → back up and start fresh" (`data-model.md` §11) is only needed once a second schema version exists.
 
 ### 2026-11-14 · 2.2 Collector CLI skeleton + config · ✅ Done
 - Done when: `pathlight-tracker --help` lists commands; config unit tests prove precedence and invalid-value fallback.

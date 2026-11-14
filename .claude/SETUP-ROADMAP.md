@@ -33,7 +33,7 @@ Status: ⬜ To do · ✅ Done · ⏭️ Dropped (with reason)
 | ✅ | 0.7 | Point `.cursorrules` at the same rules (`.claude/rules/`) so nothing is duplicated | One source of truth |
 | ⬜ | Checkpoint 0 | Run `product-analyst` on the whole product (gap vs AppMap and others) before committing to Phase 1 | Cheapest moment to change direction |
 | ✅ | 2.1 | Add `.claude/rules/protocol.md` once conventions are real; after 2.1, add `packages/protocol/` to `ask-before-change.sh` (changes = event protocol = architecture) | Not guarded during creation to avoid prompt noise |
-| ⬜ | 2.3 | Re-check `database.md` rule paths and hook paths against the real Drizzle schema / migration folders | Exact paths known |
+| ✅ | 2.3 | Re-check `database.md` rule paths and hook paths against the real Drizzle schema / migration folders | Exact paths known |
 | ⬜ | Phase 3 | Re-check `agent.md` rule; make `test-runner` include `pnpm test:corpus` for agent changes | Corpus is the safety net |
 | ⬜ | 4.1 | Re-check `ui.md` rule paths and theme path; consider a `design-check` agent comparing screens to `design.md` | UI work starts |
 | ⬜ | Each checkpoint | Trim `CLAUDE.md` (keep under ~150 lines), prune rules nobody needs, review memory, review this file; run `product-analyst` on the next phase | Keeps always-loaded context small |
