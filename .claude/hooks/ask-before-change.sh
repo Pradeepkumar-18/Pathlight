@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook: turns CLAUDE.md "Ask before changing" into a real permission
-# prompt for schema, migrations, design tokens, dependencies and env files.
+# prompt for schema, migrations, design tokens, dependencies, env files and the
+# shared protocol package (tests excluded).
 # Plain bash on purpose: jq is not installed on every dev machine.
 
 input=$(cat)
@@ -17,6 +18,8 @@ case "$path" in
   */packages/ui/src/theme/*) reason="design tokens" ;;
   */package.json|*/pnpm-lock.yaml|*/pnpm-workspace.yaml) reason="dependencies or the workspace" ;;
   */.env|*/.env.*) reason="an env file" ;;
+  */packages/protocol/src/*.test.ts|*/packages/protocol/src/spec-examples.ts) ;;
+  */packages/protocol/src/*) reason="the event protocol or API contract (packages/protocol)" ;;
 esac
 
 if [ -z "$reason" ] && printf '%s' "$cmd" |

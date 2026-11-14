@@ -565,6 +565,7 @@ One step with full captured values, for the inspector.
       "message": "Cannot read properties of undefined (reading 'rate')",
       "file": "src/pricing/pricing.service.ts",
       "line": 27,
+      "column": 31,
       "stack": [
         { "fn": "PricingService.calculateDiscount", "file": "src/pricing/pricing.service.ts", "line": 27, "column": 31, "internal": false },
         { "fn": "OrdersService.create", "file": "src/orders/orders.service.ts", "line": 40, "column": 18, "internal": false },

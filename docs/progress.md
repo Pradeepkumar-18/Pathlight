@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 0 | ⬜ |
+| 2 Protocol and collector | 13 | 1 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **12** | 🟡 |
+| **MVP total** | **65** | **13** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 1: Capture spike (done; Checkpoint 1 passed: go)
-**Current task:** none (next: 2.1 Protocol package)
+**Current phase:** Phase 2: Protocol and collector (in progress)
+**Current task:** 2.2 Collector CLI skeleton
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| — | none | | |
+| 2.2 | Collector CLI skeleton + config | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -70,6 +70,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ✅ Decided (2026-11-14) | `decisions/0021-spec-consistency-choices.md` |
 | 2026-11-14 | Capture approach: load-time wrapping, go (Checkpoint 1); returned promises become follow-on promises; `toString` shows probes (accepted) | ✅ Decided | `decisions/0002-capture-approach.md` |
 | 2026-11-14 | Agent spike deps `pirates` 4.0.7, `@swc/core` 1.16.22, `@jridgewell/trace-mapping` 0.3.31; bench dev dep `autocannon` 9.0.0 | ✅ Decided | `decisions/0002-capture-approach.md` |
+| 2026-11-14 | Phase 2 libraries approved: zod 4.6.7, commander 14.0.3 (not 15: needs Node 22.12), drizzle-orm 0.45.4, drizzle-kit 0.31.11, fastify 5.12.8, @fastify/websocket 11.3.7, @fastify/rate-limit 11.2.2, @fastify/static 10.1.11, pino 10.4.0, pino-roll 4.0.0, open 11.0.4; ULIDs written in-house | ✅ Decided | this table |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
@@ -109,8 +110,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
-| 2.1 | Protocol package: types and schemas | ⬜ | | |
-| 2.2 | Collector CLI skeleton + config | ⬜ | | |
+| 2.1 | Protocol package: types and schemas | ✅ | | 35 schema tests |
+| 2.2 | Collector CLI skeleton + config | 🟡 | | |
 | 2.3 | Database setup | ⬜ | | |
 | 2.4 | Seed data | ⬜ | | |
 | 2.5 | Store layer | ⬜ | | |
@@ -250,6 +251,18 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-14 · 2.2 Collector CLI skeleton + config · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.2.
+
+### 2026-11-14 · 2.1 Protocol package: types and schemas · ✅ Done
+- Done when: Schemas exported; unit tests accept valid examples from `api-spec.md` and reject invalid ones.
+- What changed: `packages/protocol/src/`: `version.ts` (protocol version 1, subprotocol), `values.ts` (ID, nanosecond and time helpers, every enum, recursive `CapturedValue`), `events.ts` (all `/agent` messages and the 11 event types from `api-spec.md` §11.1, collector → agent messages), `live.ts` (`/live` topics and messages, §11.2), `api.ts` (Session, RequestSummary / Detail, StepSummary / Detail, StackFrame, `pageSchema`, API error codes and envelope, WebSocket close codes). Types are inferred from the Zod schemas; strict objects reject unknown fields. New dep `zod` 4.6.7.
+- Tests: 35 tests: the spec examples (§6.1–§6.4, §8, §11.1, §11.2) are accepted; wrong ID prefixes, 24-character ULIDs, numeric durations, non-ISO times, unknown enums and fields, the old reused `kind`, bad nested captured values and made-up error codes are rejected.
+- Docs updated: `api-spec.md` §6.4 example gains the error `column` its own type requires; new `.claude/rules/protocol.md`; the `ask-before-change` hook now guards `packages/protocol/src` (tests excluded); setup roadmap 2.1 row ✅.
+- Decisions: Phase 2 libraries approved (Decisions table).
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-14 · 1.4 Performance spike · ✅ Done
 - Done when: `docs/decisions/0002-capture-approach.md` records the approach, slowdown numbers (target under 5×) and known limits.

@@ -1,2 +1,7 @@
-// Shared types and Zod schemas arrive in task 2.1.
-export const PACKAGE_NAME = '@pathlight-tracker/protocol';
+// The shared contract between agent, collector and UI. Changing it changes the protocol:
+// ask first (CLAUDE.md "Ask before changing").
+export * from './api';
+export * from './events';
+export * from './live';
+export * from './values';
+export * from './version';
