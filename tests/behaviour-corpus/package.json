@@ -1,0 +1,16 @@
+{
+  "name": "@pathlight-tracker/behaviour-corpus",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Runs tricky code with and without the agent and checks it behaves the same",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "test:corpus": "node src/run.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src"
+  }
+}

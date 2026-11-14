@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'fixtures/*'
+  - 'tests/*'
 
 # pnpm 10 blocks dependency install scripts by default. These fixture
 # dependencies need theirs: native SQLite bindings, Prisma engines and the

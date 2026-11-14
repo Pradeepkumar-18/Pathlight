@@ -1,0 +1,8 @@
+{
+  "promise-identity": {
+    "reason": "a function returning a native promise hands back a follow-on promise (keeps unhandled rejections unhandled, but identity and custom properties change); decide in decision 0002"
+  },
+  "function-tostring": {
+    "reason": "Function.prototype.toString shows the inserted probes; decide in decision 0002"
+  }
+}

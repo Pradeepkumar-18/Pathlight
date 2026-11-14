@@ -24,9 +24,22 @@ interface Insertion {
 
 type Node = Record<string, unknown>;
 
-const RUNTIME_VAR = '__pathlightTracker';
-const PROBE_VAR = '__pt$';
-const ERROR_VAR = '__pte$';
+/**
+ * Names for the generated variables that appear nowhere in the file, so they can never clash
+ * with user code (a parameter named like the probe once crashed the app at load time).
+ */
+function freeNames(code: string): { runtime: string; probe: string; error: string } {
+  const bases = ['__pathlightTracker', '__pt$', '__pte$'];
+  let suffix = '';
+  for (let n = 0; bases.some((name) => code.includes(name + suffix)); n += 1) {
+    suffix = String(n);
+  }
+  return {
+    runtime: `__pathlightTracker${suffix}`,
+    probe: `__pt$${suffix}`,
+    error: `__pte$${suffix}`,
+  };
+}
 
 function isNode(value: unknown): value is Node {
   return typeof value === 'object' && value !== null && typeof (value as Node).type === 'string';
@@ -63,6 +76,10 @@ export function wrapFunctions(code: string, options: WrapOptions): string | null
     return null;
   }
   const base = spanOf(program).start + 1;
+  const names = freeNames(code);
+  const RUNTIME_VAR = names.runtime;
+  const PROBE_VAR = names.probe;
+  const ERROR_VAR = names.error;
   const bytes = Buffer.from(code, 'utf8');
   const lineStarts = [0];
   for (let i = 0; i < bytes.length; i += 1) if (bytes[i] === 0x0a) lineStarts.push(i + 1);

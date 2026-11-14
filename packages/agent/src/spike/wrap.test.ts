@@ -185,6 +185,16 @@ describe('wrapFunctions', () => {
     expect((exports as unknown as () => unknown)()).toBeUndefined();
   });
 
+  it('never clashes with user names that look like its own variables', () => {
+    const { exports } = load(
+      'module.exports = function shadowing(__pt$, __pte$) { return [__pt$, __pte$]; };',
+    );
+    expect((exports as unknown as (a: string, b: string) => string[])('a', 'b')).toEqual([
+      'a',
+      'b',
+    ]);
+  });
+
   it('keeps a shebang as the first line', () => {
     const wrapped = wrapFunctions('#!/usr/bin/env node\nfunction main() { return 1; }', OPTIONS);
     expect(wrapped?.startsWith('#!/usr/bin/env node\n')).toBe(true);

@@ -32,6 +32,8 @@ export default tseslint.config(
       '**/.turbo/**',
       '**/.pathlight-tracker/**',
       'fixtures/express-app/generated/**',
+      // Corpus cases are plain JS written in deliberately odd shapes.
+      'tests/behaviour-corpus/cases/**',
       'eslint.config.mjs',
     ],
   },

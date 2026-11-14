@@ -133,6 +133,8 @@ importers:
 
   packages/ui: {}
 
+  tests/behaviour-corpus: {}
+
 packages:
 
   '@babel/helper-string-parser@7.29.11':

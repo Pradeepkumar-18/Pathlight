@@ -9,18 +9,18 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
-| 1 Capture spike | 4 | 2 | 🟡 |
+| 1 Capture spike | 4 | 3 | 🟡 |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **10** | 🟡 |
+| **MVP total** | **65** | **11** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 1: Capture spike (in progress)
-**Current task:** 1.3 Behaviour-preservation corpus v0
+**Current task:** 1.4 Performance spike
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 1.3 | Behaviour-preservation corpus v0 | 2026-11-14 | On `main` |
+| 1.4 | Performance spike | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -98,8 +98,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | --- | --- | --- | --- | --- |
 | 1.1 | Require hook + SWC transform spike | ✅ | | `pnpm spike:trace` |
 | 1.2 | Request context spike | ✅ | | `pnpm spike:context` |
-| 1.3 | Behaviour-preservation corpus v0 | 🟡 | | |
-| 1.4 | Performance spike | ⬜ | | |
+| 1.3 | Behaviour-preservation corpus v0 | ✅ | | `pnpm test:corpus` |
+| 1.4 | Performance spike | 🟡 | | |
 | ✔ | **Checkpoint 1: Go / no-go on capture approach** | ⬜ | | |
 
 ## Phase 2: Protocol and collector
@@ -248,8 +248,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 1.3 Behaviour-preservation corpus v0 · 🟡 In progress
+### 2026-11-14 · 1.4 Performance spike · 🟡 In progress
+- Done when: `docs/decisions/0002-capture-approach.md` records the approach, slowdown numbers (target under 5×) and known limits.
+
+### 2026-11-14 · 1.3 Behaviour-preservation corpus v0 · ✅ Done
 - Done when: Corpus runs in CI; every case gives identical results with and without the hook.
+- What changed: `tests/behaviour-corpus/` (new workspace package): 14 cases in `cases/src/` (class methods incl. private and `super`, arrow functions incl. minified shapes, async/await ordering and rejections, generators, getters/setters, tsc-style decorators, sloppy and strict `this`, `arguments` aliasing, `new.target`, default and destructured params, thrown errors incl. non-Errors and `finally`, stack traces, directives without `;`, hoisting, a parameter named like the probe, an unhandled rejection that must still crash, promise identity, `Function.prototype.toString`); `src/run.ts` runs each case with and without the hook and compares stdout, stderr and exit code (trace lines, agent warnings and stack columns left out); `known-differences.json` lists cases that must still differ. `pnpm test:corpus` (also in CI); `tests/*` added to the workspace; cases excluded from Prettier and ESLint so their odd shapes stay.
+- Tests: `pnpm test:corpus`: 12 cases identical, 2 known differences (promise identity, `toString`), every case checked to be instrumented; new wrap unit test for name clashes; lint, typecheck, 34 tests green.
+- Docs updated: `CLAUDE.md` (`pnpm test:corpus` exists now).
+- Decisions: the 2 known differences go to decision 0002 (task 1.4) for the user.
+- Bugs: found and fixed: a parameter named `__pt$` clashed with the probe variable and crashed the app at load; generated names are now chosen so they appear nowhere in the file.
+- Findings for 0002: the re-parse safety net catches syntax errors but not early errors such as duplicate declarations, so generated names must be collision-free by construction; Node's crash output includes columns, which the spike shifts.
 
 ### 2026-11-14 · 1.2 Request context spike · ✅ Done
 - Done when: Firing 20 concurrent requests produces 20 separate trees with no mixed lines.
