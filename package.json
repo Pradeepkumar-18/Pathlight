@@ -22,6 +22,7 @@
     "fixture:nest": "turbo run build --filter=@pathlight-tracker/fixture-nestjs-app && pnpm --filter @pathlight-tracker/fixture-nestjs-app start",
     "fixture:express": "turbo run build --filter=@pathlight-tracker/fixture-express-app && pnpm --filter @pathlight-tracker/fixture-express-app start",
     "fixtures:smoke": "turbo run build --filter=./fixtures/* && pnpm --filter @pathlight-tracker/fixtures-smoke start",
+    "seed": "turbo run build --filter=@pathlight-tracker/collector && node packages/collector/dist/store/seed-cli.js",
     "spike:trace": "turbo run build --filter=@pathlight-tracker/agent --filter=@pathlight-tracker/fixture-nestjs-app && pnpm --filter @pathlight-tracker/fixtures-smoke spike:trace",
     "spike:context": "turbo run build --filter=@pathlight-tracker/agent --filter=@pathlight-tracker/fixture-nestjs-app && pnpm --filter @pathlight-tracker/fixtures-smoke spike:context",
     "changeset": "changeset",

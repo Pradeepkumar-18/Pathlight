@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 3 | 🟡 |
+| 2 Protocol and collector | 13 | 4 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **15** | 🟡 |
+| **MVP total** | **65** | **16** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.4 Seed data
+**Current task:** 2.5 Store layer
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.4 | Seed data | 2026-11-14 | On `main` |
+| 2.5 | Store layer | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -113,8 +113,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.1 | Protocol package: types and schemas | ✅ | | 35 schema tests |
 | 2.2 | Collector CLI skeleton + config | ✅ | | `pathlight-tracker --help` |
 | 2.3 | Database setup | ✅ | | Migration `0000_init` |
-| 2.4 | Seed data | 🟡 | | |
-| 2.5 | Store layer | ⬜ | | |
+| 2.4 | Seed data | ✅ | | `pnpm seed` |
+| 2.5 | Store layer | 🟡 | | |
 | 2.6 | Soft delete, retention and purge | ⬜ | | |
 | 2.7 | Server + auth | ⬜ | | |
 | 2.8 | Ingest (`/agent`) | ⬜ | | |
@@ -252,8 +252,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.4 Seed data · 🟡 In progress
+### 2026-11-14 · 2.5 Store layer · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.5.
+
+### 2026-11-14 · 2.4 Seed data · ✅ Done
 - Done when: `pnpm seed` loads 3 requests and 14 steps; a test checks the error path and the trashed request.
+- What changed: `fixtures/seed/sample.sql` (the §10 SQL, copied verbatim); `packages/collector/src/store/seed.ts` (`loadSeed` replaces the store contents in one transaction); `seed-cli.ts` + root `pnpm seed [folder]` (default: `.pathlight-tracker/` in the current folder).
+- Tests: 6 tests: `sample.sql` equals `data-model.md` §10 exactly (drift guard); 3 requests, 14 steps, 6 object refs; error path = steps 3, 4, 8 with `error_step_id` = step 8 and status 500; one trashed `GET /health` with its step; reloading replaces the data; a failing seed changes nothing. Manually: `pnpm seed` → "3 requests, 14 steps, 6 object refs".
+- Docs updated: `CLAUDE.md` (`pnpm seed` exists now, with its target folder).
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-14 · 2.3 Database setup · ✅ Done
 - Done when: Fresh start creates the DB; migration test runs; schema test inserts the seed data and passes all constraints.

@@ -52,7 +52,7 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | Agent spike: 20 concurrent requests, 20 separate trees | `pnpm spike:context` |
 | Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` (from task 4.1) |
 | Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` (from task 2.12) |
-| Load seed data | `pnpm seed` (from task 2.4) |
+| Load seed data | `pnpm seed` (into `.pathlight-tracker/` of the current folder; `pnpm seed <folder>` for another) |
 | Unit tests | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
 | Behaviour corpus | `pnpm test:corpus` |
 | End-to-end tests | `pnpm test:e2e` (from task 5.1) |
