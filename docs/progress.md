@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 6 | 🟡 |
+| 2 Protocol and collector | 13 | 7 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **18** | 🟡 |
+| **MVP total** | **65** | **19** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.7 Server + auth
+**Current task:** 2.8 Ingest (`/agent`)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.7 | Server + auth | 2026-11-14 | On `main` |
+| 2.8 | Ingest (`/agent`) | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -71,6 +71,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-14 | Capture approach: load-time wrapping, go (Checkpoint 1); returned promises become follow-on promises; `toString` shows probes (accepted) | ✅ Decided | `decisions/0002-capture-approach.md` |
 | 2026-11-14 | Agent spike deps `pirates` 4.0.7, `@swc/core` 1.16.22, `@jridgewell/trace-mapping` 0.3.31; bench dev dep `autocannon` 9.0.0 | ✅ Decided | `decisions/0002-capture-approach.md` |
 | 2026-11-14 | Phase 2 libraries approved: zod 4.6.7, commander 14.0.3 (not 15: needs Node 22.12), drizzle-orm 0.45.4, drizzle-kit 0.31.11, fastify 5.12.8, @fastify/websocket 11.3.7, @fastify/rate-limit 11.2.2, @fastify/static 10.1.11, pino 10.4.0, pino-roll 4.0.0, open 11.0.4; ULIDs written in-house | ✅ Decided | this table |
+| 2026-11-14 | Server: default port 4777 (+19 fallbacks), REST allows a missing `Origin`, rate limits as 2 s windows | ✅ Decided | `decisions/0022-server-port-origin-rate-limits.md` |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
@@ -116,8 +117,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.4 | Seed data | ✅ | | `pnpm seed` |
 | 2.5 | Store layer | ✅ | | |
 | 2.6 | Soft delete, retention and purge | ✅ | | `pathlight-tracker clear` |
-| 2.7 | Server + auth | 🟡 | | |
-| 2.8 | Ingest (`/agent`) | ⬜ | | |
+| 2.7 | Server + auth | ✅ | | Decision 0022 |
+| 2.8 | Ingest (`/agent`) | 🟡 | | |
 | 2.9 | Trace builder | ⬜ | | |
 | 2.10 | REST API (MVP endpoints) | ⬜ | | |
 | 2.11 | Live hub (`/live`) | ⬜ | | |
@@ -252,8 +253,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.7 Server + auth · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.7.
+### 2026-11-14 · 2.8 Ingest (`/agent`) · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.8.
+
+### 2026-11-14 · 2.7 Server + auth · ✅ Done
+- Done when: Tests: missing token → 401, wrong token → 401, foreign origin → 403, wrong host → 403, burst → 429 with headers; static files served without a token.
+- What changed: `packages/collector/src/server/`: `app.ts` (Fastify on 127.0.0.1; host check on every route; on `/api`: origin check, Bearer token in constant time, `Cache-Control: no-store`; `X-Pathlight-Tracker-Version` everywhere; rate limits per token with draft-spec headers; 64 KB body limit; WebSocket plugin answering `pathlight-tracker.v1` with `admitSocket` for `/agent` and `/live`; UI files (or a placeholder until 4.1) with a Content-Security-Policy and no token), `errors.ts` (error envelope; Fastify errors mapped to our codes; 500s logged with a correlation ID, never echoing internals), `guards.ts`, `token.ts` (per-project token file 0600), `listen.ts` (port 4777 with fallbacks, `collector.json`). New deps `fastify` 5.12.8, `@fastify/websocket` 11.3.7, `@fastify/rate-limit` 11.2.2, `@fastify/static` 10.1.11.
+- Tests: 19 tests: the five Done-when checks; localhost origin accepted; writes limited at 21st request; 413 and 404 envelopes; UI without token with a strict CSP; built UI files served; host checked on static files; real WebSockets: `/agent` admitted with the token and the protocol answered, 4001 for wrong / missing token, `/live` 4003 for foreign / missing origin, `/agent` 4003 with a browser origin; token kept across restarts and rotated by deleting the file; next port when the default is busy.
+- Docs updated: decision 0022; `architecture.md` §4 (port 4777, REST origin rule).
+- Decisions: 0022.
+- Bugs: none.
+- Follow-ups: `405 METHOD_NOT_ALLOWED` needs the real routes (task 2.10).
 
 ### 2026-11-14 · 2.6 Soft delete, retention and purge · ✅ Done
 - Done when: Tests prove: in-progress can't be deleted; restore keeps steps; purge removes steps and object refs; retention never purges active requests directly.

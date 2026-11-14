@@ -239,11 +239,11 @@ Pathlight Tracker has **no users, no login and no roles**. It is a single-develo
 | Control | How |
 | --- | --- |
 | Network binding | Collector listens on `127.0.0.1` only, never `0.0.0.0` |
-| Fixed default port | Same port every run so saved links keep working; next free port if busy (override with `PATHLIGHT_TRACKER_PORT`) |
+| Fixed default port | 4777 every run so saved links keep working; 4778–4796 if busy (override with `PATHLIGHT_TRACKER_PORT` / `--port`; decision 0022) |
 | Project token | Generated once per project with `crypto.randomBytes(32)` and kept in `.pathlight-tracker/`, so links survive restarts; required on every connection; deleting the file rotates it (details in task 2.7) |
 | Agent connection | Agent sends the token from `PATHLIGHT_TRACKER_TOKEN` in the `/agent` WebSocket handshake; wrong or missing token → rejected |
 | UI connection | Token arrives in the URL fragment (`#token=…`, never sent to servers or logs), is moved to `sessionStorage`, then sent as `Authorization: Bearer <token>` on REST and as the WebSocket subprotocol `bearer.<token>` on `/live` (browsers can't set WebSocket headers; the agent uses the same subprotocol on `/agent`) |
-| Origin check | `/live` and `/api` accept only `Origin: http://127.0.0.1:<port>` or `http://localhost:<port>` (and the VS Code webview origin in v2); blocks malicious websites and DNS rebinding |
+| Origin check | `/live` and `/api` accept only `Origin: http://127.0.0.1:<port>` or `http://localhost:<port>` (and the VS Code webview origin in v2); blocks malicious websites and DNS rebinding. REST allows a missing `Origin` (browsers omit it on same-origin `GET`s; the token is still required); `/live` requires it (decision 0022) |
 | Host header check | Requests must have `Host: 127.0.0.1:<port>` or `localhost:<port>` |
 
 **Protected routes:** every route except the static UI files requires the token.

@@ -17,10 +17,14 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@fastify/rate-limit": "11.2.2",
+    "@fastify/static": "10.1.11",
+    "@fastify/websocket": "11.3.7",
     "@pathlight-tracker/protocol": "workspace:*",
     "better-sqlite3": "12.11.1",
     "commander": "14.0.3",
     "drizzle-orm": "0.45.4",
+    "fastify": "5.12.8",
     "zod": "4.6.7"
   },
   "devDependencies": {
