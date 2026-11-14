@@ -19,6 +19,7 @@
 9. [Require hook + SWC transform spike](09-require-hook-swc-spike.md) (Task 1.1)
 10. [Request context: one trace per request](10-request-context-async-local-storage.md) (Task 1.2)
 11. [Behaviour-preservation corpus: observe, never change](11-behaviour-preservation-corpus.md) (Task 1.3)
+12. [Performance spike: how much slower does tracing make the app?](12-performance-spike-go-no-go.md) (Task 1.4)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -68,9 +69,14 @@
 - "Observe, never change" and behaviour-preservation testing (with vs without hook): [11](11-behaviour-preservation-corpus.md)
 - Known differences must still be detected (list that cannot rot): [11](11-behaviour-preservation-corpus.md)
 - Early errors vs syntax errors; collision-free generated names (`__pt$` bug): [11](11-behaviour-preservation-corpus.md)
+- Load tests: req/s, p50 / p99 latency, slowdown ratio: [12](12-performance-spike-go-no-go.md)
+- Warm-up, null device for output, median of alternating runs: [12](12-performance-spike-go-no-go.md)
+- Go / no-go checkpoint and Phase 1 summary (1.1 to 1.4): [12](12-performance-spike-go-no-go.md)
+- Your two decisions: keep follow-on promises, accept the `toString` difference: [12](12-performance-spike-go-no-go.md)
 
 ## Open questions
-- Known differences for decision 0002 (task 1.4, your call): promise identity (follow-on promise) and `Function.prototype.toString` showing probes. Accept as documented limits or find another approach?
+- Answered in task 1.4: you chose to keep follow-on promises and accept the `toString` difference (lesson 12).
+- Bench numbers exclude transport (WebSocket, batching); task 3.15 must re-run them with the real agent.
 - Parallel steps in one request (`Promise.all`) share one indent; planned fix in task 3.8.
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).
 - Hands-on AppMap checklist is pending until `fixtures/nestjs-app` exists (after task 0.6). Decision 0001 may change.
