@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 // Entry point of the `pathlight-tracker` command.
-import { createProgram } from './program';
+import { createClearHandler } from './clear';
+import { createProgram, STUB_HANDLERS } from './program';
+import type { CliIo } from './program';
 
-const { run } = createProgram({
+const io: CliIo = {
   out: (text) => process.stdout.write(text),
   err: (text) => process.stderr.write(text),
   cwd: () => process.cwd(),
   env: process.env,
-});
+};
+
+const { run } = createProgram(io, { ...STUB_HANDLERS, clear: createClearHandler(io) });
 
 run(process.argv.slice(2)).then(
   (code) => {

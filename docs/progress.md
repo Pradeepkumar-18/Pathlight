@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 5 | 🟡 |
+| 2 Protocol and collector | 13 | 6 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **17** | 🟡 |
+| **MVP total** | **65** | **18** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.6 Soft delete, retention and purge
+**Current task:** 2.7 Server + auth
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.6 | Soft delete, retention and purge | 2026-11-14 | On `main` |
+| 2.7 | Server + auth | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -115,8 +115,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.3 | Database setup | ✅ | | Migration `0000_init` |
 | 2.4 | Seed data | ✅ | | `pnpm seed` |
 | 2.5 | Store layer | ✅ | | |
-| 2.6 | Soft delete, retention and purge | 🟡 | | |
-| 2.7 | Server + auth | ⬜ | | |
+| 2.6 | Soft delete, retention and purge | ✅ | | `pathlight-tracker clear` |
+| 2.7 | Server + auth | 🟡 | | |
 | 2.8 | Ingest (`/agent`) | ⬜ | | |
 | 2.9 | Trace builder | ⬜ | | |
 | 2.10 | REST API (MVP endpoints) | ⬜ | | |
@@ -252,8 +252,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.6 Soft delete, retention and purge · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.6.
+### 2026-11-14 · 2.7 Server + auth · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.7.
+
+### 2026-11-14 · 2.6 Soft delete, retention and purge · ✅ Done
+- Done when: Tests prove: in-progress can't be deleted; restore keeps steps; purge removes steps and object refs; retention never purges active requests directly.
+- What changed: `packages/collector/src/store/lifecycle.ts` (`softDelete`, `restore` (keeps the restored request, trashes the oldest active one if over the limit), `deletePermanently`, `clearAll`, `emptyTrash`, `purgeAll`, `counts`, `applyRetention` (oldest finished active → trash, never purged directly, in-progress never moved), `purgeExpired` (trashed past the TTL, then empty disconnected sessions, then incremental vacuum), `startPurgeJob` (startup + hourly, `unref`)); all return the affected IDs for the live hub. `src/cli/clear.ts`: real `pathlight-tracker clear` (to trash, with the TTL in the message) and `clear --purge` (counts in a confirmation prompt, `--yes` skips it, then vacuum); "nothing to clear" without creating a database. `src/version.ts`.
+- Tests: 20 new tests: soft delete keeps steps; in-progress requests can't be soft- or hard-deleted; not-found and already-trashed results; restore keeps steps and object refs; restore over the limit trashes the oldest active request, not the restored one; permanent delete cascades; clear all skips in-progress; empty trash; purge all keeps in-progress; retention order, in-progress exempt, nothing under the limit; TTL purge at 71 h vs 73 h removes steps and vacuums; empty disconnected sessions removed, connected kept; hourly job with fake timers; `clear` and `clear --purge` (no, yes, `--yes`) end to end on a real store.
+- Docs updated: none.
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: `clear` through a running collector (via `.pathlight-tracker/collector.json`, so open tabs update) needs the REST endpoints: finished in task 2.10.
 
 ### 2026-11-14 · 2.5 Store layer · ✅ Done
 - Done when: Unit tests cover every filter, sort and cursor case, including "trashed requests never appear".
