@@ -97,9 +97,9 @@ Goal: prove, before building infrastructure, that load-time wrapping works on re
 
 **Checkpoint 1: Go / no-go on the capture approach**
 
-- [ ] Step tree correct for the PRD example; concurrent requests separated.
-- [ ] Behaviour corpus fully green.
-- [ ] Slowdown measured and acceptable (or a mitigation plan written).
+- [x] Step tree correct for the PRD example; concurrent requests separated.
+- [x] Behaviour corpus fully green.
+- [x] Slowdown measured and acceptable (or a mitigation plan written).
 - [ ] If any of these fail: stop and redesign the capture approach before Phase 2.
 
 ---

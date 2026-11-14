@@ -9,18 +9,18 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
-| 1 Capture spike | 4 | 3 | 🟡 |
+| 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **11** | 🟡 |
+| **MVP total** | **65** | **12** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 1: Capture spike (in progress)
-**Current task:** 1.4 Performance spike
+**Current phase:** Phase 1: Capture spike (done; Checkpoint 1 passed: go)
+**Current task:** none (next: 2.1 Protocol package)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 1.4 | Performance spike | 2026-11-14 | On `main` |
+| — | none | | |
 
 ## Known bugs / issues
 
@@ -68,13 +68,16 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-01 | Export to AppMap's file format in v2 (7.10) | ✅ Decided | `decisions/0018-appmap-format-export.md` |
 | 2026-11-05 | CI runs on Node 24 only (Vitest 5 & Changesets 3 require Node ≥22, root engines is >=24 <25) | ✅ Decided | `decisions/0019-ci-node-24-only.md` |
 | 2026-11-06 | Spec consistency choices from task 0.8 (protocol fields, codes, env vars, schema columns, token rule) | ✅ Decided (2026-11-14) | `decisions/0021-spec-consistency-choices.md` |
+| 2026-11-14 | Capture approach: load-time wrapping, go (Checkpoint 1); returned promises become follow-on promises; `toString` shows probes (accepted) | ✅ Decided | `decisions/0002-capture-approach.md` |
+| 2026-11-14 | Agent spike deps `pirates` 4.0.7, `@swc/core` 1.16.22, `@jridgewell/trace-mapping` 0.3.31; bench dev dep `autocannon` 9.0.0 | ✅ Decided | `decisions/0002-capture-approach.md` |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. Checkpoint 0: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
-2. Phase 1: `/start-task 1.1` (directly on `main`)
+1. Push the Phase 1 commits and check CI on all three OSes
+2. Checkpoint 0 leftovers: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
+3. Phase 2: `/start-task 2.1` (protocol package)
 
 ---
 
@@ -99,8 +102,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 1.1 | Require hook + SWC transform spike | ✅ | | `pnpm spike:trace` |
 | 1.2 | Request context spike | ✅ | | `pnpm spike:context` |
 | 1.3 | Behaviour-preservation corpus v0 | ✅ | | `pnpm test:corpus` |
-| 1.4 | Performance spike | 🟡 | | |
-| ✔ | **Checkpoint 1: Go / no-go on capture approach** | ⬜ | | |
+| 1.4 | Performance spike | ✅ | | `pnpm bench`; decision 0002 |
+| ✔ | **Checkpoint 1: Go / no-go on capture approach** | ✅ | | Go (decision 0002): ~1.1–1.2× slowdown |
 
 ## Phase 2: Protocol and collector
 
@@ -248,8 +251,14 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 1.4 Performance spike · 🟡 In progress
+### 2026-11-14 · 1.4 Performance spike · ✅ Done
 - Done when: `docs/decisions/0002-capture-approach.md` records the approach, slowdown numbers (target under 5×) and known limits.
+- What changed: `tests/bench/` (new workspace package): `pnpm bench` starts the NestJS fixture untraced and traced (trace output to the null device), runs autocannon on `GET /health`, `GET /orders/42` and `POST /orders` (10 connections, 10 s after 2 s warm-up) and measures start-up (median of 5, alternating). `docs/decisions/0002-capture-approach.md` (go); `known-differences.json` now points to it. New dev dep `autocannon` 9.0.0 (approved 2026-11-14).
+- Tests: 3 benchmark runs: slowdown 1.12–1.22× in every scenario, 0 errors, p99 within a few ms; start-up 2784 ms untraced vs 2795 ms traced; lint, typecheck, tests, corpus green.
+- Docs updated: decision 0002, `CLAUDE.md` (`pnpm bench` exists now), Checkpoint 1 ticked in the plan.
+- Decisions: 0002 (go; user chose: keep follow-on promises, accept the `toString` difference).
+- Bugs: none.
+- Follow-ups: known limits in decision 0002 go to tasks 3.6, 3.7, 3.8, 3.15 and 5.7.
 
 ### 2026-11-14 · 1.3 Behaviour-preservation corpus v0 · ✅ Done
 - Done when: Corpus runs in CI; every case gives identical results with and without the hook.

@@ -1,0 +1,19 @@
+{
+  "name": "@pathlight-tracker/bench",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Benchmarks the fixtures with and without the agent",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "bench": "node src/bench.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "autocannon": "9.0.0"
+  }
+}

@@ -56,7 +56,7 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | Unit tests | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
 | Behaviour corpus | `pnpm test:corpus` |
 | End-to-end tests | `pnpm test:e2e` (from task 5.1) |
-| Benchmarks | `pnpm bench` (from task 1.4) |
+| Benchmarks | `pnpm bench` |
 | Lint / typecheck / format | `pnpm lint` · `pnpm typecheck` · `pnpm format` |
 | DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` (from task 2.3) |
 
