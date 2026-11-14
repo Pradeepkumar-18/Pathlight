@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { addHook } from 'pirates';
 
+import { traceIncomingRequests } from './context';
 import { instrument } from './hook';
 
 const AGENT_ROOT = path.resolve(__dirname, '..', '..');
@@ -13,6 +14,7 @@ function warn(code: string, context: string): void {
 }
 
 try {
+  traceIncomingRequests();
   addHook(
     (code, filename) =>
       instrument(code, filename, {

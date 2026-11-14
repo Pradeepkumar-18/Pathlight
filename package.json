@@ -21,6 +21,7 @@
     "fixture:express": "turbo run build --filter=@pathlight-tracker/fixture-express-app && pnpm --filter @pathlight-tracker/fixture-express-app start",
     "fixtures:smoke": "turbo run build --filter=./fixtures/* && pnpm --filter @pathlight-tracker/fixtures-smoke start",
     "spike:trace": "turbo run build --filter=@pathlight-tracker/agent --filter=@pathlight-tracker/fixture-nestjs-app && pnpm --filter @pathlight-tracker/fixtures-smoke spike:trace",
+    "spike:context": "turbo run build --filter=@pathlight-tracker/agent --filter=@pathlight-tracker/fixture-nestjs-app && pnpm --filter @pathlight-tracker/fixtures-smoke spike:context",
     "changeset": "changeset",
     "prepare": "lefthook install"
   },

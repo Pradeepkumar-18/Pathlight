@@ -49,6 +49,7 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | Run a fixture app on its own | `pnpm fixture:nest` / `pnpm fixture:express` |
 | Check both fixtures (expected 200s and deliberate 500s) | `pnpm fixtures:smoke` |
 | Agent spike: print the traced step tree for the PRD bug | `pnpm spike:trace` |
+| Agent spike: 20 concurrent requests, 20 separate trees | `pnpm spike:context` |
 | Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` (from task 4.1) |
 | Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` (from task 2.12) |
 | Load seed data | `pnpm seed` (from task 2.4) |

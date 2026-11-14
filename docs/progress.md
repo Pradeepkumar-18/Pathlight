@@ -9,18 +9,18 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | Phase | Tasks | Done | Status |
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
-| 1 Capture spike | 4 | 1 | 🟡 |
+| 1 Capture spike | 4 | 2 | 🟡 |
 | 2 Protocol and collector | 13 | 0 | ⬜ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **9** | 🟡 |
+| **MVP total** | **65** | **10** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 1: Capture spike (in progress)
-**Current task:** 1.2 Request context spike
+**Current task:** 1.3 Behaviour-preservation corpus v0
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 1.2 | Request context spike | 2026-11-14 | On `main` |
+| 1.3 | Behaviour-preservation corpus v0 | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -97,8 +97,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
 | 1.1 | Require hook + SWC transform spike | ✅ | | `pnpm spike:trace` |
-| 1.2 | Request context spike | 🟡 | | |
-| 1.3 | Behaviour-preservation corpus v0 | ⬜ | | |
+| 1.2 | Request context spike | ✅ | | `pnpm spike:context` |
+| 1.3 | Behaviour-preservation corpus v0 | 🟡 | | |
 | 1.4 | Performance spike | ⬜ | | |
 | ✔ | **Checkpoint 1: Go / no-go on capture approach** | ⬜ | | |
 
@@ -248,8 +248,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 1.2 Request context spike · 🟡 In progress
+### 2026-11-14 · 1.3 Behaviour-preservation corpus v0 · 🟡 In progress
+- Done when: Corpus runs in CI; every case gives identical results with and without the hook.
+
+### 2026-11-14 · 1.2 Request context spike · ✅ Done
 - Done when: Firing 20 concurrent requests produces 20 separate trees with no mixed lines.
+- What changed: `packages/agent/src/spike/context.ts`: an `AsyncLocalStorage` trace per incoming request, started from Node's official `http.server.request.start` diagnostics channel (no patching of `http`); the runtime keeps one indent per trace instead of one global counter and tags every line `[pt <trace>]`. `fixtures/smoke/src/trace-lines.ts` parses and checks trees; `spike-context.ts` + `pnpm spike:context` (also in CI).
+- Tests: `context.test.ts` (10 concurrent HTTP requests with random awaits → 10 traces, each nested correctly); `pnpm spike:context`: 20 concurrent `POST /orders` (10 × 500, 10 × 201) → 20 traces, 481 lines, output switched between traces 40 times, every tree well-formed (each `→` closed at the same indent, indent = open steps), 10 failing and 10 successful trees; lint, typecheck, 33 tests green.
+- Docs updated: `CLAUDE.md` commands (`pnpm spike:context`).
+- Decisions: none (findings go into 0002).
+- Bugs: none.
+- Findings for 0002: `enterWith` inside the `http.server.request.start` subscriber reliably scopes the whole NestJS request, including guards, interceptors, filters and everything awaited; calls outside a request share one `-` trace; two steps of the same request running in parallel (`Promise.all`) would still share one indent (task 3.8 uses parent step IDs instead of indent).
 
 ### 2026-11-14 · 1.1 Require hook + SWC transform spike · ✅ Done
 - Done when: Running the NestJS fixture with the hook prints an indented step tree for `POST /orders`, ending in the `TypeError`.

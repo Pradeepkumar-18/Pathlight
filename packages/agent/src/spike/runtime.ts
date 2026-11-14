@@ -1,12 +1,16 @@
 import { writeSync } from 'node:fs';
 import { types } from 'node:util';
 
+import { currentTrace } from './context';
+import type { Trace } from './context';
+
 /** One running call, returned by `enter` and handed back to `exit` / `throw`. */
 export interface Probe {
   name: string;
   file: string;
   line: number;
   depth: number;
+  trace: Trace;
   startedAt: bigint;
   error: string | null;
   /** True while a returned promise is still running; it ends the step when it settles. */
@@ -19,14 +23,8 @@ export type Write = (text: string) => void;
 let write: Write = (text) => {
   writeSync(1, text);
 };
-let depth = 0;
-
 export function setWriter(next: Write): void {
   write = next;
-}
-
-export function resetDepth(): void {
-  depth = 0;
 }
 
 function safely(action: () => void): void {
@@ -60,6 +58,7 @@ const DISABLED: Probe = {
   file: '',
   line: 0,
   depth: 0,
+  trace: { id: '-', depth: 0 },
   startedAt: 0n,
   error: null,
   pending: true,
@@ -67,17 +66,21 @@ const DISABLED: Probe = {
 
 export function enter(name: string, file: string, line: number): Probe {
   try {
+    // Each request keeps its own indent, so concurrent requests never shift each other.
+    const trace = currentTrace();
+    const depth = trace.depth;
     const probe: Probe = {
       name,
       file,
       line,
       depth,
+      trace,
       startedAt: process.hrtime.bigint(),
       error: null,
       pending: false,
     };
-    safely(() => write(`${indent(depth)}→ ${name} (${file}:${line})\n`));
-    depth += 1;
+    safely(() => write(`[pt ${trace.id}] ${indent(depth)}→ ${name} (${file}:${line})\n`));
+    trace.depth += 1;
     return probe;
   } catch {
     // `pending: true` makes `exit` a no-op for a probe that never really started.
@@ -95,11 +98,11 @@ export { recordThrow as throw };
 
 function finish(probe: Probe): void {
   safely(() => {
-    depth = probe.depth;
+    probe.trace.depth = probe.depth;
     const ms = Number(process.hrtime.bigint() - probe.startedAt) / 1e6;
     const result =
       probe.error === null ? `← ${probe.name}` : `✕ ${probe.name} threw ${probe.error}`;
-    write(`${indent(probe.depth)}${result} (${ms.toFixed(1)} ms)\n`);
+    write(`[pt ${probe.trace.id}] ${indent(probe.depth)}${result} (${ms.toFixed(1)} ms)\n`);
   });
 }
 

@@ -12,6 +12,7 @@
     "start": "node src/smoke.ts",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint src",
-    "spike:trace": "node src/spike-trace.ts"
+    "spike:trace": "node src/spike-trace.ts",
+    "spike:context": "node src/spike-context.ts"
   }
 }

@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { resetTraces } from './context';
 import * as runtime from './runtime';
 
 let lines: string[] = [];
 
 beforeEach(() => {
   lines = [];
-  runtime.resetDepth();
-  runtime.setWriter((text) => lines.push(text.replace(/ \(\d+\.\d ms\)/, '')));
+  resetTraces();
+  // Outside a request every line is tagged `[pt -]`; strip it and the timing.
+  runtime.setWriter((text) =>
+    lines.push(text.replace('[pt -] ', '').replace(/ \(\d+\.\d ms\)/, '')),
+  );
 });
 
 afterEach(() => {

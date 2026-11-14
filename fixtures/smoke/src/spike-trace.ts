@@ -4,12 +4,13 @@
 import path from 'node:path';
 
 import { FIXTURES_DIR, REPO_DIR, startApp } from './run-app.ts';
+import { groupByTrace, parseTraceLines, treeProblems } from './trace-lines.ts';
 
 const NEST_DIR = path.join(FIXTURES_DIR, 'nestjs-app');
 const HOOK = path.join(REPO_DIR, 'packages', 'agent', 'dist', 'spike', 'register.js');
 const SETTLE_MS = 500;
 
-// In order, each deeper than the one before it, as in the PRD example.
+// Each one nested under the one before it, as in the PRD example.
 const EXPECTED_PATH = [
   '→ OrdersController.create (src/orders/orders.controller.ts:',
   '→ OrdersService.create (src/orders/orders.service.ts:',
@@ -22,10 +23,6 @@ const EXPECTED_ALSO = [
 ];
 const EXPECTED_END =
   "✕ OrdersController.create threw TypeError: Cannot read properties of undefined (reading 'rate')";
-
-function indentOf(line: string): number {
-  return line.length - line.trimStart().length;
-}
 
 async function main(): Promise<void> {
   const app = await startApp('nestjs-app (traced)', path.join(NEST_DIR, 'dist', 'main.js'), {
@@ -42,10 +39,12 @@ async function main(): Promise<void> {
     await response.arrayBuffer();
     await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
 
-    const lines = app.output().slice(before).split('\n');
-    const start = lines.findIndex((line) => line.includes('→ AuthGuard.canActivate'));
-    const end = lines.findIndex((line) => line.includes(EXPECTED_END));
-    const tree = start >= 0 && end > start ? lines.slice(start, end + 1) : lines;
+    const groups = [...groupByTrace(parseTraceLines(app.output().slice(before))).values()];
+    const lines =
+      groups.find((group) => group.some((line) => line.name === 'OrdersController.create')) ?? [];
+    const texts = lines.map((line) => line.text);
+    const end = texts.findIndex((text) => text.includes(EXPECTED_END));
+    const tree = end >= 0 ? texts.slice(0, end + 1) : texts;
     console.log(`POST /orders → ${response.status}\n\n${tree.join('\n')}\n`);
 
     const problems: string[] = [];
@@ -56,15 +55,16 @@ async function main(): Promise<void> {
     }
     let lastIndent = -1;
     for (const text of EXPECTED_PATH) {
-      const line = tree.find((candidate) => candidate.includes(text));
+      const line = lines.find((candidate) => candidate.text.includes(text));
       if (!line) {
         problems.push(`missing "${text}"`);
         continue;
       }
-      if (indentOf(line) <= lastIndent)
+      if (line.indent <= lastIndent)
         problems.push(`"${text}" is not nested under the step before it`);
-      lastIndent = indentOf(line);
+      lastIndent = line.indent;
     }
+    problems.push(...treeProblems(lines));
 
     if (problems.length > 0) {
       console.log(`FAIL\n- ${problems.join('\n- ')}\n\n--- full output ---\n${app.output()}`);
