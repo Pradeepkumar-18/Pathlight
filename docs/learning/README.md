@@ -20,6 +20,7 @@
 10. [Request context: one trace per request](10-request-context-async-local-storage.md) (Task 1.2)
 11. [Behaviour-preservation corpus: observe, never change](11-behaviour-preservation-corpus.md) (Task 1.3)
 12. [Performance spike: how much slower does tracing make the app?](12-performance-spike-go-no-go.md) (Task 1.4)
+13. [The protocol package: one contract, written once](13-protocol-package-zod-schemas.md) (Task 2.1)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -73,6 +74,11 @@
 - Warm-up, null device for output, median of alternating runs: [12](12-performance-spike-go-no-go.md)
 - Go / no-go checkpoint and Phase 1 summary (1.1 to 1.4): [12](12-performance-spike-go-no-go.md)
 - Your two decisions: keep follow-on promises, accept the `toString` difference: [12](12-performance-spike-go-no-go.md)
+- Protocol as a contract; why the package depends on nothing: [13](13-protocol-package-zod-schemas.md)
+- Zod schema as source of truth, types via `z.infer`; `z.strictObject`: [13](13-protocol-package-zod-schemas.md)
+- Discriminated unions (`e` / `type`) and recursive `z.lazy` (CapturedValue): [13](13-protocol-package-zod-schemas.md)
+- Durations as digit strings; prefixed 26-char ULID checks: [13](13-protocol-package-zod-schemas.md)
+- Testing with the spec's own examples; ask-first guard on `packages/protocol`: [13](13-protocol-package-zod-schemas.md)
 
 ## Open questions
 - Answered in task 1.4: you chose to keep follow-on promises and accept the `toString` difference (lesson 12).

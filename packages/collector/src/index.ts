@@ -1,2 +1,5 @@
-// Collector CLI arrives in task 2.2.
-export const PACKAGE_NAME = '@pathlight-tracker/collector';
+// Collector entry points; the CLI itself is `src/cli/main.ts` (bin `pathlight-tracker`).
+export { createProgram } from './cli/program';
+export { loadConfig, values } from './config/load';
+export type { ConfigWarning, ResolvedConfig, Source } from './config/load';
+export type { SettingKey, Settings } from './config/settings';

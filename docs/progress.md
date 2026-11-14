@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 1 | 🟡 |
+| 2 Protocol and collector | 13 | 2 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **13** | 🟡 |
+| **MVP total** | **65** | **14** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.2 Collector CLI skeleton
+**Current task:** 2.3 Database setup
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.2 | Collector CLI skeleton + config | 2026-11-14 | On `main` |
+| 2.3 | Database setup | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -111,8 +111,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
 | 2.1 | Protocol package: types and schemas | ✅ | | 35 schema tests |
-| 2.2 | Collector CLI skeleton + config | 🟡 | | |
-| 2.3 | Database setup | ⬜ | | |
+| 2.2 | Collector CLI skeleton + config | ✅ | | `pathlight-tracker --help` |
+| 2.3 | Database setup | 🟡 | | |
 | 2.4 | Seed data | ⬜ | | |
 | 2.5 | Store layer | ⬜ | | |
 | 2.6 | Soft delete, retention and purge | ⬜ | | |
@@ -252,8 +252,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.2 Collector CLI skeleton + config · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.2.
+### 2026-11-14 · 2.3 Database setup · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.3.
+
+### 2026-11-14 · 2.2 Collector CLI skeleton + config · ✅ Done
+- Done when: `pathlight-tracker --help` lists commands; config unit tests prove precedence and invalid-value fallback.
+- What changed: `packages/collector/src/config/` (`settings.ts`: every setting from `architecture.md` §8 with a strict Zod schema, default, env name and text conversion; `load.ts`: defaults → `pathlight-tracker.config.json` → `PATHLIGHT_TRACKER_*` env → CLI flags, each value tagged with its source for `GET /config`; invalid values fall back to the next one down with a `CONFIG_INVALID_VALUE` warning; bad JSON is reported with its line and the file is ignored; unknown keys warn). `src/cli/` (`program.ts`: commander with `dev [options] -- <command...>` (`--port`, `--no-open`), `clear [--purge] [-y]`, `doctor`; stubs say which task builds them; `main.ts` entry; `bin` `pathlight-tracker`). New deps `commander` 14.0.3, `zod` 4.6.7.
+- Tests: 14 tests: defaults, precedence with sources, lists and booleans from text, fallback with warnings for every source, bad JSON with line number, unknown keys, env names, `--help`, `dev --help` showing `--`, the user command passed through untouched (including its own flags), clear flags, warnings printed while the command still runs, unknown command exit code 1. Manually: `node packages/collector/dist/cli/main.js --help`.
+- Docs updated: none (behaviour as in `architecture.md` §8 and `user-flows.md` §7).
+- Decisions: `port` defaults to `null` (meaning the fixed default port that task 2.7 picks, decision 0015); booleans accept 1/0, true/false, yes/no; schemas are strict (no coercion) so "false" never reads as true.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-14 · 2.1 Protocol package: types and schemas · ✅ Done
 - Done when: Schemas exported; unit tests accept valid examples from `api-spec.md` and reject invalid ones.
