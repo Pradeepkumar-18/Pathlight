@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 4 | 🟡 |
+| 2 Protocol and collector | 13 | 5 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **16** | 🟡 |
+| **MVP total** | **65** | **17** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.5 Store layer
+**Current task:** 2.6 Soft delete, retention and purge
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.5 | Store layer | 2026-11-14 | On `main` |
+| 2.6 | Soft delete, retention and purge | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -114,8 +114,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.2 | Collector CLI skeleton + config | ✅ | | `pathlight-tracker --help` |
 | 2.3 | Database setup | ✅ | | Migration `0000_init` |
 | 2.4 | Seed data | ✅ | | `pnpm seed` |
-| 2.5 | Store layer | 🟡 | | |
-| 2.6 | Soft delete, retention and purge | ⬜ | | |
+| 2.5 | Store layer | ✅ | | |
+| 2.6 | Soft delete, retention and purge | 🟡 | | |
 | 2.7 | Server + auth | ⬜ | | |
 | 2.8 | Ingest (`/agent`) | ⬜ | | |
 | 2.9 | Trace builder | ⬜ | | |
@@ -252,8 +252,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.5 Store layer · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.5.
+### 2026-11-14 · 2.6 Soft delete, retention and purge · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.6.
+
+### 2026-11-14 · 2.5 Store layer · ✅ Done
+- Done when: Unit tests cover every filter, sort and cursor case, including "trashed requests never appear".
+- What changed: `packages/collector/src/store/`: `requests.ts` (`activeRequests` / `trashedRequests` conditions every read goes through; `listRequests` with all §6.1 filters (method, status codes and classes, hasError, state, case-insensitive plain-text path, route, session, since / until, minDurationMs) and the four §9 sorts; `listTrash`; `getRequest` with `includeDeleted`), `steps.ts` (`listSteps` by parent / root, kind and error path in `seq` order; `getStep`; `childCounts`), `cursor.ts` (opaque base64url cursors holding the sort, a filter fingerprint and the last key + ID; keyset pagination with the ID breaking ties; `INVALID_CURSOR` for malformed or mismatched cursors), `writes.ts` (one-transaction `writeBatch`; insert / update for sessions, requests, steps and object refs; a step whose ID exists is skipped). The collector now depends on `@pathlight-tracker/protocol` (workspace).
+- Tests: 37 new tests: trashed requests never appear (list, filters, `getRequest`); 14 filter cases incl. `%` / `_` as plain text and AND / OR combining; 4 sorts (in-progress requests have no duration and sort last when descending); paging every sort 3 at a time visits every row once; equal sort keys page without skips or repeats; filters kept across pages; last page has no cursor; malformed, other-sort and other-filter cursors rejected; trash list; step filters, step paging, cursor bound to its request, child counts; re-sent steps skipped; a failing batch rolls back.
+- Docs updated: none.
+- Decisions: in-progress requests (no duration) sort as duration -1.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-14 · 2.4 Seed data · ✅ Done
 - Done when: `pnpm seed` loads 3 requests and 14 steps; a test checks the error path and the trashed request.
