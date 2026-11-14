@@ -25,7 +25,11 @@ import {
 } from './guards';
 
 export const MAX_BODY_BYTES = 64 * 1024;
-export const MAX_AGENT_MESSAGE_BYTES = 1024 * 1024;
+/**
+ * Hard cap in the WebSocket library. Ingest enforces the real 1 MB limit itself so it can
+ * close with the spec's 4013 (the library would close with 1009).
+ */
+export const WS_MAX_PAYLOAD_BYTES = 16 * 1024 * 1024;
 /** "100/s, burst 200" for reads and "10/s" for writes, as fixed 2-second windows. */
 const RATE_WINDOW_MS = 2000;
 const READS_PER_WINDOW = 200;
@@ -135,7 +139,7 @@ export async function createServer(options: ServerOptions): Promise<CollectorSer
 
   await app.register(websocket, {
     options: {
-      maxPayload: MAX_AGENT_MESSAGE_BYTES,
+      maxPayload: WS_MAX_PAYLOAD_BYTES,
       handleProtocols: (protocols: Set<string>) =>
         protocols.has(PROTOCOL_SUBPROTOCOL) ? PROTOCOL_SUBPROTOCOL : false,
     },

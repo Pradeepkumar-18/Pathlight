@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 7 | 🟡 |
+| 2 Protocol and collector | 13 | 8 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **19** | 🟡 |
+| **MVP total** | **65** | **20** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.8 Ingest (`/agent`)
+**Current task:** 2.9 Trace builder
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.8 | Ingest (`/agent`) | 2026-11-14 | On `main` |
+| 2.9 | Trace builder | 2026-11-14 | On `main` |
 
 ## Known bugs / issues
 
@@ -118,8 +118,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.5 | Store layer | ✅ | | |
 | 2.6 | Soft delete, retention and purge | ✅ | | `pathlight-tracker clear` |
 | 2.7 | Server + auth | ✅ | | Decision 0022 |
-| 2.8 | Ingest (`/agent`) | 🟡 | | |
-| 2.9 | Trace builder | ⬜ | | |
+| 2.8 | Ingest (`/agent`) | ✅ | | |
+| 2.9 | Trace builder | 🟡 | | |
 | 2.10 | REST API (MVP endpoints) | ⬜ | | |
 | 2.11 | Live hub (`/live`) | ⬜ | | |
 | 2.12 | Launcher | ⬜ | | |
@@ -253,8 +253,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.8 Ingest (`/agent`) · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.8.
+### 2026-11-14 · 2.9 Trace builder · 🟡 In progress
+- Done when: Feeding the recorded `POST /orders` event stream produces rows identical to the seed data (except IDs and times).
+
+### 2026-11-14 · 2.8 Ingest (`/agent`) · ✅ Done
+- Done when: Integration test sends recorded batches from a file and sees them acknowledged; invalid events are dropped without losing valid ones.
+- What changed: `packages/collector/src/ingest/`: `ingest.ts` (`hello` → `welcome` with limits; protocol version check: `PROTOCOL_MISMATCH` error with details, then close 4009; envelope validated, then each event on its own: bad events dropped with an `INVALID_EVENT` error, the rest kept; `ack` once a batch is stored; over 1 MB or 2,000 events → close 4013; 10 invalid messages in a row → close 4008; batches queue and drain one per event-loop turn, with `slow_down` above 5,000 waiting events and `resume` below 1,000), `sessions.ts` (session row on `hello`; on disconnect the session becomes `disconnected` and its running requests `incomplete`), `route.ts` (`WS /agent` behind `admitSocket`). `src/ids.ts` (prefixed ULIDs, in-house). The server's WebSocket library cap is 16 MB so ingest's own 1 MB check can close with 4013. `fixtures/events/post-orders.json`: the recorded agent stream for the seed's failing `POST /orders` (hello + 2 batches, 18 events), reused by task 2.9.
+- Tests: 12 new tests over real WebSockets: the recorded batches are welcomed and acked (seq 1, 2) and all 18 events kept, with a session row; invalid events dropped, valid ones kept and acked; batch before `hello` rejected; 4009 with details; 4013 for size and for event count; 4008 after 10 invalid messages; disconnect marks the session and its running request; backpressure `slow_down` → `resume` with 6,000 queued events, all acked; ULIDs valid, time-sorted and unique.
+- Docs updated: none.
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: the `boundary` event has no fields for its name and source location, which the seed's DB step has (`users.findOne`, `user.service.ts:15:5`); the recorded stream carries them inside `request` for now. Protocol change to be approved before task 2.9.
 
 ### 2026-11-14 · 2.7 Server + auth · ✅ Done
 - Done when: Tests: missing token → 401, wrong token → 401, foreign origin → 403, wrong host → 403, burst → 429 with headers; static files served without a token.

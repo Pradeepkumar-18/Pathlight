@@ -1,0 +1,357 @@
+[
+  {
+    "type": "hello",
+    "v": 1,
+    "pid": 48213,
+    "nodeVersion": "v24.10.0",
+    "agentVersion": "0.1.0",
+    "framework": "unknown",
+    "command": "npm run start:dev",
+    "cwd": "/home/dev/shop-api"
+  },
+  {
+    "type": "batch",
+    "v": 1,
+    "pid": 48213,
+    "seq": 1,
+    "events": [
+      {
+        "e": "request.start",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105120000000",
+        "framework": "nestjs",
+        "method": "POST",
+        "path": "/orders",
+        "route": "/orders",
+        "params": null,
+        "query": null,
+        "body": {
+          "type": "object",
+          "preview": "{ userId: 7, items: [2] }",
+          "objectId": "obj_1",
+          "size": 2
+        },
+        "headers": {
+          "type": "object",
+          "preview": "{ authorization: [REDACTED], content-type: application/json }"
+        }
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105120400000",
+        "stepId": "stp_01JBSEED000000000000000001",
+        "parentStepId": null,
+        "kind": "guard",
+        "name": "JwtAuthGuard.canActivate",
+        "file": "src/auth/jwt-auth.guard.ts",
+        "line": 12,
+        "column": 3,
+        "args": [],
+        "thisClass": "JwtAuthGuard",
+        "isAsync": true
+      },
+      {
+        "e": "step.exit",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105121500000",
+        "stepId": "stp_01JBSEED000000000000000001",
+        "returnValue": {
+          "type": "boolean",
+          "preview": "true"
+        },
+        "durationNs": "1100000",
+        "detail": {
+          "allowed": true
+        }
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105121600000",
+        "stepId": "stp_01JBSEED000000000000000002",
+        "parentStepId": null,
+        "kind": "pipe",
+        "name": "ValidationPipe.transform",
+        "thisClass": "ValidationPipe",
+        "isAsync": true
+      },
+      {
+        "e": "step.exit",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105122500000",
+        "stepId": "stp_01JBSEED000000000000000002",
+        "returnValue": {
+          "type": "object",
+          "className": "CreateOrderDto",
+          "preview": "CreateOrderDto { userId: 7, items: [2] }",
+          "objectId": "obj_2"
+        },
+        "durationNs": "900000",
+        "detail": {
+          "input": {
+            "type": "object",
+            "preview": "{ userId: 7, items: [2] }",
+            "objectId": "obj_1"
+          },
+          "output": {
+            "type": "object",
+            "className": "CreateOrderDto",
+            "preview": "CreateOrderDto { userId: 7, items: [2] }",
+            "objectId": "obj_2"
+          }
+        }
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105122600000",
+        "stepId": "stp_01JBSEED000000000000000003",
+        "parentStepId": null,
+        "kind": "handler",
+        "name": "OrdersController.create",
+        "file": "src/orders/orders.controller.ts",
+        "line": 18,
+        "column": 3,
+        "args": [
+          {
+            "type": "object",
+            "className": "CreateOrderDto",
+            "preview": "CreateOrderDto { userId: 7, items: [2] }",
+            "objectId": "obj_2"
+          }
+        ],
+        "thisClass": "OrdersController",
+        "isAsync": true
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105122900000",
+        "stepId": "stp_01JBSEED000000000000000004",
+        "parentStepId": "stp_01JBSEED000000000000000003",
+        "kind": "method",
+        "name": "OrdersService.create",
+        "file": "src/orders/orders.service.ts",
+        "line": 31,
+        "column": 3,
+        "args": [
+          {
+            "type": "object",
+            "className": "CreateOrderDto",
+            "preview": "CreateOrderDto { userId: 7, items: [2] }",
+            "objectId": "obj_2"
+          }
+        ],
+        "thisClass": "OrdersService",
+        "isAsync": true
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105123200000",
+        "stepId": "stp_01JBSEED000000000000000005",
+        "parentStepId": "stp_01JBSEED000000000000000004",
+        "kind": "method",
+        "name": "UserService.findById",
+        "file": "src/users/user.service.ts",
+        "line": 14,
+        "column": 3,
+        "args": [
+          {
+            "type": "number",
+            "preview": "7"
+          }
+        ],
+        "thisClass": "UserService",
+        "isAsync": true
+      }
+    ]
+  },
+  {
+    "type": "batch",
+    "v": 1,
+    "pid": 48213,
+    "seq": 2,
+    "events": [
+      {
+        "e": "boundary",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105123500000",
+        "stepId": "stp_01JBSEED000000000000000006",
+        "parentStepId": "stp_01JBSEED000000000000000005",
+        "boundaryType": "db",
+        "request": {
+          "name": "users.findOne",
+          "file": "src/users/user.service.ts",
+          "line": 15,
+          "column": 5,
+          "isAsync": true,
+          "driver": "mongoose",
+          "operation": "findOne",
+          "collectionOrTable": "users",
+          "query": "{ id: 7 }"
+        },
+        "response": {
+          "returnValue": {
+            "type": "object",
+            "preview": "{ id: 7, name: \"Ravi\" }"
+          },
+          "resultSummary": "1 document"
+        },
+        "durationNs": "39000000"
+      },
+      {
+        "e": "step.exit",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105164200000",
+        "stepId": "stp_01JBSEED000000000000000005",
+        "returnValue": {
+          "type": "object",
+          "className": "User",
+          "preview": "User { id: 7, name: \"Ravi\", tier: undefined }",
+          "objectId": "obj_3"
+        },
+        "durationNs": "41000000"
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105164500000",
+        "stepId": "stp_01JBSEED000000000000000007",
+        "parentStepId": "stp_01JBSEED000000000000000004",
+        "kind": "method",
+        "name": "CartService.total",
+        "file": "src/cart/cart.service.ts",
+        "line": 9,
+        "column": 3,
+        "args": [
+          {
+            "type": "array",
+            "preview": "[2 items]",
+            "size": 2,
+            "objectId": "obj_4"
+          }
+        ],
+        "thisClass": "CartService",
+        "isAsync": false
+      },
+      {
+        "e": "step.exit",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105165100000",
+        "stepId": "stp_01JBSEED000000000000000007",
+        "returnValue": {
+          "type": "number",
+          "preview": "1200"
+        },
+        "durationNs": "600000"
+      },
+      {
+        "e": "step.enter",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105165200000",
+        "stepId": "stp_01JBSEED000000000000000008",
+        "parentStepId": "stp_01JBSEED000000000000000004",
+        "kind": "method",
+        "name": "PricingService.calculateDiscount",
+        "file": "src/pricing/pricing.service.ts",
+        "line": 22,
+        "column": 3,
+        "args": [
+          {
+            "type": "object",
+            "className": "User",
+            "preview": "User { id: 7, name: \"Ravi\", tier: undefined }",
+            "objectId": "obj_3"
+          },
+          {
+            "type": "number",
+            "preview": "1200"
+          }
+        ],
+        "argNames": ["user", "total"],
+        "thisClass": "PricingService",
+        "isAsync": false
+      },
+      {
+        "e": "decision",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105165300000",
+        "stepId": "stp_01JBSEED000000000000000009",
+        "parentStepId": "stp_01JBSEED000000000000000008",
+        "decisionType": "if",
+        "expression": "user.tier === 'gold'",
+        "values": {
+          "user.tier": {
+            "type": "undefined",
+            "preview": "undefined",
+            "suspicious": true
+          }
+        },
+        "result": false,
+        "branch": "else",
+        "file": "src/pricing/pricing.service.ts",
+        "line": 24,
+        "column": 5
+      },
+      {
+        "e": "step.throw",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105165500000",
+        "stepId": "stp_01JBSEED000000000000000008",
+        "error": {
+          "type": "TypeError",
+          "message": "Cannot read properties of undefined (reading 'rate')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'rate')\n    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)\n    at OrdersService.create (src/orders/orders.service.ts:35:41)",
+          "file": "src/pricing/pricing.service.ts",
+          "line": 27,
+          "column": 31
+        },
+        "durationNs": "300000"
+      },
+      {
+        "e": "step.throw",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105203400000",
+        "stepId": "stp_01JBSEED000000000000000004",
+        "error": {
+          "type": "TypeError",
+          "message": "Cannot read properties of undefined (reading 'rate')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'rate')\n    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)\n    at OrdersService.create (src/orders/orders.service.ts:35:41)",
+          "file": "src/pricing/pricing.service.ts",
+          "line": 27,
+          "column": 31
+        },
+        "durationNs": "80500000"
+      },
+      {
+        "e": "step.throw",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105203600000",
+        "stepId": "stp_01JBSEED000000000000000003",
+        "error": {
+          "type": "TypeError",
+          "message": "Cannot read properties of undefined (reading 'rate')",
+          "stack": "TypeError: Cannot read properties of undefined (reading 'rate')\n    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)\n    at OrdersService.create (src/orders/orders.service.ts:35:41)",
+          "file": "src/pricing/pricing.service.ts",
+          "line": 27,
+          "column": 31
+        },
+        "durationNs": "81000000"
+      },
+      {
+        "e": "request.end",
+        "traceId": "req_01JBSEED000000000000000001",
+        "ts": "1793342105204000000",
+        "status": 500,
+        "responseHeaders": null,
+        "responseBody": {
+          "type": "object",
+          "preview": "{ statusCode: 500, message: Internal server error }"
+        },
+        "durationNs": "84000000"
+      }
+    ]
+  }
+]
