@@ -20,7 +20,7 @@ const SESSION_B = 'ses_01JBTEST00000000000000000B';
 const id = (n: number): string => `req_01JBTEST0000000000000000${String(n).padStart(2, '0')}`;
 
 /** 12 requests with a spread of methods, statuses, paths, durations and sessions. */
-const ROWS: NewRequest[] = [
+const VARIANTS: Partial<NewRequest>[] = [
   {
     method: 'GET',
     path: '/orders/42',
@@ -92,7 +92,8 @@ const ROWS: NewRequest[] = [
     hasError: 1,
     durationNs: 30_000_000,
   },
-].map((row, index) => ({
+];
+const ROWS: NewRequest[] = VARIANTS.map((row, index) => ({
   id: id(index + 1),
   sessionId: index < 6 ? SESSION_A : SESSION_B,
   state: 'completed' as const,
