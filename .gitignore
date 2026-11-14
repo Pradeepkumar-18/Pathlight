@@ -10,3 +10,7 @@ coverage/
 
 # Local recordings of Pathlight Tracker itself
 .pathlight-tracker/
+
+# Codex copies of the Claude setup (not used in this project)
+.codex/
+.agents/skills/
