@@ -9,7 +9,6 @@ Rules for AI coding assistants working in this repo. Package-specific rules load
 ## Docs: what to read and when
 
 All specs live in `docs/`. They are the source of truth: if code and docs disagree, stop and ask.
-**Until task 0.7**, they are in `Docs/` with a `tracer-` prefix (`docs/prd.md` = `Docs/tracer-prd.md`); `progress.md` has no prefix.
 
 | Doc | Read it when you are… |
 | --- | --- |
@@ -33,7 +32,7 @@ packages/protocol    Shared types + Zod schemas (depends on nothing)
 packages/agent       Runtime agent preloaded into the user's app
 packages/collector   CLI (`pathlight-tracker dev`), Fastify server, SQLite store, ingest, live hub, REST API
 packages/ui          React map UI (browser now, VS Code webview later)
-packages/extension   VS Code extension (Phase 2 only)
+packages/extension   VS Code extension (v2 only)
 fixtures/            nestjs-app, express-app, seed data
 tests/               behaviour-corpus, bench, e2e
 docs/                All specs
@@ -47,15 +46,19 @@ Dependency rule: `agent`, `collector` and `ui` import only from `protocol`, neve
 | --- | --- |
 | Install | `pnpm install` |
 | Build all | `pnpm build` |
-| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` |
-| Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` |
-| Load seed data | `pnpm seed` |
+| Run a fixture app on its own | `pnpm fixture:nest` / `pnpm fixture:express` |
+| Check both fixtures (expected 200s and deliberate 500s) | `pnpm fixtures:smoke` |
+| Run the UI dev server (against seed data) | `pnpm --filter @pathlight-tracker/ui dev` (from task 4.1) |
+| Run Pathlight Tracker on a fixture | `pnpm dev:nest` / `pnpm dev:express` (from task 2.12) |
+| Load seed data | `pnpm seed` (from task 2.4) |
 | Unit tests | `pnpm test` (one package: `pnpm --filter @pathlight-tracker/<pkg> test`) |
-| Behaviour corpus | `pnpm test:corpus` |
-| End-to-end tests | `pnpm test:e2e` |
-| Benchmarks | `pnpm bench` |
+| Behaviour corpus | `pnpm test:corpus` (from task 1.3) |
+| End-to-end tests | `pnpm test:e2e` (from task 5.1) |
+| Benchmarks | `pnpm bench` (from task 1.4) |
 | Lint / typecheck / format | `pnpm lint` · `pnpm typecheck` · `pnpm format` |
-| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` |
+| DB migration from schema | `pnpm --filter @pathlight-tracker/collector db:generate` (from task 2.3) |
+
+Commands marked "from task X" don't exist yet; the task that adds them must make them work as written.
 
 Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (plus `pnpm test:corpus` for any agent change, `pnpm test:e2e` for any UI or API change).
 
@@ -65,7 +68,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 - Shared shapes come from `@pathlight-tracker/protocol`. Never redefine an event, API or value type locally.
 - Validate every external input (agent events, REST params and bodies, config, env) with Zod.
 - Files and folders: `kebab-case`. Variables and functions: `camelCase`; types, classes, React components: `PascalCase`; constants: `UPPER_SNAKE_CASE`.
-- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`, `obj_`). Env vars: `PATHLIGHT_TRACKER_` prefix. JSON and API fields: `camelCase`.
+- IDs: prefixed ULIDs (`ses_`, `req_`, `stp_`); object IDs are agent-issued counters per session (`obj_17`), not ULIDs. Env vars: `PATHLIGHT_TRACKER_` prefix. JSON and API fields: `camelCase`.
 - UI wording says **steps**, never "spans".
 - One module, one job. Keep files under ~300 lines. Named exports only (no default exports unless a framework requires it).
 - Imports ordered: Node built-ins, external packages, `@pathlight-tracker/*`, relative.
@@ -75,7 +78,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 ## Do's and don'ts
 
 **Do**
-- Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); keep the PR small.
+- Work on one task from `implementation-plan.md` per session (`/start-task`, `/finish-task`); one commit (or a few) per task.
 - Write or update tests in the same change. Cover the "Done when" condition explicitly.
 - Follow the exact shapes and examples in `api-spec.md` and `data-model.md`.
 - Update docs in the same PR when behaviour changes (and say so in the PR).
@@ -83,7 +86,7 @@ Before saying a task is done, run: `pnpm lint && pnpm typecheck && pnpm test` (p
 **Don't**
 - **Don't add a dependency without asking first.** Name the package, why it's needed and the alternative you considered. Check `tech-stack.md` §12 ("Do not use") before proposing anything.
 - Don't change code outside the task's scope ("while I'm here" refactors go in a separate task).
-- Don't log, print or store tokens or captured values outside the database.
+- Don't write tokens or captured values into log files, and don't store captured values anywhere but the database. Allowed: the collector prints the UI link with the token once in the terminal, keeps the token in `.pathlight-tracker/`, and the browser keeps it in `sessionStorage`.
 - Don't send any data off the machine (no telemetry, remote logging or cloud calls) unless a task explicitly says so.
 - Don't skip or weaken a failing test to make CI pass. Fix the cause or ask.
 - Don't invent features, endpoints, fields or UI that aren't in the docs.
@@ -114,9 +117,10 @@ Update `docs/progress.md` at the start and end of every task, in the same PR (`/
 
 ## Commit and PR format
 
-- Branch: `task/<id>-<short-name>` (e.g. `task/2.3-database-setup`).
+- Branch: one per phase, `phase/<N>-<short-name>` (e.g. `phase/2-collector`); every task of the phase is committed on it.
+- PR: one per phase, opened when the phase's last task is done.
 - Commit messages: Conventional Commits (`feat(collector): add soft delete`, `fix(agent): …`, `test: …`, `docs: …`).
-- PR description: task ID, what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no).
+- PR description: phase, each task ID and what changed, docs sections followed, how it was tested, `progress.md` updated (yes/no).
 
 ## Claude setup
 

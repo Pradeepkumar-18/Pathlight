@@ -14,6 +14,8 @@
 4. [Unit testing: Vitest and coverage](04-testing-setup-vitest.md) (Task 0.4)
 5. [Continuous Integration: GitHub Actions and Changesets](05-ci-github-actions-changesets.md) (Task 0.5)
 6. [Fixture apps: real apps with deliberate bugs](06-fixture-apps.md) (Task 0.6)
+7. [Docs in the repo: one place, one name](07-docs-in-repo.md) (Task 0.7)
+8. [Spec consistency pass: fix the docs before coding](08-spec-consistency-pass.md) (Task 0.8)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -44,8 +46,15 @@
 - pnpm `onlyBuiltDependencies` install-script allowlist: [06](06-fixture-apps.md)
 - Decorator metadata and value imports: [06](06-fixture-apps.md)
 - `--enable-source-maps` and the smoke-script pattern (PORT=0, parse URL, kill child): [06](06-fixture-apps.md)
+- Case-insensitive file systems and the two-step `git mv`: [07](07-docs-in-repo.md)
+- Single source of truth for rules (`.cursorrules` points at `CLAUDE.md`): [07](07-docs-in-repo.md)
+- One branch and one PR per phase: [07](07-docs-in-repo.md)
+- Why specs drift and why to fix them before coding: [08](08-spec-consistency-pass.md)
+- Master copy (`api-spec.md` §11.1) and decision status Proposed vs accepted (0021): [08](08-spec-consistency-pass.md)
+- SQLite `auto_vacuum` before the first table; 26-char ULIDs; red error path rule; validating a seed in real SQLite: [08](08-spec-consistency-pass.md)
 
 ## Open questions
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).
 - Hands-on AppMap checklist is pending until `fixtures/nestjs-app` exists (after task 0.6). Decision 0001 may change.
-- BUG-001 (Windows long paths) is still open until the README note in task 0.7.
+- BUG-001 (Windows long paths): README note added in task 0.7; confirm it can be closed.
+- Decision 0021 is Proposed and needs your approval or changes in the Phase 0 PR review.

@@ -91,6 +91,6 @@ Use a short clone path if you are on Windows.
 </details>
 
 ## Go deeper
-- `Docs/tracer-tech-stack.md` (pinned versions and the "do not use" list).
-- `Docs/progress.md`, BUG-001, and the task 0.2 log entry.
+- `docs/tech-stack.md` (pinned versions and the "do not use" list).
+- `docs/progress.md`, BUG-001, and the task 0.2 log entry.
 - Turborepo docs: "Task dependencies" and "Caching".

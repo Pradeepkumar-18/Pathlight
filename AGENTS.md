@@ -15,15 +15,15 @@
 
 ## 2. Docs & Source of Truth
 
-All project specs live in `Docs/` (moves to `docs/` at Task 0.7 with `tracer-` prefix removed until then):
+All project specs live in `docs/`:
 
-- **Implementation Plan**: `Docs/tracer-implementation-plan.md`
-- **Progress & Tasks**: `Docs/progress.md` (Update at the start and end of every task)
-- **Architecture**: `Docs/tracer-architecture.md`
-- **Data Model & Schema**: `Docs/tracer-data-model.md`
-- **API Spec**: `Docs/tracer-api-spec.md`
-- **User Flows & Edge Cases**: `Docs/tracer-user-flows.md`
-- **Decisions**: `Docs/decisions/` and `Docs/progress.md` -> Decisions
+- **Implementation Plan**: `docs/implementation-plan.md`
+- **Progress & Tasks**: `docs/progress.md` (Update at the start and end of every task)
+- **Architecture**: `docs/architecture.md`
+- **Data Model & Schema**: `docs/data-model.md`
+- **API Spec**: `docs/api-spec.md`
+- **User Flows & Edge Cases**: `docs/user-flows.md`
+- **Decisions**: `docs/decisions/` and `docs/progress.md` -> Decisions
 
 ---
 

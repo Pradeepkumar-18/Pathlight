@@ -7,8 +7,6 @@ disable-model-invocation: true
 
 Record the decision **$ARGUMENTS**.
 
-Docs are in `docs/` (until task 0.7: `Docs/` with a `tracer-` prefix).
-
 1. **Confirm the content with me first:** context (why it came up), the decision, alternatives considered, consequences (what it affects: docs, code, schema, phases). Ask if anything is unclear; don't guess.
 2. **Write the record** at `docs/decisions/NNNN-<kebab-title>.md` (next free number, 4 digits; create the folder if missing):
 

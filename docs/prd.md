@@ -117,7 +117,7 @@ No usage stats are collected for now: this starts as a personal open-source proj
 
 The core journey is four steps: start in trace mode, hit an endpoint, watch the map draw, jump into code.
 
-1. **Start.** The developer runs `npx pathlight-tracker dev -- npm run start:dev` (web MVP), or clicks "Start with Pathlight Tracker" in VS Code (extension phase). No code changes. The map opens in the browser.
+1. **Start.** The developer runs `npx pathlight-tracker dev -- npm run start:dev` (web MVP), or clicks "Start with Pathlight Tracker" in VS Code (v2). No code changes. The map opens in the browser.
 2. **Hit.** They call an endpoint from Postman, the browser or a test.
 3. **Watch.** The map draws live as the request runs: framework steps, each function with its arguments, return value, duration and errors, and DB/HTTP calls at the edges. The failing path turns red.
 4. **Jump.** Clicking a step shows its values in the inspector and opens that exact line in the editor. (Inline values next to the code arrive with the VS Code extension.)
@@ -135,7 +135,7 @@ POST /orders                                       ✗ 500  (84ms)
       ├─ CartService.total(items) → 1200
       └─ PricingService.calculateDiscount(user, 1200)
            ◇ if (user.tier === 'gold') → false   (v1)
-           ✗ TypeError: Cannot read 'rate' of undefined
+           ✗ TypeError: Cannot read properties of undefined (reading 'rate')
 ```
 
 **User stories**
@@ -171,7 +171,7 @@ All views read the same recording, so supporting many views is cheap on the back
 - **Capture object IDs from day one.** Data journey ships later, but old recordings can't gain object identity retroactively.
 - **Decisions as a toggle layer.** Condition markers (`if` / `switch` in the MVP, expressions in v1) and loop markers (v1) can be switched on or off so the map stays clean.
 
-The approved visual design (three panels: request list, step tree, inspector) is in `tracer-design.md` and `tracer-ui-reference.png`.
+The approved visual design (three panels: request list, step tree, inspector) is in `design.md` and `ui-reference.png`.
 
 ## Tracking coverage
 
@@ -199,7 +199,7 @@ The MVP records request in → framework steps → your functions with their dat
 | Constructors | `new OrderEntity(...)` | v1 |
 | Inline callbacks, collapsed with a count | `items.map(i => ...)` | v1 |
 | Generators | `function*` | v2 |
-| Getters / setters | `get fullName()` | Not tracked by default (reading can cause side effects) |
+| Getters / setters | `get fullName()` | Never tracked (reading can cause side effects) |
 
 **3. Data at every step**
 
@@ -347,9 +347,9 @@ Pathlight Tracker must never change how the user's code behaves, and must keep t
 | Privacy | Redaction applied before data is stored or streamed |
 | Safety | Capturing values never triggers getters, `toJSON` or lazy DB loads |
 | Reliability | A pathlight-tracker failure must never crash the user's app; it degrades to "not traced" |
-| Compatibility | Node 20+, TypeScript, CommonJS; modern Chrome, Edge, Firefox and Safari for the map UI; VS Code 1.85+ for the extension phase; Windows, macOS, Linux |
+| Compatibility | Node 20+, TypeScript, CommonJS; modern Chrome, Edge, Firefox and Safari for the map UI; VS Code 1.85+ for the extension (v2); Windows, macOS, Linux |
 | Storage | Keep the last 100 requests by default, configurable; older ones move to a trash and are permanently deleted after 72 hours |
-| Accessibility | WCAG 2.2 AA: contrast, full keyboard use, screen-reader labels (see `tracer-design.md` §10) |
+| Accessibility | WCAG 2.2 AA: contrast, full keyboard use, screen-reader labels (see `design.md` §10) |
 
 ## Competitive landscape
 
@@ -389,7 +389,7 @@ Ship the smallest loop that proves value (hit an endpoint, watch the live map, j
 | **v2** | VS Code and wider reach | VS Code extension (same UI, inline values, CodeLens); ESM and bundlers; Fastify and Next.js; Kafka consumers and cron jobs; data journey; export | Extension adoption and retention |
 | **Future** | AI on top of real data | AI explanation layer; opt-in usage stats; tablet and phone layouts | Core proven |
 
-Each phase starts only when the previous gate is met. The task-level breakdown is in `tracer-implementation-plan.md`.
+Each phase starts only when the previous gate is met. The task-level breakdown is in `implementation-plan.md`.
 
 ## Risks, assumptions and open questions
 
@@ -427,10 +427,10 @@ The biggest risks are technical (instrumenting arbitrary AI-written code safely)
 
 | Document | What it covers |
 | --- | --- |
-| `tracer-tech-stack.md` | Technology choices, versions, "do not use" list |
-| `tracer-architecture.md` | Processes, folders, data flow, auth, modules, state, env vars, security, errors, decisions |
-| `tracer-data-model.md` | Database tables, keys, indexes, enums, soft delete, access rules, seed data |
-| `tracer-user-flows.md` | Screens, journeys, navigation, connection states, empty/loading/error states, edge cases |
-| `tracer-design.md` + `tracer-ui-reference.png` | Colors, type, spacing, components, layout, responsive, themes, accessibility |
-| `tracer-api-spec.md` | REST and WebSocket endpoints, types, errors, pagination, limits |
-| `tracer-implementation-plan.md` | Phases, tasks, dependencies, "done when", checkpoints, MVP line |
+| `tech-stack.md` | Technology choices, versions, "do not use" list |
+| `architecture.md` | Processes, folders, data flow, auth, modules, state, env vars, security, errors, decisions |
+| `data-model.md` | Database tables, keys, indexes, enums, soft delete, access rules, seed data |
+| `user-flows.md` | Screens, journeys, navigation, connection states, empty/loading/error states, edge cases |
+| `design.md` + `ui-reference.png` | Colors, type, spacing, components, layout, responsive, themes, accessibility |
+| `api-spec.md` | REST and WebSocket endpoints, types, errors, pagination, limits |
+| `implementation-plan.md` | Phases, tasks, dependencies, "done when", checkpoints, MVP line |

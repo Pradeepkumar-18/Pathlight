@@ -4,7 +4,7 @@
 
 root="${CLAUDE_PROJECT_DIR:-.}"
 progress=""
-for f in "$root/docs/progress.md" "$root/Docs/progress.md"; do
+for f in "$root/docs/progress.md"; do
   [ -f "$f" ] && progress="$f" && break
 done
 [ -z "$progress" ] && exit 0

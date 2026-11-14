@@ -1,5 +1,5 @@
 # 05 · Continuous Integration: GitHub Actions and Changesets
-2026-11-05 · Task 0.5 · `.github/workflows/ci.yml`, `.changeset/config.json`, `Docs/decisions/0019-ci-node-24-only.md`
+2026-11-05 · Task 0.5 · `.github/workflows/ci.yml`, `.changeset/config.json`, `docs/decisions/0019-ci-node-24-only.md`
 
 ## In one sentence
 We use GitHub Actions to verify every commit across Ubuntu, macOS, and Windows on Node 24, and Changesets to manage package versioning and changelogs across our monorepo.

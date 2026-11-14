@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop hook: when a task in progress.md is marked done and Docs/learning/ has no
+# Stop hook: when a task in progress.md is marked done and docs/learning/ has no
 # lesson for it yet, keep Claude going and have the teacher agent write one.
 # Lessons are matched by the "Task <id>" marker the teacher writes in each lesson.
 
@@ -9,7 +9,7 @@ printf '%s' "$input" | grep -q '"stop_hook_active"[[:space:]]*:[[:space:]]*true'
 
 root="${CLAUDE_PROJECT_DIR:-.}"
 progress=""
-for f in "$root/docs/progress.md" "$root/Docs/progress.md"; do
+for f in "$root/docs/progress.md"; do
   [ -f "$f" ] && progress="$f" && break
 done
 [ -z "$progress" ] && exit 0

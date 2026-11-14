@@ -13,5 +13,5 @@ CI matrix workflow runs on Node 24 only across Ubuntu, macOS, and Windows. Suppo
 
 ## Consequences
 - `.github/workflows/ci.yml` sets `node-version: [24]`.
-- Task 0.5 plan in `Docs/tracer-implementation-plan.md` updated to reflect Node 24 only.
+- Task 0.5 plan in `docs/implementation-plan.md` updated to reflect Node 24 only.
 - CI runtime is faster and matrix focuses on OS compatibility (Ubuntu, macOS, Windows).
