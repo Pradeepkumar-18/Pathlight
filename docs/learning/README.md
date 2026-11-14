@@ -17,6 +17,8 @@
 7. [Docs in the repo: one place, one name](07-docs-in-repo.md) (Task 0.7)
 8. [Spec consistency pass: fix the docs before coding](08-spec-consistency-pass.md) (Task 0.8)
 9. [Require hook + SWC transform spike](09-require-hook-swc-spike.md) (Task 1.1)
+10. [Request context: one trace per request](10-request-context-async-local-storage.md) (Task 1.2)
+11. [Behaviour-preservation corpus: observe, never change](11-behaviour-preservation-corpus.md) (Task 1.3)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -59,8 +61,17 @@
 - Async functions, `ret`, follow-on promises and unhandled rejections: [09](09-require-hook-swc-spike.md)
 - Fail open ("the user's app always wins"): [09](09-require-hook-swc-spike.md)
 - Spike findings: shifted stack columns, `FunctionBody`, skipped tsc helpers: [09](09-require-hook-swc-spike.md)
+- Why concurrency mixes output (one global counter vs per-request state): [10](10-request-context-async-local-storage.md)
+- `AsyncLocalStorage`, `enterWith`, context across `await`: [10](10-request-context-async-local-storage.md)
+- `diagnostics_channel` (`http.server.request.start`) instead of patching `http`: [10](10-request-context-async-local-storage.md)
+- Checking tree well-formedness (`treeProblems`) and the `Promise.all` limit: [10](10-request-context-async-local-storage.md)
+- "Observe, never change" and behaviour-preservation testing (with vs without hook): [11](11-behaviour-preservation-corpus.md)
+- Known differences must still be detected (list that cannot rot): [11](11-behaviour-preservation-corpus.md)
+- Early errors vs syntax errors; collision-free generated names (`__pt$` bug): [11](11-behaviour-preservation-corpus.md)
 
 ## Open questions
+- Known differences for decision 0002 (task 1.4, your call): promise identity (follow-on promise) and `Function.prototype.toString` showing probes. Accept as documented limits or find another approach?
+- Parallel steps in one request (`Promise.all`) share one indent; planned fix in task 3.8.
 - Is there real demand for a Node runtime tracer? The research found little public evidence of AppMap users on Node (demand unproven).
 - Hands-on AppMap checklist is pending until `fixtures/nestjs-app` exists (after task 0.6). Decision 0001 may change.
 - BUG-001 (Windows long paths): README note added in task 0.7; confirm it can be closed.
