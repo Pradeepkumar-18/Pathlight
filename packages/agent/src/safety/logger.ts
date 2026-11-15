@@ -15,6 +15,7 @@ const ORDER: Record<Level, number> = {
 };
 
 export interface AgentLogger {
+  trace: (code: string, message: string) => void;
   debug: (code: string, message: string) => void;
   info: (code: string, message: string) => void;
   warn: (code: string, message: string) => void;
@@ -35,5 +36,11 @@ export function createAgentLogger(
         // stderr closed or broken: there is nowhere left to report it, and the app must go on.
       }
     };
-  return { debug: at('debug'), info: at('info'), warn: at('warn'), error: at('error') };
+  return {
+    trace: at('trace'),
+    debug: at('debug'),
+    info: at('info'),
+    warn: at('warn'),
+    error: at('error'),
+  };
 }

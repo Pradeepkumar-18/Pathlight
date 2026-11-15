@@ -1,5 +1,6 @@
-// Behaviour-preservation corpus (task 1.3): runs every case with and without the agent hook
-// and checks the app behaves the same: stdout, stderr and exit code.
+// Behaviour-preservation corpus (task 1.3): runs every case with and without the agent and
+// checks the app behaves the same: stdout, stderr and exit code. Since task 3.6 it runs the real
+// agent (`--require @pathlight-tracker/agent`), not the spike.
 // Run with `pnpm test:corpus` (builds the agent first).
 import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -19,17 +20,17 @@ interface KnownDifference {
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CASES_DIR = path.resolve(HERE, '..', 'cases');
-const HOOK = path.resolve(
-  HERE,
-  '..',
-  '..',
-  '..',
-  'packages',
-  'agent',
-  'dist',
-  'spike',
-  'register.js',
-);
+const HOOK = path.resolve(HERE, '..', '..', '..', 'packages', 'agent', 'dist', 'register.js');
+/**
+ * The real agent only starts with a collector address. Nothing listens on port 9 (discard), so
+ * the transport just retries in the background; `trace` makes every step print one line, which
+ * proves the case really ran through the agent.
+ */
+const AGENT_ENV = {
+  PATHLIGHT_TRACKER_COLLECTOR_URL: 'ws://127.0.0.1:9/agent',
+  PATHLIGHT_TRACKER_TOKEN: 'corpus-'.padEnd(43, 'x'),
+  PATHLIGHT_TRACKER_AGENT_LOG_LEVEL: 'trace',
+};
 const KNOWN = JSON.parse(
   readFileSync(path.resolve(HERE, '..', 'known-differences.json'), 'utf8'),
 ) as Record<string, KnownDifference>;
@@ -40,21 +41,20 @@ function run(file: string, traced: boolean): Run {
     cwd: CASES_DIR,
     encoding: 'utf8',
     timeout: TIMEOUT_MS,
+    env: traced ? { ...process.env, ...AGENT_ENV } : process.env,
   });
-  const stdoutLines = result.stdout.split('\n');
-  // Trace lines and the agent's own warnings are the tracer talking, not the app.
-  const appStdout = stdoutLines.filter((line) => !line.startsWith('[pt ')).join('\n');
-  const appStderr = result.stderr
-    .split('\n')
+  const stderrLines = result.stderr.split('\n');
+  // The agent's own lines (steps, warnings) are the tracer talking, not the app.
+  const appStderr = stderrLines
     .filter((line) => !line.startsWith('[pathlight-tracker]'))
-    // Node prints the crash location with the column; the spike shifts columns (known finding).
+    // Node prints the crash location with the column; the probes shift columns (known finding).
     .map((line) => line.replace(/(\.js:\d+):\d+/g, '$1'))
     .join('\n');
   return {
-    stdout: appStdout,
+    stdout: result.stdout,
     stderr: appStderr,
     status: result.status,
-    traceLines: stdoutLines.length - appStdout.split('\n').length,
+    traceLines: stderrLines.filter((line) => line.startsWith('[pathlight-tracker] STEP ')).length,
   };
 }
 

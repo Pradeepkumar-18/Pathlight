@@ -11,16 +11,16 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 13 | ✅ |
-| 3 Runtime agent | 15 | 5 | 🟡 |
+| 3 Runtime agent | 15 | 6 | 🟡 |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **30** | 🟡 |
+| **MVP total** | **65** | **31** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 3: Runtime agent (in progress)
-**Current task:** 3.6 Loader + transform (production)
+**Current task:** 3.7 Runtime helpers + source maps
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 3.6 | Loader + transform (production) | 2026-11-15 | On `main` |
+| 3.7 | Runtime helpers + source maps | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -141,8 +141,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 3.3 | Safe value capture | ✅ | | |
 | 3.4 | Redaction | ✅ | | |
 | 3.5 | Object IDs | ✅ | | |
-| 3.6 | Loader + transform (production) | 🟡 | | |
-| 3.7 | Runtime helpers + source maps | ⬜ | | |
+| 3.6 | Loader + transform (production) | ✅ | | |
+| 3.7 | Runtime helpers + source maps | 🟡 | | |
 | 3.8 | Request context + HTTP patch | ⬜ | | |
 | 3.9 | Express patch | ⬜ | | |
 | 3.10 | NestJS patch | ⬜ | | |
@@ -259,8 +259,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 3.6 Loader + transform (production) · 🟡 In progress
+### 2026-11-15 · 3.7 Runtime helpers + source maps · 🟡 In progress
+- Done when: NestJS fixture events show `.ts` lines matching the source; async durations include awaited time.
+
+### 2026-11-15 · 3.6 Loader + transform (production) · ✅ Done
 - Done when: Behaviour corpus (1.3) fully green against the real agent; a deliberately broken file still loads.
+- What changed: `packages/agent/src/loader/loader.ts`: `pirates` hook on `.js` / `.cjs`; include / exclude globs matched on the original `.ts` path from the source map, else on the compiled path with a `NO_SOURCE_MAP` warning event (for `doctor`); `node_modules` and the agent's own files skipped; wrapped in memory only; a file the transform gives up on loads as it is (`FILE_NOT_TRACED` warning) and a transform crash is counted by the safety net and the original loads. `loader/glob.ts` (`**`, `*`, `?`, `{a,b}`; in-house), `loader/source-map.ts` (original line and column; a missing map file = no map). `transform/wrap.ts` + `edits.ts` + `sites.ts`: the spike's SWC transform rebuilt for production: functions, methods, static and private methods, arrows, arrow class fields, object methods, async functions; each file registers a site table (name, kind, `.ts` line / column, async, class, argument names) and every call passes `enter(site, this, args)` (arrows pass their parameters; only class-field arrows pass `this`, so `this` is never read before `super()`); functions nested in getters, setters and constructors are wrapped too. `runtime/runtime.ts`: `sites` / `enter` / `exit` / `throw` / `ret` with a pluggable recorder (events come in 3.7); never throws into user code, does nothing once the agent is off; returned promises end the step when they settle. `runtime/trace-log.ts`: at `PATHLIGHT_TRACKER_AGENT_LOG_LEVEL=trace` one stderr line per step (logger gained `trace`). `register.ts` installs the loader. The behaviour corpus now runs the real agent (`dist/register.js`, an unreachable collector, `trace` lines as proof of instrumentation).
+- Tests: corpus 13 identical + 2 known (new case `empty-and-derived`); 17 transform tests against the real runtime (what is wrapped, site descriptions, `this` / arguments, `this` never read before `super()`, returned values, throws, async timing, off agent, directives, multi-byte positions, name clashes, shebang); 19 loader / glob tests (source-map path matching, excludes, no-map warning, transform giving up, a crashing transform still loads the file through the real `require`, a real syntax error fails exactly as without the agent, `node_modules` untouched). Manual: NestJS fixture with the real agent at `trace`: 23 files traced, `POST /orders` shows guard → interceptor → controller → service → repository with `.ts` lines, still 500.
+- Docs updated: none (behaviour as specified).
+- Decisions: none.
+- Bugs: empty function bodies (`{}`) produced unparseable code, so the file loaded untraced (the spike had it too; the corpus had no empty function). Fixed in `edits.ts` ordering; new corpus case. SWC 1.16 names parameter nodes `Parameter` and keeps private names on the node (`value`): handled.
+- Follow-ups: the spike (`src/spike/`, `pnpm spike:trace` / `spike:context`) stays until task 3.8 replaces those checks.
 
 ### 2026-11-15 · 3.5 Object IDs · ✅ Done
 - Done when: Same object passed to two functions gets the same `objectId`; no memory growth after 10,000 requests (heap test).
