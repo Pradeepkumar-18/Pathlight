@@ -19,8 +19,8 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 2: Protocol and collector (tasks done; Checkpoint 2 review next)
-**Current task:** none (Checkpoint 2: collector review)
+**Current phase:** Phase 3: Runtime agent (next; Checkpoint 2 passed 2026-11-15)
+**Current task:** none (next: `/start-task 3.1`)
 **Blockers:** none
 
 ## In progress
@@ -72,14 +72,15 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-14 | Phase 2 libraries approved: zod 4.6.7, commander 14.0.3 (not 15: needs Node 22.12), drizzle-orm 0.45.4, drizzle-kit 0.31.11, fastify 5.12.8, @fastify/websocket 11.3.7, @fastify/rate-limit 11.2.2, @fastify/static 10.1.11, pino 10.4.0, pino-roll 4.0.0, open 11.0.4; ULIDs written in-house | ✅ Decided | this table |
 | 2026-11-14 | Server: default port 4777 (+19 fallbacks), REST allows a missing `Origin`, rate limits as 2 s windows | ✅ Decided | `decisions/0022-server-port-origin-rate-limits.md` |
 | 2026-11-15 | `boundary` event gains optional `name`, `file`, `line`, `column`, `isAsync`; `request` / `response` contents and `ts` = call start documented | ✅ Decided (user, 2026-11-15) | `api-spec.md` §11.1 |
+| 2026-11-15 | Checkpoint 2: steps of a trashed request answer `404 REQUEST_IN_TRASH`; `clear --purge` deletes every *finished* request (in-progress kept) | ✅ Decided (user, 2026-11-15) | `data-model.md` §7, §8; `user-flows.md` §8 |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. Push the Phase 1 commits and check CI on all three OSes
+1. Phase 3: `/start-task 3.1`
 2. Checkpoint 0 leftovers: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
-3. Phase 2: `/start-task 2.1` (protocol package)
+3. Packaging (5.6) must ship the agent and `fixtures/seed/sample.sql` with the CLI (`dev` prints `AGENT_NOT_FOUND` until then)
 
 ---
 
@@ -124,7 +125,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.11 | Live hub (`/live`) | ✅ | | |
 | 2.12 | Launcher | ✅ | | |
 | 2.13 | Collector logging and errors | ✅ | | |
-| ✔ | **Checkpoint 2: Collector review** | ⬜ | | |
+| ✔ | **Checkpoint 2: Collector review** | ✅ | | Passed 2026-11-15: All 5 items pass; recorded-events→REST test added (0dc8e7d); 2 doc wordings fixed |
 
 ## Phase 3: Runtime agent
 

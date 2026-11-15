@@ -471,7 +471,7 @@ Session rules:
 | Start / stop tracing | ✓ | — |
 | Setup checks | ✓ (`doctor`, pre-checks) | Warnings shown in S7 |
 | See requests, maps, values | Summary line only | ✓ |
-| Delete / restore / empty trash | `clear` (to trash), `clear --purge` (delete everything permanently) | ✓ |
+| Delete / restore / empty trash | `clear` (to trash), `clear --purge` (delete every finished request permanently) | ✓ |
 | Configuration | Env vars, `pathlight-tracker.config.json` | Read-only view (S7, v1) |
 | Open source code | — | ✓ (`vscode://` links) |
 

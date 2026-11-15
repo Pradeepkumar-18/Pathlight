@@ -330,7 +330,7 @@ When the developer deletes a request, it moves to the **trash** (`deleted_at` is
 | `meta` | Not soft-deleted. |
 | In-progress requests | Cannot be soft-deleted (check constraint); the UI disables delete until the request finishes. |
 | Default reads | Every query on `requests` filters `deleted_at IS NULL` unless it explicitly asks for the trash. In Drizzle this is one shared helper (`activeRequests`), so no query forgets it. |
-| Steps of a trashed request | The API returns `404 REQUEST_NOT_FOUND` for its steps unless called with `includeDeleted=true` (used by the trash preview). |
+| Steps of a trashed request | The API returns `404 REQUEST_IN_TRASH` (with `details.deletedAt`, so the UI can offer Restore) for its steps unless called with `includeDeleted=true` (used by the trash preview). |
 | Live updates | Soft-deleting or restoring sends `live.request.deleted` / `live.request.restored` so every open UI updates. |
 | Restore | Sets `deleted_at = NULL`. If retention would then exceed the limit, the oldest **active** request is moved to the trash, never purged straight away. |
 | Grace period | `PATHLIGHT_TRACKER_TRASH_TTL_HOURS` (default **72 hours**). The purge job hard-deletes requests whose `deleted_at` is older than this. |
@@ -346,7 +346,7 @@ How rows are removed:
 | `POST /api/v1/requests/:requestId/restore` | Restore | Clears `deleted_at` |
 | `DELETE /api/v1/requests/:requestId?permanent=true` | **Hard** | Deletes the request, its steps and object refs immediately |
 | `DELETE /api/v1/trash` (UI "Empty trash") | **Hard** | Deletes every trashed request immediately |
-| `pathlight-tracker clear --purge` | **Hard** | Deletes **every** request, active and trashed, immediately (after a confirmation prompt; `--yes` skips it) |
+| `pathlight-tracker clear --purge` | **Hard** | Deletes **every finished** request, active and trashed, immediately (after a confirmation prompt; `--yes` skips it). Requests still in progress are kept, so the trace builder never writes into a deleted request |
 | Purge job (on startup, then hourly) | **Hard** | Deletes trashed requests older than `PATHLIGHT_TRACKER_TRASH_TTL_HOURS` |
 | Retention (after each completed request) | **Soft** first | Moves the oldest **active** requests beyond `PATHLIGHT_TRACKER_RETENTION` (default 100) to the trash; the purge job removes them later |
 | Trash size guard (v1, task 6.14, decision 0012) | **Hard** | If the trash holds more than `PATHLIGHT_TRACKER_RETENTION` requests, the oldest trashed ones are purged early. Not in the MVP, which keeps the plain 72-hour promise |
@@ -386,7 +386,7 @@ Only the **collector** opens the database. Every other part goes through the col
 | Map UI | Read via API | Read, soft delete, restore, delete permanently, empty trash via API | Read via API | Read via API (v2) | — |
 | VS Code extension (v2) | Read via API | Read active via API | Read via API | Read via API | — |
 | CLI (`pathlight-tracker clear`) | — | Soft delete all finished requests | — | — | — |
-| CLI (`pathlight-tracker clear --purge`) | Delete | Hard delete all (active and trashed) | Delete (cascade) | Delete (cascade) | Update |
+| CLI (`pathlight-tracker clear --purge`) | Delete | Hard delete all finished requests (active and trashed; in-progress kept) | Delete (cascade) | Delete (cascade) | Update |
 | Migrations | Schema only | Schema only | Schema only | Schema only | Create, update `schema_version` |
 
 API calls require the local token and pass origin checks (see `architecture.md` §4). There are no per-user or per-role rules, because there is only one user.

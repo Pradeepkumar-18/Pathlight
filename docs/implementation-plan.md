@@ -124,11 +124,11 @@ Goal: prove, before building infrastructure, that load-time wrapping works on re
 
 **Checkpoint 2: Collector review**
 
-- [ ] Full API contract test suite green; every endpoint in `api-spec.md` (MVP) implemented.
-- [ ] Security tests green: token, origin, host, rate and size limits.
-- [ ] Recorded event stream → database → REST output matches the seed example.
-- [ ] Soft delete / retention / purge behaviour matches `data-model.md` §7.
-- [ ] Manual review: run `pathlight-tracker dev` with the Express fixture; `GET /api/v1/health` works with the token and fails without it.
+- [x] Full API contract test suite green; every endpoint in `api-spec.md` (MVP) implemented.
+- [x] Security tests green: token, origin, host, rate and size limits.
+- [x] Recorded event stream → database → REST output matches the seed example.
+- [x] Soft delete / retention / purge behaviour matches `data-model.md` §7.
+- [x] Manual review: run `pathlight-tracker dev` with the Express fixture; `GET /api/v1/health` works with the token and fails without it.
 
 ---
 
