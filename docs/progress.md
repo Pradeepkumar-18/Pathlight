@@ -11,16 +11,16 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 13 | ✅ |
-| 3 Runtime agent | 15 | 2 | 🟡 |
+| 3 Runtime agent | 15 | 3 | 🟡 |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **27** | 🟡 |
+| **MVP total** | **65** | **28** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 3: Runtime agent (in progress)
-**Current task:** 3.3 Safe value capture
+**Current task:** 3.4 Redaction
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 3.3 | Safe value capture | 2026-11-15 | On `main` |
+| 3.4 | Redaction | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -138,8 +138,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | --- | --- | --- | --- | --- |
 | 3.1 | Register, config and safety | ✅ | | |
 | 3.2 | Transport | ✅ | | |
-| 3.3 | Safe value capture | 🟡 | | |
-| 3.4 | Redaction | ⬜ | | |
+| 3.3 | Safe value capture | ✅ | | |
+| 3.4 | Redaction | 🟡 | | |
 | 3.5 | Object IDs | ⬜ | | |
 | 3.6 | Loader + transform (production) | ⬜ | | |
 | 3.7 | Runtime helpers + source maps | ⬜ | | |
@@ -259,8 +259,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 3.3 Safe value capture · 🟡 In progress
+### 2026-11-15 · 3.4 Redaction · 🟡 In progress
+- Done when: Tests: `password`, `authorization`, nested `apiKey`, `accessToken`, `x-api-key` and `set-cookie` all become `[REDACTED]`; nothing secret reaches the transport.
+
+### 2026-11-15 · 3.3 Safe value capture · ✅ Done
 - Done when: Unit tests for every type; a getter with side effects is never triggered; a 50 MB buffer is summarized.
+- What changed: `packages/agent/src/capture/capture.ts` (`capture(value, options)` → `CapturedValue`): depth / array / string caps from the settings, at most 50 keys per object, circular references as `[Circular]`, `suspicious` for `undefined` / `NaN` inside objects (top-level `undefined` only when asked, for arguments); special types: Map, Set, Date (incl. invalid), Error (message + own fields), Promise, BigInt, Symbol, functions, class instances (`className`), Buffer / typed arrays / ArrayBuffer (first 16 bytes, size), WeakMap / WeakSet, RegExp, Mongoose documents (their `_doc` fields under the model name), BSON ObjectId (hex). Hooks for redaction (`isSecretKey`, task 3.4) and object IDs (`objectIdOf`, task 3.5). `capture/safe.ts`: reads only own data properties; never calls getters, `toJSON`, `toString`, custom `inspect` hooks or proxy traps; Map / Set / Date / RegExp / binary built-ins are called through the built-in prototypes so a subclass's overrides never run. `capture/preview.ts`: short previews matching the seed (`User { id: 7, name: "Ravi", tier: undefined }`, `CreateOrderDto { userId: 7, items: [2] }`, `[2 items]`).
+- Tests: 34 unit tests, every result validated against the protocol schema: each primitive and special type; string, array, key and depth caps; cycles vs shared objects; a 50 MB buffer captured in under 50 ms as a summary under 500 bytes; getters (own and inherited), `toJSON`, `toString`, `inspect.custom`, proxy traps and subclass overrides of Map / Date are never called (counted); secret keys replaced before being read; object IDs requested for objects and arrays.
+- Docs updated: `data-model.md` §3.6 (how the agent fills a captured value).
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-15 · 3.2 Transport · ✅ Done
 - Done when: Integration test against a real collector: events arrive in order; killing the collector never blocks or crashes the app.

@@ -201,6 +201,21 @@ type CapturedValue = {
 };
 ```
 
+How the agent fills it (task 3.3; it never runs user code to do so):
+
+| Value | Captured as |
+| --- | --- |
+| Long string | First `PATHLIGHT_TRACKER_MAX_STRING` characters + `…`, `size` = full length, `truncated` |
+| Array, Set, Map | First `PATHLIGHT_TRACKER_MAX_ARRAY` items as `children`; array preview `[2 items]`, `Map(2) {…}`, `Set(3) {…}` |
+| Object | At most 50 own enumerable keys; preview `User { id: 7, name: "Ravi", … }` (about 120 characters); deeper than `PATHLIGHT_TRACKER_MAX_DEPTH`: no `children`, `truncated` |
+| Getter (accessor property) | Never called: `{ type: 'function', preview: '[Getter]' }` |
+| Proxy | Never opened: `{ type: 'object', className: 'Proxy', preview: 'Proxy' }` |
+| Cycle | `{ type: 'circular', preview: '[Circular]' }` (the same object twice without a cycle is captured both times) |
+| Buffer, typed array, ArrayBuffer | `type: 'buffer'`, first 16 bytes in hex, `size` in bytes |
+| Error | Preview `TypeError: message`; `children`: `message` and its own fields (e.g. `code`) |
+| Mongoose document | Its own fields (`_doc`) under the model name, e.g. `User { name: "Ravi" }`; BSON ObjectId as `ObjectId("…")` |
+| `undefined` / `NaN` inside an object | `suspicious: true` (top-level `undefined` only for arguments) |
+
 ### 3.7 `logs` (v1)
 
 One row per `console.*` call made while a request was running (decision 0011). Logs are not steps: they take no step number, don't count toward `PATHLIGHT_TRACKER_MAX_STEPS` and don't appear in the step tree. Created by the v1 migration (task 6.7).
