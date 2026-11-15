@@ -31,7 +31,7 @@ export interface StartOptions extends LoadAgentConfigOptions {
   /** stderr by default. */
   write?: (text: string) => void;
   /** Builds the sink once the agent knows it will run (task 3.2 passes the transport). */
-  createSink?: (agent: Omit<Agent, 'sink'>) => EventSink;
+  createSink?: (agent: Omit<Agent, 'sink'>, collector: { url: string; token: string }) => EventSink;
   /** Installs hooks and patches (later tasks); runs inside the safety net. */
   install?: (agent: Agent) => void;
   now?: () => number;
@@ -69,7 +69,9 @@ export function startAgent(options: StartOptions): Agent | NotStarted {
     );
     return 'production';
   }
-  if (config.collectorUrl === null || config.token === null) {
+  const url = config.collectorUrl;
+  const token = config.token;
+  if (url === null || token === null) {
     logger.warn(
       'NO_COLLECTOR',
       'No collector address or token: start your app with `pathlight-tracker dev -- <command>`.',
@@ -92,7 +94,11 @@ export function startAgent(options: StartOptions): Agent | NotStarted {
       }),
   });
   const base = { config, logger, safety, currentTraceId: () => null };
-  const sink = safety.run('SINK_FAILED', () => options.createSink?.(base) ?? NO_SINK, NO_SINK);
+  const sink = safety.run(
+    'SINK_FAILED',
+    () => options.createSink?.(base, { url, token }) ?? NO_SINK,
+    NO_SINK,
+  );
   agent = { ...base, sink };
   (globalThis as Global)[RUNNING] = agent;
   const started = agent;

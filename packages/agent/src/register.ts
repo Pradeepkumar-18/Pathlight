@@ -2,9 +2,23 @@
 // never throw during the app's startup: anything unexpected is reported once and the app runs
 // untraced.
 import { startAgent } from './agent';
+import { buildHello } from './transport/hello';
+import { createTransport } from './transport/transport';
 
 try {
-  startAgent({ env: process.env, cwd: process.cwd() });
+  const cwd = process.cwd();
+  startAgent({
+    env: process.env,
+    cwd,
+    createSink: ({ logger, safety }, { url, token }) =>
+      createTransport({
+        url,
+        token,
+        safety,
+        logger,
+        hello: () => buildHello(cwd),
+      }),
+  });
 } catch (error) {
   try {
     process.stderr.write(

@@ -57,6 +57,11 @@ export interface Ingest {
   pendingEvents: () => number;
   /** Resolves once everything received so far is stored (for tests and shutdown). */
   drained: () => Promise<void>;
+  /**
+   * Ends every connected agent's session now, while the store is still open; used on shutdown,
+   * before the sockets close (their close events then have nothing left to do).
+   */
+  endAllSessions: () => void;
 }
 
 export function createIngest(
@@ -201,6 +206,18 @@ export function createIngest(
     }
   };
 
+  /** Ends a connection's session once (its requests still running become incomplete). */
+  function endSession(connection: Connection): void {
+    const sessionId = connection.sessionId;
+    if (sessionId === null) return;
+    connection.sessionId = null;
+    try {
+      sink.closeSession(sessionId);
+    } catch (error) {
+      onError('SESSION_CLOSE_FAILED', error instanceof Error ? error.message : 'unknown');
+    }
+  }
+
   return {
     accept(socket) {
       const connection: Connection = {
@@ -222,11 +239,14 @@ export function createIngest(
         onClose: () => {
           connection.closed = true;
           connections.delete(connection);
-          if (connection.sessionId !== null) sink.closeSession(connection.sessionId);
+          endSession(connection);
         },
       };
     },
     pendingEvents: () => pending,
+    endAllSessions: () => {
+      for (const connection of connections) endSession(connection);
+    },
     drained: () =>
       draining ? new Promise<void>((resolve) => idle.push(resolve)) : Promise.resolve(),
   };

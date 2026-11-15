@@ -11,16 +11,16 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 13 | ✅ |
-| 3 Runtime agent | 15 | 1 | 🟡 |
+| 3 Runtime agent | 15 | 2 | 🟡 |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **26** | 🟡 |
+| **MVP total** | **65** | **27** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 3: Runtime agent (in progress)
-**Current task:** 3.2 Transport
+**Current task:** 3.3 Safe value capture
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 3.2 | Transport | 2026-11-15 | On `main` |
+| 3.3 | Safe value capture | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -137,8 +137,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
 | 3.1 | Register, config and safety | ✅ | | |
-| 3.2 | Transport | 🟡 | | |
-| 3.3 | Safe value capture | ⬜ | | |
+| 3.2 | Transport | ✅ | | |
+| 3.3 | Safe value capture | 🟡 | | |
 | 3.4 | Redaction | ⬜ | | |
 | 3.5 | Object IDs | ⬜ | | |
 | 3.6 | Loader + transform (production) | ⬜ | | |
@@ -259,8 +259,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 3.2 Transport · 🟡 In progress
+### 2026-11-15 · 3.3 Safe value capture · 🟡 In progress
+- Done when: Unit tests for every type; a getter with side effects is never triggered; a 50 MB buffer is summarized.
+
+### 2026-11-15 · 3.2 Transport · ✅ Done
 - Done when: Integration test against a real collector: events arrive in order; killing the collector never blocks or crashes the app.
+- What changed: `packages/agent/src/transport/transport.ts` (`createTransport`, the agent's sink): `ws` client with the `pathlight-tracker.v1` + `bearer.<token>` subprotocols; `hello` on open, batches only after `welcome` and within its limits (2,000 events / 1 MB); batches every 50 ms or at once when full; each batch kept until its `ack` and resent in order after a reconnect; `slow_down` → one batch in flight until `resume`; reconnect with jittered backoff (250 ms doubling to 5 s) and one `COLLECTOR_UNREACHABLE` warning per outage; close codes 4001 / 4003 / 4009 stop for good with one `COLLECTOR_CLOSED` warning; the socket and every timer are `unref`'d so the app exits on its own. `transport/buffer.ts`: 10,000 events / 8 MB including unacknowledged ones; when full, whole requests are dropped oldest first and a dropped request's later events are discarded until its `request.end`; process-level events are kept. `transport/hello.ts`, `version.ts`. `register.ts` wires the transport in (`startAgent` hands `createSink` the checked address and token). New workspace package `tests/integration` (agent + collector source together; in the root Vitest run).
+- Tests: integration (real collector): the recorded `POST /orders` arrives with its steps in send order; 3,002 events are split across batches and keep their order; with the collector stopped, 24,030 events are sent in under 2 s with event-loop delay under 250 ms, the oldest requests are dropped whole, and when the collector comes back on the same port the agent reconnects by itself and the newest request arrives complete; a real preloaded app connects and still exits on its own, with or without a collector. Agent unit: buffer rules (7), transport against a scripted server (subprotocol token, hello, batch limits, slow down, resend after a drop, final 4001, one warning per outage).
+- Docs updated: `CLAUDE.md` repo map (`tests/integration`).
+- Decisions: none.
+- Bugs: collector shutdown with an agent connected: `stop()` closed the store before the agent sockets' close events, so `closeSession` threw "database connection is not open" (unhandled). Fixed: `ingest.endAllSessions()` ends every session while the store is open; `onClose` errors are logged (`SESSION_CLOSE_FAILED`). Regression test in `collector.test.ts`.
+- Follow-ups: none.
 
 ### 2026-11-15 · 3.1 Register, config and safety · ✅ Done
 - Done when: Tests: forced internal errors never reach user code; after N errors the agent disables itself and sends `agent.disabled`.

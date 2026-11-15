@@ -5,6 +5,7 @@ import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import Database from 'better-sqlite3';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { startCollector } from './collector';
@@ -127,5 +128,33 @@ describe('checkpoint 2: recorded events → database → REST', () => {
       await get(seeded, `/requests/${REQUEST}/curl`),
     );
     disconnect();
+  });
+});
+
+describe('shutdown with an agent connected', () => {
+  it('ends the session and marks its running request incomplete before closing the store', async () => {
+    const live = await collector();
+    const dbFile = live.store.sqlite.name;
+    // The first batch starts the request; the second (with request.end) is never sent.
+    const agent = new WebSocket(live.agentUrl, ['pathlight-tracker.v1', `bearer.${live.token}`]);
+    let acks = 0;
+    agent.addEventListener('message', (event) => {
+      if ((JSON.parse(String(event.data)) as { type: string }).type === 'ack') acks += 1;
+    });
+    await new Promise((resolve) => agent.addEventListener('open', resolve));
+    for (const message of recorded.slice(0, 2)) agent.send(JSON.stringify(message));
+    while (acks < 1) await new Promise((resolve) => setTimeout(resolve, 20));
+
+    await live.stop();
+    running.splice(running.indexOf(live), 1);
+    // Let the socket's own close event arrive: it must find nothing left to do.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const db = new Database(dbFile, { readonly: true });
+    expect(db.prepare('SELECT status FROM sessions').all()).toEqual([{ status: 'disconnected' }]);
+    expect(db.prepare('SELECT state FROM requests WHERE id = ?').get(REQUEST)).toEqual({
+      state: 'incomplete',
+    });
+    db.close();
   });
 });

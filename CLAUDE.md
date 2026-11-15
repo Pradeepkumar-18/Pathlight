@@ -34,7 +34,7 @@ packages/collector   CLI (`pathlight-tracker dev`), Fastify server, SQLite store
 packages/ui          React map UI (browser now, VS Code webview later)
 packages/extension   VS Code extension (v2 only)
 fixtures/            nestjs-app, express-app, seed data
-tests/               behaviour-corpus, bench, e2e
+tests/               behaviour-corpus, bench, integration (agent + collector together), e2e
 docs/                All specs
 ```
 

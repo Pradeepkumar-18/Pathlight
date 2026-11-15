@@ -162,8 +162,9 @@ export async function startCollector(options: StartOptions): Promise<RunningColl
       if (stopped) return;
       stopped = true;
       stopPurge();
-      hub.close();
       await ingest.drained();
+      ingest.endAllSessions();
+      hub.close();
       await server.app.close();
       removeCollectorFile();
       store.close();
