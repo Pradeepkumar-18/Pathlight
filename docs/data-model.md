@@ -192,7 +192,7 @@ type CapturedValue = {
       | 'date' | 'error' | 'buffer' | 'promise' | 'circular';
   preview: string;             // short display text, e.g. "{ id: 7, tier: undefined }"
   className?: string;          // e.g. "User", "CreateOrderDto"
-  objectId?: string;           // e.g. "obj_17" (objects, arrays and errors)
+  objectId?: string;           // e.g. "obj_17" (objects, arrays, maps, sets and errors)
   size?: number;               // array length / map size / key count
   truncated?: boolean;         // depth, length or size cap hit
   redacted?: boolean;          // value replaced with [REDACTED]

@@ -29,6 +29,7 @@ import {
 
 /** Keys shown per object; the rest is marked truncated. */
 export const MAX_KEYS = 50;
+const FOLLOWED = new Set<CapturedValue['type']>(['object', 'array', 'map', 'set', 'error']);
 /** Bytes shown for binary data. */
 const BINARY_HEAD = 16;
 
@@ -103,8 +104,11 @@ class Walker {
     if (this.ancestors.includes(value)) return { type: 'circular', preview: '[Circular]' };
     if (isProxy(value)) return { type: 'object', className: 'Proxy', preview: 'Proxy' };
     const result = this.shape(value);
-    const objectId = this.options.objectIdOf?.(value);
-    if (objectId !== undefined) result.objectId = objectId;
+    // Objects the data journey can follow (data-model.md §3.6); not dates, buffers or promises.
+    if (FOLLOWED.has(result.type)) {
+      const objectId = this.options.objectIdOf?.(value);
+      if (objectId !== undefined) result.objectId = objectId;
+    }
     if (!['object', 'array', 'map', 'set', 'error'].includes(result.type)) return result;
 
     const entries = this.entries(value, result);

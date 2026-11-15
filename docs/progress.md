@@ -11,16 +11,16 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 13 | ✅ |
-| 3 Runtime agent | 15 | 4 | 🟡 |
+| 3 Runtime agent | 15 | 5 | 🟡 |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **29** | 🟡 |
+| **MVP total** | **65** | **30** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 3: Runtime agent (in progress)
-**Current task:** 3.5 Object IDs
+**Current task:** 3.6 Loader + transform (production)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 3.5 | Object IDs | 2026-11-15 | On `main` |
+| 3.6 | Loader + transform (production) | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -140,8 +140,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 3.2 | Transport | ✅ | | |
 | 3.3 | Safe value capture | ✅ | | |
 | 3.4 | Redaction | ✅ | | |
-| 3.5 | Object IDs | 🟡 | | |
-| 3.6 | Loader + transform (production) | ⬜ | | |
+| 3.5 | Object IDs | ✅ | | |
+| 3.6 | Loader + transform (production) | 🟡 | | |
 | 3.7 | Runtime helpers + source maps | ⬜ | | |
 | 3.8 | Request context + HTTP patch | ⬜ | | |
 | 3.9 | Express patch | ⬜ | | |
@@ -259,8 +259,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 3.5 Object IDs · 🟡 In progress
+### 2026-11-15 · 3.6 Loader + transform (production) · 🟡 In progress
+- Done when: Behaviour corpus (1.3) fully green against the real agent; a deliberately broken file still loads.
+
+### 2026-11-15 · 3.5 Object IDs · ✅ Done
 - Done when: Same object passed to two functions gets the same `objectId`; no memory growth after 10,000 requests (heap test).
+- What changed: `packages/agent/src/capture/object-ids.ts` (`createObjectIds`): `obj_<n>` per object from a `WeakMap`, counter per process (so unique within each session). `capture.ts` asks for IDs only for objects the data journey can follow (object, array, map, set, error; not dates, buffers or promises). `capturer.ts` gives every capturer one ID map by default (one capturer per process). The collector already writes `object_refs` from these IDs (task 2.9).
+- Tests: 5: the same object in two steps' arguments gets the same `objectId`, a look-alike gets another; a shared nested array is recognised in two values; only followable objects get IDs; a `WeakRef` proves an ID'd object is collected; heap after 10,000 requests (≈130,000 objects) grows by less than 1 MB (forced GC; stable over repeated runs).
+- Docs updated: `data-model.md` §3.6 (`objectId` also on maps and sets).
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-15 · 3.4 Redaction · ✅ Done
 - Done when: Tests: `password`, `authorization`, nested `apiKey`, `accessToken`, `x-api-key` and `set-cookie` all become `[REDACTED]`; nothing secret reaches the transport.

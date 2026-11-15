@@ -3,6 +3,7 @@
 import type { CapturedValue, Settings } from '@pathlight-tracker/protocol';
 
 import { capture } from './capture';
+import { createObjectIds } from './object-ids';
 import { createRedactor } from './redact';
 
 export interface Capturer {
@@ -13,7 +14,8 @@ export interface Capturer {
 
 export function createCapturer(
   settings: Pick<Settings, 'maxDepth' | 'maxArray' | 'maxString' | 'redactKeys'>,
-  objectIdOf?: (value: object) => string | undefined,
+  /** One per process: IDs must stay stable across every request. */
+  objectIdOf: (value: object) => string | undefined = createObjectIds().idOf,
 ): Capturer {
   const redactor = createRedactor(settings.redactKeys);
   const base = {
