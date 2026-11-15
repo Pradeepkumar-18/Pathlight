@@ -51,7 +51,7 @@ Related docs: `architecture.md` (§4 auth, §6 API approach), `data-model.md` (t
 | # | Method | Path | Purpose | Phase |
 | --- | --- | --- | --- | --- |
 | 1 | `GET` | `/api/v1/health` | Collector status, version, connected agents | MVP |
-| 2 | `GET` | `/api/v1/config` | Effective configuration and where each value came from (Settings screen) | MVP |
+| 2 | `GET` | `/api/v1/config` | Effective configuration and where each value came from (Settings screen) | v1 (decision 0008) |
 | 3 | `GET` | `/api/v1/sessions` | App processes seen (starts and restarts) | MVP |
 | 4 | `GET` | `/api/v1/requests` | List active requests (paginated, filterable, sortable) | MVP |
 | 5 | `GET` | `/api/v1/requests/:requestId` | One request: summary, captured request and response, error path | MVP |
@@ -661,7 +661,7 @@ Data journey: every step where the object appeared, in order.
 
 ### 6.10 `GET /api/v1/sample`
 
-A built-in, read-only example (the failing `POST /orders` from the seed data) for the onboarding screen. Nothing is written to the database. The UI shows it at its own page, `/sample` (the request map in read-only "sample" mode). The data is built from `data-model.md` §10 at build time and shipped inside the npm package (`dist/sample.json` in the collector), so it works offline.
+A built-in, read-only example (the failing `POST /orders` from the seed data) for the onboarding screen. Nothing is written to the database. The UI shows it at its own page, `/sample` (the request map in read-only "sample" mode). The data is built in memory from the seed SQL (`data-model.md` §10, `fixtures/seed/sample.sql`) the first time it is requested; the npm package ships that file (task 5.6), so it works offline.
 
 **200 OK:** `{ "data": { "request": RequestDetail, "steps": StepSummary[], "stepDetails": Record<string, StepDetail> } }` with `"sample": true` on the request.
 

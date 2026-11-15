@@ -27,14 +27,31 @@ const FASTIFY_ERRORS: Record<string, [number, ApiErrorCode, string]> = {
 };
 
 export function registerErrorHandlers(app: FastifyInstance): void {
-  app.setNotFoundHandler((request, reply) =>
-    sendError(
-      reply,
-      404,
-      'ROUTE_NOT_FOUND',
-      `No endpoint ${request.method} ${request.url.split('?')[0]}.`,
-    ),
-  );
+  // Remember every route's path pattern, so a known path with the wrong method gets 405, not 404.
+  const routes: { pattern: RegExp; methods: string[] }[] = [];
+  app.addHook('onRoute', (route) => {
+    // Catch-all routes (static UI files) say nothing about which methods a path supports.
+    if (route.url.includes('*')) return;
+    const pattern = new RegExp(`^${route.url.replace(/:[^/]+/g, '[^/]+').replace(/\*/g, '.*')}/?$`);
+    routes.push({ pattern, methods: ([] as string[]).concat(route.method) });
+  });
+
+  app.setNotFoundHandler((request, reply) => {
+    const path = request.url.split('?')[0] ?? '';
+    const allowed = routes
+      .filter((route) => route.pattern.test(path))
+      .flatMap((route) => route.methods);
+    if (allowed.length > 0 && !allowed.includes(request.method)) {
+      void reply.header('Allow', [...new Set(allowed)].join(', '));
+      return sendError(
+        reply,
+        405,
+        'METHOD_NOT_ALLOWED',
+        `${request.method} is not allowed on ${path}.`,
+      );
+    }
+    return sendError(reply, 404, 'ROUTE_NOT_FOUND', `No endpoint ${request.method} ${path}.`);
+  });
 
   app.setErrorHandler((error: FastifyError, request, reply) => {
     const known = error.code ? FASTIFY_ERRORS[error.code] : undefined;

@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -47,6 +47,60 @@ function seed(): void {
   loadSeed(store);
   store.close();
 }
+
+describe('pathlight-tracker clear through a running collector', () => {
+  /** A fake collector that records calls and answers like the REST API. */
+  function fakeCollector() {
+    const calls: string[] = [];
+    const running = {
+      call: async (method: 'GET' | 'DELETE', url: string): Promise<unknown> => {
+        calls.push(`${method} ${url}`);
+        if (url === '/health') return { storage: { activeRequests: 2, trashedRequests: 1 } };
+        if (method === 'DELETE' && url === '/requests')
+          return { data: { moved: 2, skippedInProgress: 0, purgeAt: '' } };
+        return { data: { deleted: 3 } };
+      },
+    };
+    return { calls, find: async () => running };
+  }
+
+  it('clears through the collector, so open tabs update', async () => {
+    seed();
+    const collector = fakeCollector();
+    await createClearHandler(
+      io,
+      vi.fn(),
+      collector.find,
+    )({ purge: false, yes: false, config: config() });
+    expect(collector.calls).toEqual(['DELETE /requests']);
+    expect(output.join('')).toBe('Moved 2 requests to the trash (restorable for 72 h).\n');
+    expect(requestsLeft().total).toBe(3); // the database was not touched directly
+  });
+
+  it('--purge --yes empties the trash after clearing, through the collector', async () => {
+    seed();
+    const collector = fakeCollector();
+    await createClearHandler(
+      io,
+      vi.fn(),
+      collector.find,
+    )({ purge: true, yes: true, config: config() });
+    expect(collector.calls).toEqual(['GET /health', 'DELETE /requests', 'DELETE /trash']);
+    expect(output.join('')).toBe('Deleted 3 requests permanently.\n');
+  });
+
+  it('works on the database when collector.json is stale (nothing answers)', async () => {
+    seed();
+    writeFileSync(
+      path.join(root, '.pathlight-tracker', 'collector.json'),
+      JSON.stringify({ pid: 1, port: 1, version: '0', startedAt: '' }),
+    );
+    writeFileSync(path.join(root, '.pathlight-tracker', 'token'), `${'a'.repeat(43)}\n`);
+    await createClearHandler(io)({ purge: false, yes: false, config: config() });
+    expect(output.join('')).toBe('Moved 2 requests to the trash (restorable for 72 h).\n');
+    expect(requestsLeft().active).toBe(0);
+  });
+});
 
 describe('pathlight-tracker clear', () => {
   it('says there is nothing to clear, without creating a database', async () => {

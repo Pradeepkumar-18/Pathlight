@@ -32,7 +32,7 @@ INSERT INTO requests (id, session_id, method, path, route, state, http_status, h
                       started_at, ended_at, duration_ns, deleted_at, created_at, updated_at) VALUES
   ('req_01JBSEED000000000000000003', 'ses_01JBSEED000000000000000001', 'GET', '/health', '/health',
    'completed', 200, 0, 1,
-   '{"params":null,"query":null,"body":{"type":"undefined","preview":"undefined"},"headers":{}}',
+   '{"params":null,"query":null,"body":{"type":"undefined","preview":"undefined"},"headers":null}',
    '{"headers":null,"body":{"type":"object","preview":"{ status: \"ok\" }"}}',
    1793342101000, 1793342101002, 2000000, 1793342120000, 1793342101000, 1793342120000);
 

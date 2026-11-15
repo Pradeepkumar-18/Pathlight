@@ -195,3 +195,75 @@ export const WS_CLOSE_CODES = {
   messageTooLarge: 4013,
   tooManyConnections: 4029,
 } as const;
+
+/** Response bodies of the MVP endpoints (`api-spec.md` §5–§7), as documented there. */
+const sessionWarningSchema = z.strictObject({
+  code: z.string(),
+  message: z.string(),
+  file: z.string().optional(),
+});
+
+/** §5.1 */
+export const healthSchema = z.strictObject({
+  status: z.literal('ok'),
+  collectorVersion: z.string(),
+  protocolVersion: z.int().positive(),
+  startedAt: isoTimeSchema,
+  project: z.strictObject({ name: z.string(), cwd: z.string() }),
+  agents: z.array(
+    z.strictObject({
+      sessionId: sessionIdSchema,
+      pid: z.int().positive(),
+      framework: frameworkSchema,
+      status: sessionStatusSchema,
+      warnings: z.array(sessionWarningSchema),
+    }),
+  ),
+  storage: z.strictObject({
+    mode: z.enum(['sqlite', 'memory']),
+    activeRequests: z.int().nonnegative(),
+    trashedRequests: z.int().nonnegative(),
+  }),
+});
+export type Health = z.infer<typeof healthSchema>;
+
+/** §7.5 */
+export const trashItemSchema = z.strictObject({
+  ...requestSummarySchema.shape,
+  deletedAt: isoTimeSchema,
+  purgeAt: isoTimeSchema,
+});
+export type TrashItem = z.infer<typeof trashItemSchema>;
+
+/** §7.1 */
+export const softDeleteResultSchema = z.strictObject({
+  id: requestIdSchema,
+  deletedAt: isoTimeSchema,
+  purgeAt: isoTimeSchema,
+});
+/** §7.3 */
+export const clearAllResultSchema = z.strictObject({
+  moved: z.int().nonnegative(),
+  skippedInProgress: z.int().nonnegative(),
+  purgeAt: isoTimeSchema,
+});
+/** §7.4 */
+export const restoreResultSchema = z.strictObject({
+  request: requestSummarySchema,
+  movedToTrash: z.array(requestIdSchema),
+});
+/** §7.6 */
+export const emptyTrashResultSchema = z.strictObject({ deleted: z.int().nonnegative() });
+
+/** §6.10: the built-in example, marked `sample: true`. */
+export const sampleSchema = z.strictObject({
+  request: z.strictObject({ ...requestDetailSchema.shape, sample: z.literal(true) }),
+  steps: z.array(stepSummarySchema),
+  stepDetails: z.record(stepIdSchema, stepDetailSchema),
+});
+export type Sample = z.infer<typeof sampleSchema>;
+
+/** `{ "data": … }` wrapper of single-object responses. */
+export function dataSchema<T extends z.ZodType>(item: T) {
+  return z.strictObject({ data: item });
+}

@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 9 | 🟡 |
+| 2 Protocol and collector | 13 | 10 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **21** | 🟡 |
+| **MVP total** | **65** | **22** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.10 REST API (MVP endpoints)
+**Current task:** 2.11 Live hub (`/live`)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.10 | REST API (MVP endpoints) | 2026-11-15 | On `main` |
+| 2.11 | Live hub (`/live`) | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -121,8 +121,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.7 | Server + auth | ✅ | | Decision 0022 |
 | 2.8 | Ingest (`/agent`) | ✅ | | |
 | 2.9 | Trace builder | ✅ | | |
-| 2.10 | REST API (MVP endpoints) | 🟡 | | |
-| 2.11 | Live hub (`/live`) | ⬜ | | |
+| 2.10 | REST API (MVP endpoints) | ✅ | | 14 MVP endpoints |
+| 2.11 | Live hub (`/live`) | 🟡 | | |
 | 2.12 | Launcher | ⬜ | | |
 | 2.13 | Collector logging and errors | ⬜ | | |
 | ✔ | **Checkpoint 2: Collector review** | ⬜ | | |
@@ -254,8 +254,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 2.10 REST API (MVP endpoints) · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.10.
+### 2026-11-15 · 2.11 Live hub (`/live`) · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.11.
+
+### 2026-11-15 · 2.10 REST API (MVP endpoints) · ✅ Done
+- Done when: Contract tests check every endpoint against the Zod schemas and the examples in `api-spec.md`, including every listed error code.
+- What changed: `packages/collector/src/api/`: `GET /health`, `/sessions`, `/requests` (every §6.1 filter, §9 sorts and cursors), `/requests/:id` (with `errorPath`, `REQUEST_IN_TRASH` + `deletedAt` unless `includeDeleted`), `/requests/:id/steps` (tree, one level, error path), `/steps/:id` (parsed `.ts` stack frames, `calledBy`, `absolutePath`, `fileChangedSince`), `/requests/:id/curl` (from the captured `host` header, else a placeholder), `DELETE /requests/:id` (idempotent soft delete; `?permanent=true` → 204), `DELETE /requests` (clear all, `skippedInProgress`), `POST /requests/:id/restore`, `GET` / `DELETE /trash`, `GET /sample` (the seed built in memory once, `sample: true`). Strict query validation (`INVALID_PARAMS`, `INVALID_ID`, `INVALID_CURSOR`); delete / restore / purge report to `ApiEvents` for the live hub. The server now answers `405 METHOD_NOT_ALLOWED` (with `Allow`) for a known path with the wrong method. Protocol: response schemas for the documented shapes (`health`, `trashItem`, delete / clear / restore / empty-trash results, `sample`, `dataSchema`). `openStore` accepts `:memory:`; `clearAll` takes an optional session. 2.6 follow-up done: `pathlight-tracker clear` goes through a running collector (`collector.json` + token, only if it answers) so open tabs update, else works on the database.
+- Tests: 18 contract tests (every endpoint parsed with its protocol schema and compared with the §5–§7 examples; every listed error code: `INVALID_PARAMS`, `INVALID_ID`, `INVALID_CURSOR`, `REQUEST_NOT_FOUND`, `REQUEST_IN_TRASH`, `STEP_NOT_FOUND`, `REQUEST_IN_PROGRESS`, `REQUEST_NOT_IN_TRASH`, `METHOD_NOT_ALLOWED`, `ROUTE_NOT_FOUND`; auth, origin, host, size and rate codes are covered by the 2.7 tests); 3 `clear` tests through a (fake) running collector and with a stale `collector.json`; a seed guard that every stored captured value passes the protocol schema.
+- Docs updated: `api-spec.md` §2 (`/config` is v1, decision 0008), §6.10 (sample built in memory from the shipped seed SQL); `data-model.md` §10 seed: the trashed request's empty request headers are `null` (caught by the contract test); `fixtures/seed/sample.sql` re-copied.
+- Decisions: none.
+- Bugs: fixed: seed request headers `{}` was not a valid captured value.
+- Follow-ups: task 5.6 must ship `fixtures/seed/sample.sql` inside the npm package for `GET /sample`.
 
 ### 2026-11-15 · 2.9 Trace builder · ✅ Done
 - Done when: Feeding the recorded `POST /orders` event stream produces rows identical to the seed data (except IDs and times).

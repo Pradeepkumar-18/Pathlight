@@ -60,12 +60,13 @@ export function deletePermanently(db: Db, id: string): DeleteResult {
 }
 
 /** UI "Clear all" and `pathlight-tracker clear`: every finished active request to the trash. */
-export function clearAll(db: Db, now: number): string[] {
+export function clearAll(db: Db, now: number, sessionId?: string): string[] {
   return writeBatch(db, () => {
+    const inSession = sessionId === undefined ? undefined : eq(requests.sessionId, sessionId);
     const ids = db
       .select({ id: requests.id })
       .from(requests)
-      .where(and(activeRequests, finished))
+      .where(and(activeRequests, finished, inSession))
       .all()
       .map((r) => r.id);
     if (ids.length > 0)

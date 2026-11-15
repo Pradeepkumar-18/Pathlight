@@ -4,6 +4,8 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { capturedValueSchema } from '@pathlight-tracker/protocol';
+
 import { openStore } from './open';
 import type { Store } from './open';
 import { loadSeed, SEED_FILE } from './seed';
@@ -94,6 +96,37 @@ describe('seed data', () => {
           }
         }
       }
+    }
+  });
+
+  it('stores only captured values the protocol accepts (request, response, args, return)', () => {
+    loadSeed(store);
+    const value = capturedValueSchema.nullable();
+    const requests = store.sqlite
+      .prepare('SELECT request_json, response_json FROM requests')
+      .all() as Record<string, string | null>[];
+    for (const row of requests) {
+      for (const part of Object.values(
+        JSON.parse(row.request_json ?? '{}') as Record<string, unknown>,
+      )) {
+        expect(value.safeParse(part).error).toBeUndefined();
+      }
+      for (const part of Object.values(
+        JSON.parse(row.response_json ?? '{}') as Record<string, unknown>,
+      )) {
+        expect(value.safeParse(part).error).toBeUndefined();
+      }
+    }
+    const steps = store.sqlite.prepare('SELECT args_json, return_json FROM steps').all() as {
+      args_json: string | null;
+      return_json: string | null;
+    }[];
+    const json = (text: string | null): unknown => (text === null ? null : JSON.parse(text));
+    for (const row of steps) {
+      expect(
+        capturedValueSchema.array().nullable().safeParse(json(row.args_json)).error,
+      ).toBeUndefined();
+      expect(value.safeParse(json(row.return_json)).error).toBeUndefined();
     }
   });
 

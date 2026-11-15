@@ -52,15 +52,21 @@ export interface OpenOptions {
 }
 
 export function openStore(options: OpenOptions): Store {
-  const file = path.resolve(options.projectRoot, options.dbPath);
+  // `:memory:` builds a throwaway store (the built-in sample, `api-spec.md` §6.10).
+  const inMemory = options.dbPath === ':memory:';
+  const file = inMemory ? ':memory:' : path.resolve(options.projectRoot, options.dbPath);
   const now = options.now ?? Date.now;
   let sqlite: Database.Database;
   try {
-    // Owner-only: captured values are private (data-model.md §8). Ignored on Windows.
-    mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
-    const isNew = !existsSync(file);
-    sqlite = new Database(file);
-    if (isNew) chmodSync(file, 0o600);
+    if (inMemory) {
+      sqlite = new Database(':memory:');
+    } else {
+      // Owner-only: captured values are private (data-model.md §8). Ignored on Windows.
+      mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+      const isNew = !existsSync(file);
+      sqlite = new Database(file);
+      if (isNew) chmodSync(file, 0o600);
+    }
   } catch (error) {
     throw new StoreUnavailableError(
       `Cannot create or open ${file}: ${error instanceof Error ? error.message : 'unknown error'}`,
