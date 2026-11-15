@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 10 | 🟡 |
+| 2 Protocol and collector | 13 | 11 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **22** | 🟡 |
+| **MVP total** | **65** | **23** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.11 Live hub (`/live`)
+**Current task:** 2.12 Launcher
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.11 | Live hub (`/live`) | 2026-11-15 | On `main` |
+| 2.12 | Launcher | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -122,8 +122,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.8 | Ingest (`/agent`) | ✅ | | |
 | 2.9 | Trace builder | ✅ | | |
 | 2.10 | REST API (MVP endpoints) | ✅ | | 14 MVP endpoints |
-| 2.11 | Live hub (`/live`) | 🟡 | | |
-| 2.12 | Launcher | ⬜ | | |
+| 2.11 | Live hub (`/live`) | ✅ | | |
+| 2.12 | Launcher | 🟡 | | |
 | 2.13 | Collector logging and errors | ⬜ | | |
 | ✔ | **Checkpoint 2: Collector review** | ⬜ | | |
 
@@ -254,8 +254,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 2.11 Live hub (`/live`) · 🟡 In progress
-- Done when: see `implementation-plan.md` 2.11.
+### 2026-11-15 · 2.12 Launcher · 🟡 In progress
+- Done when: Running `pathlight-tracker dev -- node fixtures/express-app` starts the app, prints the URL with the token, and stops cleanly on Ctrl+C with the app's exit code.
+
+### 2026-11-15 · 2.11 Live hub (`/live`) · ✅ Done
+- Done when: Integration test: an agent batch produces the expected `/live` messages in order; a UI subscribed to one request gets only its steps.
+- What changed: `packages/collector/src/live/hub.ts` (subscriptions to `requests` and `request:<id>`; `live.request.started` / `completed` / `deleted` / `restored` / `purged`, `live.steps.appended` / `updated`, `live.agent.connected` / `disconnected` / `disabled`; ~100 ms batches with consecutive step appends merged; a subscriber gets each message once even with several matching topics; `ping` → `pong`; invalid messages answered with `INVALID_MESSAGE`; an 11th UI closed with 4029), `live/route.ts` (`WS /live` behind `admitSocket`). `src/collector.ts` (`startCollector`): store, gitignore, token, builder, ingest, live hub, REST API, server on 127.0.0.1, `collector.json`, retention after each completed request, hourly purge job, clean `stop()`; agent connect / disconnect / incomplete requests and API deletes reach the hub.
+- Tests: 5 integration tests on a real collector: the recorded agent batches produce `pong`, `agent.connected`, `request.started`, steps appended (seq 1–9) and updated, `request.completed` (with the red path), `agent.disconnected`, in that order, every message validated with the protocol; a UI watching one request gets its steps and no list updates, a UI watching another gets nothing; a REST delete reaches the list as `live.request.deleted`; the 11th UI gets 4029; an invalid message gets an error and the socket stays usable.
+- Docs updated: none.
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-15 · 2.10 REST API (MVP endpoints) · ✅ Done
 - Done when: Contract tests check every endpoint against the Zod schemas and the examples in `api-spec.md`, including every listed error code.
