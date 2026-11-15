@@ -76,7 +76,7 @@ export function createDevHandler(io: CliIo, deps?: Partial<DevDeps>) {
         projectRoot,
         config: request.config,
         version: d.version,
-        onError: (code, context) => io.err(`[pathlight-tracker] ${code} ${context}\n`),
+        logConsole: io.err,
       });
     } catch (error) {
       const code = (error as { code?: unknown }).code;

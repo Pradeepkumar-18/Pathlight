@@ -819,7 +819,7 @@ Every non-2xx REST response uses the envelope:
 | `415` | `UNSUPPORTED_MEDIA_TYPE` | Body not JSON |
 | `429` | `RATE_LIMITED` | Too many requests; `Retry-After` header set (§10) |
 | `500` | `INTERNAL_ERROR` | Unexpected collector error (logged with a correlation ID in `details.logId`) |
-| `503` | `STORE_UNAVAILABLE` | Database locked or unreadable; retry shortly |
+| `503` | `STORE_UNAVAILABLE` | Database locked or unreadable; retry shortly (logged, with the correlation ID in `details.logId`) |
 
 WebSocket close codes:
 

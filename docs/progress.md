@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 12 | 🟡 |
+| 2 Protocol and collector | 13 | 13 | ✅ |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **24** | 🟡 |
+| **MVP total** | **65** | **25** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.13 Collector logging and errors
+**Current phase:** Phase 2: Protocol and collector (tasks done; Checkpoint 2 review next)
+**Current task:** none (Checkpoint 2: collector review)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,6 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.13 | Collector logging and errors | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -124,7 +123,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.10 | REST API (MVP endpoints) | ✅ | | 14 MVP endpoints |
 | 2.11 | Live hub (`/live`) | ✅ | | |
 | 2.12 | Launcher | ✅ | | |
-| 2.13 | Collector logging and errors | 🟡 | | |
+| 2.13 | Collector logging and errors | ✅ | | |
 | ✔ | **Checkpoint 2: Collector review** | ⬜ | | |
 
 ## Phase 3: Runtime agent
@@ -254,8 +253,14 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 2.13 Collector logging and errors · 🟡 In progress
+### 2026-11-15 · 2.13 Collector logging and errors · ✅ Done
 - Done when: Tests show a forced DB lock returns 503 and logs an entry with a `logId`; grep of logs in tests finds no token or captured values.
+- What changed: `packages/collector/src/logging/logger.ts` (`createLogger`): pino with two streams, the console (one readable line per entry, `[pathlight-tracker] ERROR <code> <message> (logId …)`; uncoded info such as Fastify's "listening" stays in the file) and `.pathlight-tracker/logs/collector.<n>.log` via pino-roll (10 MB per file, 5 files kept); `token`, `authorization` and `headers` are redacted; falls back to the console with `LOG_FILE_UNAVAILABLE` if the file can't be opened. `pino-roll.d.ts` types the untyped package. Fastify uses the logger with request logging off and a ULID request ID (the `logId`). `server/errors.ts`: SQLite busy / locked / unreadable errors → `503 STORE_UNAVAILABLE` with `details.logId`, logged. `startCollector` logs ingest and purge failures and uncaught exceptions / rejections (`UNCAUGHT_ERROR`) without crashing, and closes the log on stop; `dev` sends console lines to stderr. Added pino 10.4.0 and pino-roll 4.0.0 (approved 2026-11-14). Replaced Fastify's deprecated `disableRequestLogging` with `logController`.
+- Tests: 4 tests on a real collector: a second connection holding the write lock makes `DELETE /requests/:id` return 503 `STORE_UNAVAILABLE` with a ULID `logId`, the log file has a level-50 entry with that `logId` and the console shows it; the collector works again after the lock goes; an uncaught error is logged and `/health` still answers; after ingest, a locked-database batch, a 503 and an uncaught error, neither the log files nor the console contain the token or any captured value preview from the recorded events; console line format. Manual: `dev -- node fixtures/express-app` shows only the banner and app output, and the log file has the JSON entries.
+- Docs updated: `architecture.md` §6 (logging module) and §10 (log file name, rotation, console contents, `logId`); `api-spec.md` §8 (`503` carries `details.logId`).
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-15 · 2.12 Launcher · ✅ Done
 - Done when: Running `pathlight-tracker dev -- node fixtures/express-app` starts the app, prints the URL with the token, and stops cleanly on Ctrl+C with the app's exit code.

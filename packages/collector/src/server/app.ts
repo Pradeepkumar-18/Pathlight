@@ -7,11 +7,12 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import websocket from '@fastify/websocket';
 import type { WebSocket } from '@fastify/websocket';
-import Fastify from 'fastify';
-import type { FastifyInstance } from 'fastify';
+import Fastify, { LogController } from 'fastify';
+import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 
 import { PROTOCOL_SUBPROTOCOL, WS_CLOSE_CODES } from '@pathlight-tracker/protocol';
 
+import { ulid } from '../ids';
 import { registerErrorHandlers, sendError } from './errors';
 import {
   agentOriginAllowed,
@@ -40,7 +41,8 @@ export interface ServerOptions {
   version: string;
   /** Built UI files (`packages/ui/dist`); a placeholder page is served until task 4.1. */
   uiDir?: string;
-  logger?: boolean;
+  /** The collector's pino logger; nothing is logged without one. */
+  logger?: FastifyBaseLogger;
 }
 
 export interface CollectorServer {
@@ -84,7 +86,14 @@ const PLACEHOLDER = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 
 export async function createServer(options: ServerOptions): Promise<CollectorServer> {
   let port = 0;
-  const app = Fastify({ logger: options.logger ?? false, bodyLimit: MAX_BODY_BYTES });
+  const app = Fastify({
+    ...(options.logger ? { loggerInstance: options.logger } : { logger: false }),
+    // Errors are logged by the error handler; a line per UI call would drown the app's own output.
+    logController: new LogController({ disableRequestLogging: true }),
+    // The request ID is the `logId` returned with 500 / 503 errors, so it must be unique across runs.
+    genReqId: () => ulid(),
+    bodyLimit: MAX_BODY_BYTES,
+  });
   registerErrorHandlers(app);
 
   app.addHook('onRequest', async (request, reply) => {

@@ -294,7 +294,7 @@ Owns every message type and Zod schema shared by agent, collector and UI, plus t
 | `store` | Drizzle schema and queries, batched writes in transactions, retention pruning |
 | `live` | Tracks UI subscriptions, pushes started / appended / completed messages |
 | `api` | REST routes for history, single request, steps, search, clear |
-| `logging` | pino logger to console (pretty) and `.pathlight-tracker/logs/collector.log` |
+| `logging` | pino logger to console (one readable line per entry) and `.pathlight-tracker/logs/collector.<n>.log` |
 
 ### UI (`packages/ui`)
 
@@ -482,11 +482,11 @@ All settings can also live in an optional `pathlight-tracker.config.json` in the
 
 | Process | Logger | Where | Default level |
 | --- | --- | --- | --- |
-| Collector | pino | Console (pretty) + `.pathlight-tracker/logs/collector.log` (rotated) | `info` |
+| Collector | pino | Console (one line per entry; coded entries and warnings only) + `.pathlight-tracker/logs/collector.<n>.log` (JSON lines, pino-roll: new file every 10 MB, 5 files kept) | `info` |
 | Agent | Minimal internal logger (no dependencies) | stderr, prefixed `[pathlight-tracker]` | `warn` |
 | UI | `console` in development; errors forwarded to the collector log via `/api/v1/client-logs` (v1) | Browser console | `warn` |
 
-**Log rules:** structured JSON fields (`requestId`, `pid`, `code`); never log captured values or tokens; redaction applies to logs too.
+**Log rules:** structured JSON fields (`requestId`, `pid`, `code`, `logId`); never log captured values or tokens; redaction applies to logs too. Each HTTP request's ID is a ULID, returned as `details.logId` on `500` and `503` errors so a report can be matched to its log entry.
 
 ---
 

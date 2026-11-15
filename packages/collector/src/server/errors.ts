@@ -26,6 +26,16 @@ const FASTIFY_ERRORS: Record<string, [number, ApiErrorCode, string]> = {
   FST_ERR_CTP_INVALID_JSON_BODY: [400, 'INVALID_BODY', 'The body is not valid JSON.'],
 };
 
+/** SQLite result codes meaning "the database is locked or can't be read" (not a bug of ours). */
+const STORE_UNAVAILABLE_CODES = /^SQLITE_(BUSY|LOCKED|CANTOPEN|IOERR|CORRUPT|NOTADB|FULL|READONLY)/;
+
+export function isStoreUnavailable(error: { code?: unknown }): boolean {
+  return (
+    typeof error.code === 'string' &&
+    (error.code === 'STORE_UNAVAILABLE' || STORE_UNAVAILABLE_CODES.test(error.code))
+  );
+}
+
 export function registerErrorHandlers(app: FastifyInstance): void {
   // Remember every route's path pattern, so a known path with the wrong method gets 405, not 404.
   const routes: { pattern: RegExp; methods: string[] }[] = [];
@@ -67,7 +77,16 @@ export function registerErrorHandlers(app: FastifyInstance): void {
     if (error.code === 'FST_ERR_BAD_STATUS_CODE' || error.validation) {
       return sendError(reply, 400, 'INVALID_PARAMS', error.message);
     }
-    // Never echo internals or captured values; the log has the details (task 2.13).
+    if (isStoreUnavailable(error)) {
+      request.log.error(
+        { code: 'STORE_UNAVAILABLE', logId: request.id, sqliteCode: error.code },
+        'database locked or unreadable',
+      );
+      return sendError(reply, 503, 'STORE_UNAVAILABLE', 'The database is busy. Retry shortly.', {
+        logId: request.id,
+      });
+    }
+    // Never echo internals or captured values; the log has the details.
     request.log.error(
       { code: 'INTERNAL_ERROR', logId: request.id, err: error },
       'unexpected collector error',

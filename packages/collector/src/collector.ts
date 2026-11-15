@@ -12,6 +12,8 @@ import { closeSession, openSession } from './ingest/sessions';
 import { createLiveHub } from './live/hub';
 import type { LiveHub } from './live/hub';
 import { registerLiveRoute } from './live/route';
+import { createLogger } from './logging/logger';
+import type { CollectorLogger } from './logging/logger';
 import { createServer } from './server/app';
 import { listen, writeCollectorFile } from './server/listen';
 import { loadOrCreateToken } from './server/token';
@@ -24,8 +26,10 @@ export interface StartOptions {
   config: ResolvedConfig;
   version: string;
   uiDir?: string;
-  /** Logs collector problems; never captured values or tokens (task 2.13). */
+  /** Also told about every logged collector problem (code + context, never values or tokens). */
   onError?: (code: string, context: string) => void;
+  /** Where console log lines go (default stderr). */
+  logConsole?: (text: string) => void;
   now?: () => number;
 }
 
@@ -38,13 +42,13 @@ export interface RunningCollector {
   addedGitignore: boolean;
   store: Store;
   hub: LiveHub;
+  log: CollectorLogger;
   stop: () => Promise<void>;
 }
 
 export async function startCollector(options: StartOptions): Promise<RunningCollector> {
   const settings = values(options.config);
   const now = options.now ?? Date.now;
-  const onError = options.onError ?? (() => undefined);
   const storeDir = path.resolve(options.projectRoot, STORE_DIR);
   const store = openStore({
     projectRoot: options.projectRoot,
@@ -52,6 +56,18 @@ export async function startCollector(options: StartOptions): Promise<RunningColl
     version: options.version,
   });
   const addedGitignore = ensureGitignored(options.projectRoot);
+  const log = await createLogger({
+    storeDir,
+    level: settings.logLevel,
+    console: options.logConsole,
+  });
+  const onError = (code: string, context: string) => {
+    log.logger.error({ code }, context);
+    options.onError?.(code, context);
+  };
+  // The server stays up where possible (architecture.md §10): log, don't crash.
+  const onUncaught = (error: unknown) =>
+    onError('UNCAUGHT_ERROR', error instanceof Error ? (error.stack ?? error.message) : 'unknown');
   const token = loadOrCreateToken(storeDir);
 
   const hub = createLiveHub({ db: store.db, trashTtlHours: () => settings.trashTtlHours });
@@ -84,7 +100,12 @@ export async function startCollector(options: StartOptions): Promise<RunningColl
     onError,
   );
 
-  const server = await createServer({ token, version: options.version, uiDir: options.uiDir });
+  const server = await createServer({
+    token,
+    version: options.version,
+    uiDir: options.uiDir,
+    logger: log.logger,
+  });
   registerAgentRoute(server, ingest);
   registerLiveRoute(server, hub);
   await registerApi(server.app, {
@@ -124,6 +145,9 @@ export async function startCollector(options: StartOptions): Promise<RunningColl
     },
   });
 
+  process.on('uncaughtException', onUncaught);
+  process.on('unhandledRejection', onUncaught);
+
   let stopped = false;
   return {
     port,
@@ -133,6 +157,7 @@ export async function startCollector(options: StartOptions): Promise<RunningColl
     addedGitignore,
     store,
     hub,
+    log,
     async stop() {
       if (stopped) return;
       stopped = true;
@@ -142,6 +167,9 @@ export async function startCollector(options: StartOptions): Promise<RunningColl
       await server.app.close();
       removeCollectorFile();
       store.close();
+      process.off('uncaughtException', onUncaught);
+      process.off('unhandledRejection', onUncaught);
+      await log.close();
     },
   };
 }

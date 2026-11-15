@@ -34,7 +34,12 @@ export async function listen(server: CollectorServer, preferred: number | null):
   for (const candidate of candidates) {
     try {
       server.setPort(candidate);
-      await server.app.listen({ host: '127.0.0.1', port: candidate });
+      await server.app.listen({
+        host: '127.0.0.1',
+        port: candidate,
+        // Kept in the log file; the launcher's banner already shows the address on the console.
+        listenTextResolver: (address) => `listening on ${address}`,
+      });
       return candidate;
     } catch (error) {
       lastError = error;
