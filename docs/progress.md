@@ -11,16 +11,16 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 13 | ✅ |
-| 3 Runtime agent | 15 | 0 | ⬜ |
+| 3 Runtime agent | 15 | 1 | 🟡 |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **25** | 🟡 |
+| **MVP total** | **65** | **26** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
-**Current phase:** Phase 3: Runtime agent (next; Checkpoint 2 passed 2026-11-15)
-**Current task:** none (next: `/start-task 3.1`)
+**Current phase:** Phase 3: Runtime agent (in progress)
+**Current task:** 3.2 Transport
 **Blockers:** none
 
 ## In progress
@@ -29,6 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
+| 3.2 | Transport | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -73,12 +74,16 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-14 | Server: default port 4777 (+19 fallbacks), REST allows a missing `Origin`, rate limits as 2 s windows | ✅ Decided | `decisions/0022-server-port-origin-rate-limits.md` |
 | 2026-11-15 | `boundary` event gains optional `name`, `file`, `line`, `column`, `isAsync`; `request` / `response` contents and `ts` = call start documented | ✅ Decided (user, 2026-11-15) | `api-spec.md` §11.1 |
 | 2026-11-15 | Checkpoint 2: steps of a trashed request answer `404 REQUEST_IN_TRASH`; `clear --purge` deletes every *finished* request (in-progress kept) | ✅ Decided (user, 2026-11-15) | `data-model.md` §7, §8; `user-flows.md` §8 |
+| 2026-11-15 | Phase 3 libraries approved: ws 8.22.1 (8.23.0 skipped: 3 days old), @types/ws 8.18.2 (dev), require-in-the-middle 8.0.1 | ✅ Decided (user) | this table |
+| 2026-11-15 | Node 20: a CI job in 3.15 runs the fixtures and corpus apps under Node 20 (tools stay on 24); the agent avoids Node 22+-only APIs | ✅ Decided (user) | decision 0019 follow-up |
+| 2026-11-15 | `warning` and `agent.disabled` take `traceId: null` outside a request | ✅ Decided (user) | `api-spec.md` §11.1 |
+| 2026-11-15 | Settings definition (schemas, defaults, env names, parsing) moves to `protocol/src/config.ts`, shared by agent and collector | ✅ Decided (user) | `architecture.md` §5 |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
 ## Next steps
 
-1. Phase 3: `/start-task 3.1`
+1. Phase 3: work through 3.1–3.15, then one report (user, 2026-11-15)
 2. Checkpoint 0 leftovers: hands-on AppMap checklist on `fixtures/nestjs-app` (`docs/analysis/2026-11-01-appmap-validation.md`), `product-analyst` run (raise: NestJS 12 is ESM-only), trim `CLAUDE.md` / rules / memory (`.claude/SETUP-ROADMAP.md`)
 3. Packaging (5.6) must ship the agent and `fixtures/seed/sample.sql` with the CLI (`dev` prints `AGENT_NOT_FOUND` until then)
 
@@ -131,8 +136,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 
 | ID | Task | Status | PR | Notes |
 | --- | --- | --- | --- | --- |
-| 3.1 | Register, config and safety | ⬜ | | |
-| 3.2 | Transport | ⬜ | | |
+| 3.1 | Register, config and safety | ✅ | | |
+| 3.2 | Transport | 🟡 | | |
 | 3.3 | Safe value capture | ⬜ | | |
 | 3.4 | Redaction | ⬜ | | |
 | 3.5 | Object IDs | ⬜ | | |
@@ -253,6 +258,18 @@ Newest first. One entry per task (or checkpoint). Template:
 - Bugs: <added to / closed in "Known bugs / issues", or "none">
 - Follow-ups: <new tasks, open questions, or "none">
 ```
+
+### 2026-11-15 · 3.2 Transport · 🟡 In progress
+- Done when: Integration test against a real collector: events arrive in order; killing the collector never blocks or crashes the app.
+
+### 2026-11-15 · 3.1 Register, config and safety · ✅ Done
+- Done when: Tests: forced internal errors never reach user code; after N errors the agent disables itself and sends `agent.disabled`.
+- What changed: `packages/agent/src/register.ts` is the package entry (`main` → `dist/register.js`; the placeholder `index.ts` is gone) and never throws. `agent.ts` (`startAgent`): reads the settings, then the kill switch (`PATHLIGHT_TRACKER_DISABLED=1`: loads, does nothing, silent), the production guard (`NODE_ENV=production` without `PATHLIGHT_TRACKER_ALLOW_PRODUCTION=1`: one `PRODUCTION_GUARD` warning), a missing collector address or token (one `NO_COLLECTOR` warning), one agent per process; the sink and `install` hook for later tasks run inside the safety net. `config.ts`: defaults → `pathlight-tracker.config.json` → env, invalid values keep the lower one with a warning. `safety/safety.ts`: `run` / `callback` / `report`; 20 internal errors within 60 s turn tracing off once, print one `AGENT_DISABLED` warning and send `agent.disabled`. `safety/logger.ts`: stderr `[pathlight-tracker] CODE message` by level, no dependencies, internal errors logged by code and type only. `clock.ts`: event `ts` as wall-clock ns from one wall reading plus `hrtime`. Settings definition moved from `collector/src/config/settings.ts` to `protocol/src/config.ts` (`SETTING_SCHEMAS`, `SETTING_DEFAULTS`, `CONFIG_FILE`, `envName`, `fromText`) so both packages read settings the same way (user, 2026-11-15). Protocol: `warning` and `agent.disabled` take `traceId: null` outside a request (user, 2026-11-15); the builder handles them before looking up a request. Installed ws 8.22.1, require-in-the-middle 8.0.1, @types/ws 8.18.2 (dev) for the coming tasks.
+- Tests: 19 new agent tests (config precedence and invalid values; the safety net never lets an error out, callbacks can't throw, 20 errors in 60 s disable once with one warning and one `agent.disabled` that passes the protocol schema with `traceId: null`, errors spread out don't disable, no agent work once off, logs never contain the error message; start modes: connected, kill switch, production guard and its force, no collector, preloaded twice, token never printed, failing install). Protocol: `traceId: null` accepted only on the two process-level events. Builder: `agent.disabled` without a request. Manual: `node -r ./dist/register.js` in each mode prints the expected line and the app runs. Corpus: 12 identical, 2 known.
+- Docs updated: `api-spec.md` §11.1 (`traceId: null` on process-level events); `architecture.md` §2 and §5 (protocol `config.ts`).
+- Decisions: Phase 3 libraries, Node 20 CI job in 3.15, `traceId: null`, settings in protocol (all user, 2026-11-15; Decisions table).
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-15 · 2.13 Collector logging and errors · ✅ Done
 - Done when: Tests show a forced DB lock returns 503 and logs an entry with a `logId`; grep of logs in tests finds no token or captured values.

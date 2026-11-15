@@ -4,8 +4,7 @@
   "private": true,
   "license": "MIT",
   "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/register.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -14,7 +13,13 @@
   },
   "dependencies": {
     "@jridgewell/trace-mapping": "0.3.31",
+    "@pathlight-tracker/protocol": "workspace:*",
     "@swc/core": "1.16.22",
-    "pirates": "4.0.7"
+    "pirates": "4.0.7",
+    "require-in-the-middle": "8.0.1",
+    "ws": "8.22.1"
+  },
+  "devDependencies": {
+    "@types/ws": "8.18.2"
   }
 }

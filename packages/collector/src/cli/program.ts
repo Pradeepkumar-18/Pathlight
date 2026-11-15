@@ -4,7 +4,7 @@ import { Command } from 'commander';
 
 import { loadConfig } from '../config/load';
 import type { ConfigWarning, ResolvedConfig } from '../config/load';
-import type { SettingKey } from '../config/settings';
+import type { SettingKey } from '@pathlight-tracker/protocol';
 
 export interface CliIo {
   out: (text: string) => void;

@@ -65,6 +65,7 @@ pathlight-tracker/
 │   │       ├── events.ts          # Agent → collector event types
 │   │       ├── live.ts            # Collector → UI live message types
 │   │       ├── api.ts             # REST request/response types
+│   │       ├── config.ts          # Settings: schemas, defaults, env-var names (agent + collector)
 │   │       ├── schemas.ts         # Zod schemas for all of the above
 │   │       └── version.ts         # Protocol version constant
 │   │
@@ -280,7 +281,7 @@ Pathlight Tracker has **no users, no login and no roles**. It is a single-develo
 
 ### Protocol (`packages/protocol`)
 
-Owns every message type and Zod schema shared by agent, collector and UI, plus the protocol version. Any change to a message starts here.
+Owns every message type and Zod schema shared by agent, collector and UI, plus the protocol version. Any change to a message starts here. It also holds the settings definition (`config.ts`: schemas, defaults, env-var names, text parsing), so the agent and the collector read every setting the same way.
 
 ### Collector (`packages/collector`)
 

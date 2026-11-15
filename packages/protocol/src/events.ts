@@ -19,6 +19,8 @@ import {
 const versioned = { v: z.int().positive() };
 /** Every event carries its type, the request it belongs to and a wall-clock time in ns. */
 const eventBase = { traceId: requestIdSchema, ts: nanosSchema };
+/** `warning` and `agent.disabled` are about the whole process: no request when outside one. */
+const processEventBase = { traceId: requestIdSchema.nullable(), ts: nanosSchema };
 const sourceLocation = {
   file: z.string().nullable().optional(),
   line: z.int().positive().nullable().optional(),
@@ -134,7 +136,7 @@ export const logEventSchema = z.strictObject({
 /** A setup warning or a file that couldn't be recorded (stored in `sessions.warnings_json`). */
 export const warningEventSchema = z.strictObject({
   e: z.literal('warning'),
-  ...eventBase,
+  ...processEventBase,
   code: z.string(),
   message: z.string(),
   file: z.string().optional(),
@@ -152,7 +154,7 @@ export const requestEndEventSchema = z.strictObject({
 
 export const agentDisabledEventSchema = z.strictObject({
   e: z.literal('agent.disabled'),
-  ...eventBase,
+  ...processEventBase,
   reason: z.string(),
   internalErrorCount: z.int().nonnegative(),
 });

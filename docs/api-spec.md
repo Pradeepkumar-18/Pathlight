@@ -923,7 +923,7 @@ Connect with subprotocols `["pathlight-tracker.v1", "bearer.<token>"]`.
 ] }
 ```
 
-This section is the **master copy** of the agent protocol; `architecture.md` §3d only summarises it. `v` and `pid` are sent once per batch, not per event. Every event carries `e` (its type), `traceId` and `ts` (wall-clock time in nanoseconds since the Unix epoch, as a string: the agent reads the clock once at request start and adds high-resolution offsets).
+This section is the **master copy** of the agent protocol; `architecture.md` §3d only summarises it. `v` and `pid` are sent once per batch, not per event. Every event carries `e` (its type), `traceId` and `ts` (wall-clock time in nanoseconds since the Unix epoch, as a string: the agent reads the clock once at request start and adds high-resolution offsets). `warning` and `agent.disabled` describe the whole process, so their `traceId` is `null` when they happen outside a request (e.g. at startup).
 
 | Event (`e`) | Phase | Fields besides `e`, `traceId`, `ts` |
 | --- | --- | --- |

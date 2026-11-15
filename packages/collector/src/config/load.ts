@@ -3,8 +3,15 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { DEFAULTS, SETTINGS, SETTING_KEYS, envName, fromText } from './settings';
-import type { SettingKey, Settings } from './settings';
+import {
+  CONFIG_FILE,
+  SETTING_DEFAULTS,
+  SETTING_KEYS,
+  SETTING_SCHEMAS,
+  envName,
+  fromText,
+} from '@pathlight-tracker/protocol';
+import type { SettingKey, Settings } from '@pathlight-tracker/protocol';
 
 export type Source = 'default' | 'config-file' | 'env' | 'cli';
 
@@ -24,7 +31,7 @@ export interface LoadOptions {
   readFile?: (file: string) => string;
 }
 
-export const CONFIG_FILE = 'pathlight-tracker.config.json';
+export { CONFIG_FILE };
 
 /** "Unexpected token } in JSON at position 42" → the line containing position 42. */
 function lineOf(text: string, error: unknown): number | null {
@@ -80,7 +87,10 @@ export function loadConfig(options: LoadOptions): {
   const env = options.env ?? process.env;
   const config = {} as Record<SettingKey, { value: unknown; source: Source }>;
   for (const key of SETTING_KEYS) {
-    let resolved: { value: unknown; source: Source } = { value: DEFAULTS[key], source: 'default' };
+    let resolved: { value: unknown; source: Source } = {
+      value: SETTING_DEFAULTS[key],
+      source: 'default',
+    };
     const candidates: { source: Source; raw: unknown; label: string }[] = [];
     if (key in fileValues)
       candidates.push({
@@ -97,7 +107,7 @@ export function loadConfig(options: LoadOptions): {
 
     // Higher-precedence sources come later; an invalid one is skipped with a warning.
     for (const candidate of candidates) {
-      const result = SETTINGS[key].safeParse(candidate.raw);
+      const result = SETTING_SCHEMAS[key].safeParse(candidate.raw);
       if (result.success) {
         resolved = { value: result.data, source: candidate.source };
       } else {

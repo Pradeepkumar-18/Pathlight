@@ -126,8 +126,24 @@ describe('agent protocol rejects invalid data', () => {
         returnValue: { type: 'object', preview: '{}', children: { a: { type: 'nope' } } },
       },
     ],
+    ['no request ID on a step event', { ...stepExit, traceId: null }],
   ])('an event with %s', (_name, event) => {
     expect(agentEventSchema.safeParse(event).success).toBe(false);
+  });
+
+  it('accepts a null request ID only on the process-level warning and agent.disabled', () => {
+    const outside = { traceId: null, ts: '1' };
+    expect(
+      agentEventSchema.safeParse({ e: 'warning', ...outside, code: 'X', message: 'm' }).success,
+    ).toBe(true);
+    expect(
+      agentEventSchema.safeParse({
+        e: 'agent.disabled',
+        ...outside,
+        reason: 'r',
+        internalErrorCount: 20,
+      }).success,
+    ).toBe(true);
   });
 
   it('a WebSocket error code that does not exist', () => {

@@ -1,4 +1,5 @@
-// Every setting, its default and how to read it (`architecture.md` §8).
+// Every setting, its default and how to read it (`architecture.md` §8). Shared because the
+// collector (CLI, `doctor`) and the agent read the same settings the same way.
 import { z } from 'zod';
 
 const logLevel = z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']);
@@ -8,7 +9,7 @@ const positiveInt = z.number().int().positive();
  * One schema per setting, strict on purpose (no coercion: `z.coerce.boolean()` would read
  * "false" as true). Text from env vars and flags is converted by `fromText` first.
  */
-export const SETTINGS = {
+export const SETTING_SCHEMAS = {
   // Read by the agent (passed through the environment by the CLI).
   disabled: z.boolean(),
   include: z.array(z.string().min(1)).min(1),
@@ -30,10 +31,13 @@ export const SETTINGS = {
   logLevel,
 } as const;
 
-export type SettingKey = keyof typeof SETTINGS;
-export type Settings = { [K in SettingKey]: z.infer<(typeof SETTINGS)[K]> };
+/** Optional settings file in the project root: one camelCase key per setting. */
+export const CONFIG_FILE = 'pathlight-tracker.config.json';
 
-export const DEFAULTS: Settings = {
+export type SettingKey = keyof typeof SETTING_SCHEMAS;
+export type Settings = { [K in SettingKey]: z.infer<(typeof SETTING_SCHEMAS)[K]> };
+
+export const SETTING_DEFAULTS: Settings = {
   disabled: false,
   include: ['src/**'],
   exclude: ['**/*.spec.ts', '**/*.test.ts'],
@@ -53,7 +57,7 @@ export const DEFAULTS: Settings = {
   logLevel: 'info',
 };
 
-export const SETTING_KEYS = Object.keys(SETTINGS) as SettingKey[];
+export const SETTING_KEYS = Object.keys(SETTING_SCHEMAS) as SettingKey[];
 
 const LIST_KEYS = new Set<SettingKey>(['include', 'exclude', 'redactKeys']);
 const BOOLEAN_KEYS = new Set<SettingKey>(['disabled', 'allowProduction', 'openBrowser']);

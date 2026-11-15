@@ -151,9 +151,10 @@ describe('trace builder: session events', () => {
     });
     builder.apply(sessionId, [warning, warning]);
     builder.apply(sessionId, [
+      // Outside any request: process-level events carry no request ID.
       agentEventSchema.parse({
         e: 'agent.disabled',
-        traceId: REQUEST,
+        traceId: null,
         ts: '2',
         reason: 'too many internal errors',
         internalErrorCount: 20,

@@ -99,6 +99,11 @@ export function createBuilder(db: Db, options: BuilderOptions) {
   }
 
   function apply(tx: Tx, sessionId: string, event: AgentEvent, changes: Changes): void {
+    // Process-level events belong to the session, inside a request or not (traceId may be null).
+    if (event.e === 'warning' || event.e === 'agent.disabled') {
+      applySessionEvent(tx, sessionId, event, now());
+      return;
+    }
     const requestId = event.traceId;
     const request = open.get(requestId);
     const known = (stepId: string): boolean => request?.depths.has(stepId) === true;
@@ -194,10 +199,6 @@ export function createBuilder(db: Db, options: BuilderOptions) {
         return;
       case 'request.end':
         if (request) end(tx, requestId, request, event, changes);
-        return;
-      case 'warning':
-      case 'agent.disabled':
-        applySessionEvent(tx, sessionId, event, now());
         return;
       case 'loop':
       case 'log':

@@ -2,8 +2,9 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { SETTING_DEFAULTS as DEFAULTS, envName } from '@pathlight-tracker/protocol';
+
 import { CONFIG_FILE, loadConfig, values } from './load';
-import { DEFAULTS, envName } from './settings';
 
 const ROOT = path.resolve('/project');
 
