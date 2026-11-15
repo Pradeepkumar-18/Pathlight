@@ -24,6 +24,15 @@
 14. [The CLI and config loading](14-cli-and-config-loading.md) (Task 2.2)
 15. [The database: SQLite, Drizzle and migrations](15-sqlite-drizzle-store.md) (Task 2.3)
 16. [Seed data and the drift guard](16-seed-data.md) (Task 2.4)
+17. [The store layer: filters, sorts and cursors](17-store-layer-filters-cursors.md) (Task 2.5)
+18. [Soft delete, retention and purge](18-soft-delete-retention-purge.md) (Task 2.6)
+19. [The server and its guards: token, origin, host](19-server-auth-dns-rebinding.md) (Task 2.7)
+20. [Ingest: receiving events from the agent](20-ingest-websocket-agent.md) (Task 2.8)
+21. [The trace builder: events become rows](21-trace-builder.md) (Task 2.9)
+22. [The REST API and contract tests](22-rest-api-contract-tests.md) (Task 2.10)
+23. [The live hub and startCollector](23-live-hub-websocket.md) (Task 2.11)
+24. [The launcher: dev and Windows spawn](24-dev-launcher-windows-spawn.md) (Task 2.12)
+25. [Logging and store errors](25-logging-and-store-errors.md) (Task 2.13)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -90,6 +99,15 @@
 - PRAGMAs (WAL, foreign_keys, auto_vacuum first), 0700/0600, `.gitignore` entry: [15](15-sqlite-drizzle-store.md)
 - `STORE_UNAVAILABLE` instead of an in-memory fallback (decision 0008): [15](15-sqlite-drizzle-store.md)
 - Seed data, drift-guard test, all-or-nothing transaction, `INSERT OR REPLACE`: [16](16-seed-data.md)
+- Keyset pagination, opaque cursors, filter fingerprint: [17](17-store-layer-filters-cursors.md)
+- Soft delete, retention, TTL purge, vacuum: [18](18-soft-delete-retention-purge.md)
+- Host / Origin / token checks, DNS rebinding, constant-time compare: [19](19-server-auth-dns-rebinding.md)
+- Ingest protocol: ack, per-event validation, backpressure, close codes: [20](20-ingest-websocket-agent.md)
+- Event-to-row building, error path, finalize; tests that expose seed bugs: [21](21-trace-builder.md)
+- Contract tests, 404 vs 405, idempotent delete: [22](22-rest-api-contract-tests.md)
+- Live topics, batching, `startCollector` wiring: [23](23-live-hub-websocket.md)
+- Windows `cmd.exe` quoting, `taskkill /T`, ready-before-handler race: [24](24-dev-launcher-windows-spawn.md)
+- Correlation `logId`, 503 for locked SQLite, no secrets in logs, uncaught handlers: [25](25-logging-and-store-errors.md)
 
 ## Open questions
 - Answered in task 1.4: you chose to keep follow-on promises and accept the `toString` difference (lesson 12).
