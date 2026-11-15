@@ -413,7 +413,7 @@ No variable holds a real secret. The token is generated once per project, kept i
 | `PATHLIGHT_TRACKER_DISABLED` | Kill switch: `1` loads the agent but does nothing | `0` |
 | `PATHLIGHT_TRACKER_INCLUDE` | Glob(s) of files to instrument | `src/**` |
 | `PATHLIGHT_TRACKER_EXCLUDE` | Glob(s) to skip (in addition to `node_modules`) | `**/*.spec.ts,**/*.test.ts` |
-| `PATHLIGHT_TRACKER_REDACT_KEYS` | Extra keys to redact (comma-separated), added to the built-in list | Built-in list: `password`, `passwd`, `secret`, `token`, `authorization`, `cookie`, `apikey`, `privatekey`, `credential`, `session`, `otp`. Matching: key lower-cased with `-` and `_` removed, then **contains** (so `accessToken`, `x-api-key`, `set-cookie` and `Authorization` all match). Applies to object keys, headers and query params. The exact list is finalised in task 3.4 |
+| `PATHLIGHT_TRACKER_REDACT_KEYS` | Extra keys to redact (comma-separated), added to the built-in list | Built-in list (finalised in task 3.4): **contains** `password`, `passwd`, `pwd`, `secret`, `token`, `authorization`, `cookie`, `apikey`, `accesskey`, `privatekey`, `credential`, `session`, `jwt`; **whole key only** `otp`, `pin`, `cvv` (as parts of words they would hide `notPaid`, `shipping`, …). Matching: key lower-cased with `-` and `_` removed (so `accessToken`, `x-api-key`, `set-cookie` and `Authorization` all match); extra keys match by **contains**. Applies to object keys at any depth, Map keys, headers, query params and query strings inside URLs |
 | `PATHLIGHT_TRACKER_MAX_DEPTH` | Max depth of captured objects | `3` |
 | `PATHLIGHT_TRACKER_MAX_ARRAY` | Max array items captured | `10` |
 | `PATHLIGHT_TRACKER_MAX_STRING` | Max string length captured | `200` |
@@ -442,7 +442,7 @@ All settings can also live in an optional `pathlight-tracker.config.json` in the
 | --- | --- |
 | **Input validation** | Every agent event batch, live message and REST request is validated with Zod schemas from `protocol`. Invalid input is rejected and logged, never partially processed. |
 | **Size limits** | Max WebSocket message size (e.g. 1 MB per batch), max captured value sizes (§8), max steps per request. Oversized payloads are truncated by the agent and rejected by the collector. |
-| **Redaction** | Applied in the agent before data leaves the app, so secrets are never sent, stored or shown. Covers keys (password, token, authorization, secret, cookie, apiKey and user-added keys) and header values. Redacted values show as `[REDACTED]`. |
+| **Redaction** | Applied in the agent before data leaves the app, so secrets are never sent, stored or shown. Covers keys (the built-in list in §8 and user-added keys) at any depth, header values and query parameters in URLs. A secret value is replaced before it is read, so it is never captured. Redacted values show as `[REDACTED]`. |
 | **Network exposure** | Bind `127.0.0.1` only; token on every data route; origin and host header checks (§4). |
 | **Rate limiting / backpressure** | Agent connections: if ingest falls behind, the collector sends `slow_down`, and the agent samples or drops lower-priority events (repeated loop iterations first). REST: `@fastify/rate-limit` caps requests per second as a guard against misbehaving local scripts. |
 | **Row-level security (RLS)** | **Not applicable.** One user, one local database, no tenants. File permissions on `.pathlight-tracker/` are set to the current user only. |

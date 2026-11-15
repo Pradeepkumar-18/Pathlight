@@ -11,16 +11,16 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
 | 2 Protocol and collector | 13 | 13 | ✅ |
-| 3 Runtime agent | 15 | 3 | 🟡 |
+| 3 Runtime agent | 15 | 4 | 🟡 |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **28** | 🟡 |
+| **MVP total** | **65** | **29** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 3: Runtime agent (in progress)
-**Current task:** 3.4 Redaction
+**Current task:** 3.5 Object IDs
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 3.4 | Redaction | 2026-11-15 | On `main` |
+| 3.5 | Object IDs | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -139,8 +139,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 3.1 | Register, config and safety | ✅ | | |
 | 3.2 | Transport | ✅ | | |
 | 3.3 | Safe value capture | ✅ | | |
-| 3.4 | Redaction | 🟡 | | |
-| 3.5 | Object IDs | ⬜ | | |
+| 3.4 | Redaction | ✅ | | |
+| 3.5 | Object IDs | 🟡 | | |
 | 3.6 | Loader + transform (production) | ⬜ | | |
 | 3.7 | Runtime helpers + source maps | ⬜ | | |
 | 3.8 | Request context + HTTP patch | ⬜ | | |
@@ -259,8 +259,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 3.4 Redaction · 🟡 In progress
+### 2026-11-15 · 3.5 Object IDs · 🟡 In progress
+- Done when: Same object passed to two functions gets the same `objectId`; no memory growth after 10,000 requests (heap test).
+
+### 2026-11-15 · 3.4 Redaction · ✅ Done
 - Done when: Tests: `password`, `authorization`, nested `apiKey`, `accessToken`, `x-api-key` and `set-cookie` all become `[REDACTED]`; nothing secret reaches the transport.
+- What changed: `packages/agent/src/capture/redact.ts` (`createRedactor(extraKeys)`): keys lower-cased with `-` / `_` removed; built-in list finalised: contains `password`, `passwd`, `pwd`, `secret`, `token`, `authorization`, `cookie`, `apikey`, `accesskey`, `privatekey`, `credential`, `session`, `jwt`; whole key only `otp`, `pin`, `cvv` (as parts of words they hit `notPaid`, `footprint`, `shipping`); `PATHLIGHT_TRACKER_REDACT_KEYS` adds contains-words; bounded cache; `redactUrl` replaces secret query parameters in URLs. `capture/capturer.ts` (`createCapturer(settings)`): caps + redaction (+ object IDs next) in one call, so no patch can capture without redacting. Secret values are replaced before they are read (a secret getter is never even called).
+- Tests: 38 new: every listed key form (incl. `apiKey`, `accessToken`, `x-api-key`, `set-cookie`, `Authorization`, user-added `ssn`) is secret and ordinary keys (`notPaid`, `footprint`, `shipping`, `author`, …) are not; nested values, headers, query params, Map keys and URL query strings redacted; a `request.start` full of secrets sent through the real transport to a socket server arrives with `[REDACTED]` and none of the 7 secrets.
+- Docs updated: `architecture.md` §8 (final built-in list and matching) and §9 (what redaction covers).
+- Decisions: final list as above (task 3.4 was the place to finalise it; see the report).
+- Bugs: none.
+- Follow-ups: none.
 
 ### 2026-11-15 · 3.3 Safe value capture · ✅ Done
 - Done when: Unit tests for every type; a getter with side effects is never triggered; a 50 MB buffer is summarized.
