@@ -86,7 +86,7 @@ describe('soft delete and restore', () => {
     expect(restore(store.db, FAILED, 100, NOW)).toEqual({ result: 'ok', trashed: [] });
     expect(deletedAt(FAILED)).toBeNull();
     expect(stepsOf(FAILED)).toBe(9);
-    expect(refsOf(FAILED)).toBe(6);
+    expect(refsOf(FAILED)).toBe(7);
     expect(restore(store.db, OK, 100, NOW).result).toBe('not_in_trash');
   });
 

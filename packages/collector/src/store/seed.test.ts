@@ -39,7 +39,7 @@ describe('seed data', () => {
   });
 
   it('loads 3 requests and 14 steps', () => {
-    expect(loadSeed(store)).toEqual({ requests: 3, steps: 14, objectRefs: 6 });
+    expect(loadSeed(store)).toEqual({ requests: 3, steps: 14, objectRefs: 7 });
   });
 
   it('marks the error path from the root to the step that threw (decision 0010)', () => {
@@ -80,9 +80,26 @@ describe('seed data', () => {
     });
   });
 
+  it('stores valid JSON in every *_json column', () => {
+    loadSeed(store);
+    for (const table of ['sessions', 'requests', 'steps']) {
+      const rows = store.sqlite.prepare(`SELECT * FROM ${table}`).all() as Record<
+        string,
+        unknown
+      >[];
+      for (const row of rows) {
+        for (const [column, value] of Object.entries(row)) {
+          if (column.endsWith('_json') && typeof value === 'string') {
+            expect(() => JSON.parse(value), `${table}.${column}`).not.toThrow();
+          }
+        }
+      }
+    }
+  });
+
   it('can be loaded again: it replaces the previous data', () => {
     loadSeed(store);
-    expect(loadSeed(store)).toEqual({ requests: 3, steps: 14, objectRefs: 6 });
+    expect(loadSeed(store)).toEqual({ requests: 3, steps: 14, objectRefs: 7 });
   });
 
   it('changes nothing when the seed fails half-way', () => {

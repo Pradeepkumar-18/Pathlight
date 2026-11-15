@@ -83,7 +83,7 @@ describe('openStore', () => {
     sqlite.exec(seedSql());
     const count = (table: string) =>
       (sqlite.prepare(`SELECT count(*) AS n FROM ${table}`).get() as { n: number }).n;
-    expect([count('requests'), count('steps'), count('object_refs')]).toEqual([3, 14, 6]);
+    expect([count('requests'), count('steps'), count('object_refs')]).toEqual([3, 14, 7]);
     expect(sqlite.pragma('foreign_key_check')).toEqual([]);
   });
 

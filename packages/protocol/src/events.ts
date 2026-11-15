@@ -83,6 +83,10 @@ export const boundaryEventSchema = z.strictObject({
   stepId: stepIdSchema,
   parentStepId: stepIdSchema.nullable().optional(),
   boundaryType: boundaryTypeSchema,
+  /** Step name and where the call happens in user code (approved 2026-11-15). */
+  name: z.string().optional(),
+  ...sourceLocation,
+  isAsync: z.boolean().optional(),
   request: z.record(z.string(), z.unknown()),
   response: z.record(z.string(), z.unknown()).nullable().optional(),
   durationNs: nanosSchema,

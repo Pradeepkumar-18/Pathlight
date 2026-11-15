@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 8 | 🟡 |
+| 2 Protocol and collector | 13 | 9 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **20** | 🟡 |
+| **MVP total** | **65** | **21** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.9 Trace builder
+**Current task:** 2.10 REST API (MVP endpoints)
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.9 | Trace builder | 2026-11-14 | On `main` |
+| 2.10 | REST API (MVP endpoints) | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -72,6 +72,7 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2026-11-14 | Agent spike deps `pirates` 4.0.7, `@swc/core` 1.16.22, `@jridgewell/trace-mapping` 0.3.31; bench dev dep `autocannon` 9.0.0 | ✅ Decided | `decisions/0002-capture-approach.md` |
 | 2026-11-14 | Phase 2 libraries approved: zod 4.6.7, commander 14.0.3 (not 15: needs Node 22.12), drizzle-orm 0.45.4, drizzle-kit 0.31.11, fastify 5.12.8, @fastify/websocket 11.3.7, @fastify/rate-limit 11.2.2, @fastify/static 10.1.11, pino 10.4.0, pino-roll 4.0.0, open 11.0.4; ULIDs written in-house | ✅ Decided | this table |
 | 2026-11-14 | Server: default port 4777 (+19 fallbacks), REST allows a missing `Origin`, rate limits as 2 s windows | ✅ Decided | `decisions/0022-server-port-origin-rate-limits.md` |
+| 2026-11-15 | `boundary` event gains optional `name`, `file`, `line`, `column`, `isAsync`; `request` / `response` contents and `ts` = call start documented | ✅ Decided (user, 2026-11-15) | `api-spec.md` §11.1 |
 | 2026-11-14 | Work directly on `main`: no branches or PRs (replaces one branch and one PR per phase, 2026-11-06) | ✅ Decided | `implementation-plan.md` §2, `CLAUDE.md` → "Commit and PR format" |
 | 2026-11-05 | Fixture stack: no database install (`mongodb-memory-server` + SQLite), NestJS 11 (12 is ESM-only), install-script allowlist | ✅ Decided | `decisions/0020-fixture-stack.md` |
 
@@ -119,8 +120,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.6 | Soft delete, retention and purge | ✅ | | `pathlight-tracker clear` |
 | 2.7 | Server + auth | ✅ | | Decision 0022 |
 | 2.8 | Ingest (`/agent`) | ✅ | | |
-| 2.9 | Trace builder | 🟡 | | |
-| 2.10 | REST API (MVP endpoints) | ⬜ | | |
+| 2.9 | Trace builder | ✅ | | |
+| 2.10 | REST API (MVP endpoints) | 🟡 | | |
 | 2.11 | Live hub (`/live`) | ⬜ | | |
 | 2.12 | Launcher | ⬜ | | |
 | 2.13 | Collector logging and errors | ⬜ | | |
@@ -253,8 +254,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-14 · 2.9 Trace builder · 🟡 In progress
+### 2026-11-15 · 2.10 REST API (MVP endpoints) · 🟡 In progress
+- Done when: see `implementation-plan.md` 2.10.
+
+### 2026-11-15 · 2.9 Trace builder · ✅ Done
 - Done when: Feeding the recorded `POST /orders` event stream produces rows identical to the seed data (except IDs and times).
+- What changed: `packages/collector/src/builder/`: `builder.ts` (request rows from `request.start`, the session framework from it, `seq` in arrival order, depth from the parent, exits / throws update their step, boundaries and decisions become leaf steps, the step limit stops recording and marks the request truncated, re-sent steps are skipped, one transaction per batch; returns started / appended / updated / completed IDs for the live hub), `finalize.ts` (decision 0010: propagated / swallowed / converted / unhandled, the red path from the root to the step that threw for errors that reached the response, `error_step_id`, `has_error`), `refs.ts` (object refs from every `objectId` in args, return values and the request body, with paths like `args[0]` and `request.body`), `rows.ts` (event → row fields), `session-events.ts` (warnings kept once, `agent.disabled`), `layer.ts` (controller / service / repository / fn badge from the class name, for task 2.10). `loop` and `log` events are accepted but not stored (v1).
+- Tests: 22 new tests: the recorded stream reproduces the seed's request row, all 9 step rows and every object ref (IDs and times excluded, JSON compared as data); framework set from `request.start`; changes reported per batch; re-sent batch not duplicated; step limit truncates; warnings deduplicated and `agent.disabled`; error handling for a 500 from a filter, an unhandled error, a 404 (no red path), a swallowed error, several errors at once and none; layer badges; and a new seed guard that every `*_json` column is valid JSON.
+- Docs updated: `api-spec.md` §11.1 `boundary` row (new optional fields, what `request` / `response` hold, `ts` = call start); `data-model.md` §10 seed made consistent with what the agent sends (response headers `null`, the same full error on all three throwing steps, the request-body object ref: 7 refs now) and its error stacks fixed to valid JSON (they held raw line breaks since task 0.8); `fixtures/seed/sample.sql` re-copied; `fixtures/events/post-orders.json` uses the new boundary fields.
+- Decisions: `boundary` event fields (user, 2026-11-15).
+- Bugs: fixed: the seed's error stacks were not valid JSON (introduced in 0.8, caught by this task's comparison; the new seed test guards it).
+- Follow-ups: none.
 
 ### 2026-11-14 · 2.8 Ingest (`/agent`) · ✅ Done
 - Done when: Integration test sends recorded batches from a file and sees them acknowledged; invalid events are dropped without losing valid ones.

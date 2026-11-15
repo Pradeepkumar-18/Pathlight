@@ -47,7 +47,6 @@
         "file": "src/auth/jwt-auth.guard.ts",
         "line": 12,
         "column": 3,
-        "args": [],
         "thisClass": "JwtAuthGuard",
         "isAsync": true
       },
@@ -181,12 +180,12 @@
         "stepId": "stp_01JBSEED000000000000000006",
         "parentStepId": "stp_01JBSEED000000000000000005",
         "boundaryType": "db",
+        "name": "users.findOne",
+        "file": "src/users/user.service.ts",
+        "line": 15,
+        "column": 5,
+        "isAsync": true,
         "request": {
-          "name": "users.findOne",
-          "file": "src/users/user.service.ts",
-          "line": 15,
-          "column": 5,
-          "isAsync": true,
           "driver": "mongoose",
           "operation": "findOne",
           "collectionOrTable": "users",
@@ -270,7 +269,6 @@
             "preview": "1200"
           }
         ],
-        "argNames": ["user", "total"],
         "thisClass": "PricingService",
         "isAsync": false
       },

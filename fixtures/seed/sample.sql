@@ -18,12 +18,12 @@ INSERT INTO requests (id, session_id, method, path, route, state, http_status, h
   ('req_01JBSEED000000000000000001', 'ses_01JBSEED000000000000000001', 'POST', '/orders', '/orders',
    'completed', 500, 1, 'stp_01JBSEED000000000000000008', 9,
    '{"params":null,"query":null,"body":{"type":"object","preview":"{ userId: 7, items: [2] }","objectId":"obj_1","size":2},"headers":{"type":"object","preview":"{ authorization: [REDACTED], content-type: application/json }"}}',
-   '{"headers":{},"body":{"type":"object","preview":"{ statusCode: 500, message: Internal server error }"}}',
+   '{"headers":null,"body":{"type":"object","preview":"{ statusCode: 500, message: Internal server error }"}}',
    1793342105120, 1793342105204, 84000000, 1793342105120, 1793342105204),
   ('req_01JBSEED000000000000000002', 'ses_01JBSEED000000000000000001', 'GET', '/orders/42', '/orders/:id',
    'completed', 200, 0, NULL, 4,
    '{"params":{"type":"object","preview":"{ id: \"42\" }"},"query":null,"body":{"type":"undefined","preview":"undefined"},"headers":{"type":"object","preview":"{ authorization: [REDACTED] }"}}',
-   '{"headers":{},"body":{"type":"object","preview":"{ id: 42, total: 1200, status: \"paid\" }"}}',
+   '{"headers":null,"body":{"type":"object","preview":"{ id: 42, total: 1200, status: \"paid\" }"}}',
    1793342110010, 1793342110031, 21000000, 1793342110010, 1793342110031);
 
 -- A request the developer moved to the trash (soft-deleted, restorable for 72 hours)
@@ -33,7 +33,7 @@ INSERT INTO requests (id, session_id, method, path, route, state, http_status, h
   ('req_01JBSEED000000000000000003', 'ses_01JBSEED000000000000000001', 'GET', '/health', '/health',
    'completed', 200, 0, 1,
    '{"params":null,"query":null,"body":{"type":"undefined","preview":"undefined"},"headers":{}}',
-   '{"headers":{},"body":{"type":"object","preview":"{ status: \"ok\" }"}}',
+   '{"headers":null,"body":{"type":"object","preview":"{ status: \"ok\" }"}}',
    1793342101000, 1793342101002, 2000000, 1793342120000, 1793342101000, 1793342120000);
 
 -- Steps for the failing POST /orders (seq order = order of entry)
@@ -57,14 +57,14 @@ INSERT INTO steps (id, request_id, parent_id, seq, depth, kind, name, class_name
    'OrdersController.create', 'OrdersController', 'create', 'src/orders/orders.controller.ts', 18, 3,
    1, 'threw', '[{"type":"object","className":"CreateOrderDto","preview":"CreateOrderDto { userId: 7, items: [2] }","objectId":"obj_2"}]',
    NULL, 'OrdersController',
-   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","file":"src/pricing/pricing.service.ts","line":27}',
+   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","stack":"TypeError: Cannot read properties of undefined (reading ''rate'')\n    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)\n    at OrdersService.create (src/orders/orders.service.ts:35:41)","file":"src/pricing/pricing.service.ts","line":27,"column":31}',
    'converted', NULL, NULL, 1, 2600000, 81000000, 1793342105123, 1793342105204),
 
   ('stp_01JBSEED000000000000000004', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000003', 4, 1, 'method',
    'OrdersService.create', 'OrdersService', 'create', 'src/orders/orders.service.ts', 31, 3,
    1, 'threw', '[{"type":"object","className":"CreateOrderDto","preview":"CreateOrderDto { userId: 7, items: [2] }","objectId":"obj_2"}]',
    NULL, 'OrdersService',
-   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","file":"src/pricing/pricing.service.ts","line":27}',
+   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","stack":"TypeError: Cannot read properties of undefined (reading ''rate'')\n    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)\n    at OrdersService.create (src/orders/orders.service.ts:35:41)","file":"src/pricing/pricing.service.ts","line":27,"column":31}',
    'propagated', NULL, NULL, 1, 2900000, 80500000, 1793342105123, 1793342105204),
 
   ('stp_01JBSEED000000000000000005', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000004', 5, 2, 'method',
@@ -89,9 +89,7 @@ INSERT INTO steps (id, request_id, parent_id, seq, depth, kind, name, class_name
    'PricingService.calculateDiscount', 'PricingService', 'calculateDiscount', 'src/pricing/pricing.service.ts', 22, 3,
    0, 'threw', '[{"type":"object","className":"User","preview":"User { id: 7, name: \"Ravi\", tier: undefined }","objectId":"obj_3"},{"type":"number","preview":"1200"}]',
    NULL, 'PricingService',
-   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","stack":"TypeError: Cannot read properties of undefined (reading ''rate'')
-    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)
-    at OrdersService.create (src/orders/orders.service.ts:35:41)","file":"src/pricing/pricing.service.ts","line":27,"column":31}',
+   '{"type":"TypeError","message":"Cannot read properties of undefined (reading ''rate'')","stack":"TypeError: Cannot read properties of undefined (reading ''rate'')\n    at PricingService.calculateDiscount (src/pricing/pricing.service.ts:27:31)\n    at OrdersService.create (src/orders/orders.service.ts:35:41)","file":"src/pricing/pricing.service.ts","line":27,"column":31}',
    'propagated', NULL, NULL, 1, 45200000, 300000, 1793342105166, 1793342105166),
 
   ('stp_01JBSEED000000000000000009', 'req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000008', 9, 3, 'decision',
@@ -129,8 +127,9 @@ INSERT INTO steps (id, request_id, parent_id, seq, depth, kind, name, class_name
    0, 'returned', '[]', '{"type":"object","preview":"{ status: \"ok\" }"}', NULL, NULL,
    200000, 1500000, 1793342101000, 1793342101002);
 
--- The user object (obj_3) followed across steps: the data journey in v2
+-- The request body (obj_1, no step) and the user object (obj_3) followed across steps: the data journey in v2
 INSERT INTO object_refs (request_id, step_id, object_id, role, path, type_name, created_at) VALUES
+  ('req_01JBSEED000000000000000001', NULL,                           'obj_1', 'request', 'request.body', 'Object', 1793342105120),
   ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000002', 'obj_2', 'return', 'return',  'CreateOrderDto', 1793342105123),
   ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000003', 'obj_2', 'arg',    'args[0]', 'CreateOrderDto', 1793342105123),
   ('req_01JBSEED000000000000000001', 'stp_01JBSEED000000000000000004', 'obj_2', 'arg',    'args[0]', 'CreateOrderDto', 1793342105123),

@@ -931,7 +931,7 @@ This section is the **master copy** of the agent protocol; `architecture.md` §3
 | `step.enter` | MVP | `stepId`, `parentStepId`, `kind` (`StepKind`), `name`, `file`, `line`, `column`, `args`, `argNames`, `thisClass`, `isAsync` |
 | `step.exit` | MVP | `stepId`, `returnValue`, `durationNs`, `detail` (kind-specific, see `data-model.md` §6) |
 | `step.throw` | MVP | `stepId`, `error` (`type`, `message`, `stack` mapped to `.ts`, `file`, `line`, `column`), `durationNs`. Whether it was swallowed, converted or unhandled is decided by the collector afterwards (decision 0010) |
-| `boundary` | MVP | `stepId`, `parentStepId`, `boundaryType` (MVP: `db`, `http`; v1: `redis`, `queue`), `request`, `response`, `durationNs`, `error` |
+| `boundary` | MVP | `stepId`, `parentStepId`, `boundaryType` (MVP: `db`, `http`; v1: `redis`, `queue`), `name` (e.g. `users.findOne`), `file`, `line`, `column`, `isAsync` (where the call happens in user code), `request` (what was sent: db `driver`, `operation`, `collectionOrTable`, `query`; http `client`, `method`, `url`, `requestBody`), `response` (what came back: db `resultSummary`, `returnValue`; http `status`, `responseBody`), `durationNs`, `error`. One event per finished call; `ts` is when the call started |
 | `decision` | MVP (`if`, `switch`); v1 (`ternary`, `logical`, `optional`) | `stepId`, `parentStepId`, `decisionType`, `expression`, `values`, `result`, `branch`, `file`, `line`, `column` |
 | `loop` | v1 | `stepId`, `parentStepId`, `loopType`, `iterations`, `durationNs`, `samples` (`first`, `last`, `failing`) |
 | `log` | v1 | `stepId` (running step, if any), `level`, `args` (captured values). Stored in `logs`, not as a step |
