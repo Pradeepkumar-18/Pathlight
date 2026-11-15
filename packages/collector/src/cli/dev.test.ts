@@ -16,6 +16,8 @@ let io: CliIo;
 /** A stand-in app: reports its environment, then waits for Ctrl+C or exits with a code. */
 const APP = `
 const fs = require('node:fs');
+// Before env.json is written: the test sends Ctrl+C as soon as that file exists.
+process.on('SIGINT', () => { console.log('app stopping'); process.exit(0); });
 fs.writeFileSync('env.json', JSON.stringify({
   url: process.env.PATHLIGHT_TRACKER_COLLECTOR_URL,
   token: process.env.PATHLIGHT_TRACKER_TOKEN,
@@ -23,7 +25,6 @@ fs.writeFileSync('env.json', JSON.stringify({
 }));
 console.log('app started');
 if (process.argv[2]) process.exit(Number(process.argv[2]));
-process.on('SIGINT', () => { console.log('app stopping'); process.exit(0); });
 setInterval(() => {}, 1000);
 `;
 
