@@ -10,17 +10,17 @@ Live status of `docs/implementation-plan.md`. Update this file in the same PR as
 | --- | --- | --- | --- |
 | 0 Setup and validation | 8 | 8 | ✅ |
 | 1 Capture spike | 4 | 4 | ✅ |
-| 2 Protocol and collector | 13 | 11 | 🟡 |
+| 2 Protocol and collector | 13 | 12 | 🟡 |
 | 3 Runtime agent | 15 | 0 | ⬜ |
 | 4 Map UI | 17 | 0 | ⬜ |
 | 5 Integration and MVP release | 8 | 0 | ⬜ |
-| **MVP total** | **65** | **23** | 🟡 |
+| **MVP total** | **65** | **24** | 🟡 |
 | 6 v1 | 16 | 0 | ⬜ |
 | 7 VS Code extension and v2 | 10 | 0 | ⬜ |
 | 8 Future | 3 | 0 | ⬜ |
 
 **Current phase:** Phase 2: Protocol and collector (in progress)
-**Current task:** 2.12 Launcher
+**Current task:** 2.13 Collector logging and errors
 **Blockers:** none
 
 ## In progress
@@ -29,7 +29,7 @@ Tasks currently `🟡 In progress`. Remove the row when the task is done or bloc
 
 | ID | Task | Started | Notes |
 | --- | --- | --- | --- |
-| 2.12 | Launcher | 2026-11-15 | On `main` |
+| 2.13 | Collector logging and errors | 2026-11-15 | On `main` |
 
 ## Known bugs / issues
 
@@ -123,8 +123,8 @@ Decisions made during planning and coding. Architecture or schema decisions also
 | 2.9 | Trace builder | ✅ | | |
 | 2.10 | REST API (MVP endpoints) | ✅ | | 14 MVP endpoints |
 | 2.11 | Live hub (`/live`) | ✅ | | |
-| 2.12 | Launcher | 🟡 | | |
-| 2.13 | Collector logging and errors | ⬜ | | |
+| 2.12 | Launcher | ✅ | | |
+| 2.13 | Collector logging and errors | 🟡 | | |
 | ✔ | **Checkpoint 2: Collector review** | ⬜ | | |
 
 ## Phase 3: Runtime agent
@@ -254,8 +254,17 @@ Newest first. One entry per task (or checkpoint). Template:
 - Follow-ups: <new tasks, open questions, or "none">
 ```
 
-### 2026-11-15 · 2.12 Launcher · 🟡 In progress
+### 2026-11-15 · 2.13 Collector logging and errors · 🟡 In progress
+- Done when: Tests show a forced DB lock returns 503 and logs an entry with a `logId`; grep of logs in tests finds no token or captured values.
+
+### 2026-11-15 · 2.12 Launcher · ✅ Done
 - Done when: Running `pathlight-tracker dev -- node fixtures/express-app` starts the app, prints the URL with the token, and stops cleanly on Ctrl+C with the app's exit code.
+- What changed: `packages/collector/src/cli/dev.ts` (`createDevHandler`): starts the collector, prints `[pathlight-tracker] <version> · map: <url>/#token=<token>` once, spawns the user's command with the agent appended to the user's own `NODE_OPTIONS` (`--require "<path>"`), `PATHLIGHT_TRACKER_COLLECTOR_URL` and `PATHLIGHT_TRACKER_TOKEN`; stdio inherited; opens the browser with `open` unless `--no-open`; first Ctrl+C goes to the app (POSIX), second force-stops it; the CLI exits with the app's code (128 + signal when a signal ended it) and stops the collector. Windows: the command runs through `cmd.exe` (for `npm` / `npx` shims) with each word quoted, and the app's process tree is stopped with `taskkill /T`. `AGENT_NOT_FOUND` warning when the agent isn't installed next to the CLI. `cli/main.ts` wires it in.
+- Tests: 6 tests: a stand-in app gets the collector URL, the token and `NODE_OPTIONS` (user's own kept), the banner has the token, the app's exit code (3) comes back and the collector stops; Ctrl+C stops the app (0 on POSIX, 130 on Windows); a missing command fails; helpers for `NODE_OPTIONS`, Windows quoting and exit codes. Manual: `node packages/collector/dist/cli/main.js dev --no-open -- node fixtures/express-app` printed the banner, the app served on :3002 and the collector answered 401 without the token.
+- Docs updated: `implementation-plan.md` 2.12 row (`o` + Enter is v1, task 6.14, per `user-flows.md` §5 and FR-51).
+- Decisions: none.
+- Bugs: none.
+- Follow-ups: the agent isn't a dependency of the CLI yet, so `dev` prints `AGENT_NOT_FOUND` until packaging (task 5.6) ships them together.
 
 ### 2026-11-15 · 2.11 Live hub (`/live`) · ✅ Done
 - Done when: Integration test: an agent batch produces the expected `/live` messages in order; a UI subscribed to one request gets only its steps.
