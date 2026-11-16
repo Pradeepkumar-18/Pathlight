@@ -33,6 +33,12 @@
 23. [The live hub and startCollector](23-live-hub-websocket.md) (Task 2.11)
 24. [The launcher: dev and Windows spawn](24-dev-launcher-windows-spawn.md) (Task 2.12)
 25. [Logging and store errors](25-logging-and-store-errors.md) (Task 2.13)
+26. [The agent entry: register, config and fail open](26-agent-register-and-fail-open.md) (Task 3.1)
+27. [The agent transport: batching, buffer, reconnect](27-agent-websocket-transport.md) (Task 3.2)
+28. [Safe value capture](28-safe-value-capture.md) (Task 3.3)
+29. [Redaction: secrets never leave the app](29-redaction.md) (Task 3.4)
+30. [Object IDs with WeakMap](30-object-ids-weakmap.md) (Task 3.5)
+31. [The production loader and transform](31-loader-and-production-transform.md) (Task 3.6)
 
 ## Concepts learned
 - Desk research vs hands-on test: [01](01-validate-against-appmap.md)
@@ -108,6 +114,14 @@
 - Live topics, batching, `startCollector` wiring: [23](23-live-hub-websocket.md)
 - Windows `cmd.exe` quoting, `taskkill /T`, ready-before-handler race: [24](24-dev-launcher-windows-spawn.md)
 - Correlation `logId`, 503 for locked SQLite, no secrets in logs, uncaught handlers: [25](25-logging-and-store-errors.md)
+- Agent start rules: kill switch, production guard, one agent per process; 20 errors in 60 s auto-disable (`run` / `report`): [26](26-agent-register-and-fail-open.md)
+- Settings shared through `protocol`; the agent log level is separate from the collector's: [26](26-agent-register-and-fail-open.md)
+- Transport: batching (50 ms), ack and resend, `slow_down`, jittered backoff, bounded buffer dropping whole requests, `unref`: [27](27-agent-websocket-transport.md)
+- Integration tests with real agent + collector (found the shutdown bug): [27](27-agent-websocket-transport.md)
+- Capturing values without running user code (descriptors, built-in prototypes, caps, `[Circular]`, `suspicious`): [28](28-safe-value-capture.md)
+- Redaction: key normalising, "contains" vs "exact" lists, redact before read, false positives vs negatives: [29](29-redaction.md)
+- Object identity with `WeakMap`, garbage collection, why not a `Map` or an `__id` property: [30](30-object-ids-weakmap.md)
+- `pirates` hook, site table, matching globs on the original `.ts` path, failed transform loads the original: [31](31-loader-and-production-transform.md)
 
 ## Open questions
 - Answered in task 1.4: you chose to keep follow-on promises and accept the `toString` difference (lesson 12).
@@ -120,3 +134,6 @@
 - `pnpm seed` deletes all data in the target store before loading; consider a guard or warning if the store is not a seed one (task 2.5 or later).
 - The 0700/0600 permission test is skipped on Windows, where you develop; it only runs on the Linux/macOS CI jobs.
 - Decision 0021 is Proposed and needs your approval or changes in the Phase 0 PR review.
+- Redaction is by key name only: a secret under an ordinary key or inside free text is not caught (lesson 29). Should `architecture.md` §8 say this plainly?
+- Object IDs are numbered per capturer, not per request; confirm what the data journey needs when the recorder arrives in task 3.7 (lesson 30).
+- Without a source map, files are matched and shown by compiled path (`NO_SOURCE_MAP`); the `doctor` command should explain how to fix it (lesson 31).
